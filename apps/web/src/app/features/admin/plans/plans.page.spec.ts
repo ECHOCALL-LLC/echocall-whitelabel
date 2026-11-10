@@ -73,11 +73,12 @@ describe('AdminPlansPage', () => {
     await settle();
   }
 
-  /** Answers the plan list and the two calls the price panel makes on the same page. */
+  /** Answers the plan list and the three calls the price panel makes on the same page. */
   async function answerLoad(plans: unknown[] = PLANS) {
     await answerPlans(plans);
     http.expectOne('/api/admin/hub/resellers/pricing').flush(PRICING);
     http.expectOne('/api/admin/hub/resellers/pricing/suggestions').flush([]);
+    http.expectOne('/api/admin/hub/resellers/settings').flush({ stripeConfigured: false });
     await settle();
   }
 

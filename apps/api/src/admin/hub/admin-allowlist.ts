@@ -46,6 +46,7 @@ const RULES: readonly (readonly [string, string])[] = [
   ['PATCH|DELETE', '/resellers/plans/{id}'],
   ['GET|PATCH', '/resellers/pricing'],
   ['GET', '/resellers/pricing/suggestions'],
+  ['PUT', '/resellers/pricing/number-markup'],
 
   ['GET|POST', '/resellers/subscriptions'],
   ['GET', '/resellers/subscriptions/count'],
@@ -67,6 +68,7 @@ const RULES: readonly (readonly [string, string])[] = [
   ['POST', '/resellers/phone-numbers/import'],
   ['POST', '/resellers/phone-numbers/{id}/assign'],
   ['POST', '/resellers/phone-numbers/{id}/release'],
+  ['PATCH', '/resellers/phone-numbers/{id}/sale'],
   ['DELETE', '/resellers/phone-numbers/{id}'],
 
   ['GET', '/resellers/tickets'],

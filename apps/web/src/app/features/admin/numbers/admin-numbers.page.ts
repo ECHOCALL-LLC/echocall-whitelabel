@@ -19,6 +19,21 @@ import {
   type AssignNumberResult,
 } from './assign-number-dialog.component';
 import { ImportNumberDialogComponent, type ImportNumberResult } from './import-number-dialog.component';
+import {
+  SaleNumberDialogComponent,
+  type SaleNumberDialogData,
+  type SaleNumberResult,
+} from './sale-number-dialog.component';
+
+/**
+ * A number in the pool. The hub also says whose number it is and whether the
+ * operator offers it to its customers; the API reference does not list these
+ * two fields yet, so they are declared here and read defensively.
+ */
+export type PoolNumber = PhoneNumber & {
+  ownership?: 'platform' | 'partner' | 'customer' | null;
+  isAvailableForPurchase?: boolean | null;
+};
 
 /**
  * The number pool of the portal, in the two states a number can be in: lying in
@@ -87,9 +102,45 @@ import { ImportNumberDialogComponent, type ImportNumberResult } from './import-n
                 {{ money(row.monthlyPrice) }}
               </td>
             </ng-container>
+            <ng-container matColumnDef="sale">
+              <th mat-header-cell *matHeaderCellDef>{{ t('admin.numbers.sale') }}</th>
+              <td
+                mat-cell
+                *matCellDef="let row"
+                [attr.data-label]="t('admin.numbers.sale')"
+                data-testid="sale-state"
+              >
+                @if (isOwn(row)) {
+                  @if (row.isAvailableForPurchase) {
+                    <span class="on-sale">{{ t('admin.numbers.onSale') }}</span>
+                  } @else {
+                    <span class="cell-sub">{{ t('admin.numbers.notOnSale') }}</span>
+                  }
+                }
+              </td>
+            </ng-container>
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let row" class="row-actions">
+                @if (isOwn(row)) {
+                  @if (row.isAvailableForPurchase) {
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="offer(row)"
+                      data-testid="sale-price-change"
+                    >
+                      {{ t('admin.numbers.changePrice') }}
+                    </button>
+                    <button mat-stroked-button type="button" (click)="withdraw(row)" data-testid="sale-stop">
+                      {{ t('admin.numbers.stopSale') }}
+                    </button>
+                  } @else {
+                    <button mat-stroked-button type="button" (click)="offer(row)" data-testid="sale-start">
+                      {{ t('admin.numbers.offer') }}
+                    </button>
+                  }
+                }
                 <button mat-stroked-button type="button" (click)="assign(row)" data-testid="assign">
                   {{ t('admin.numbers.assign') }}
                 </button>
@@ -176,6 +227,10 @@ import { ImportNumberDialogComponent, type ImportNumberResult } from './import-n
       text-align: right;
       white-space: nowrap;
     }
+    .on-sale {
+      color: var(--mat-sys-primary);
+      font: var(--mat-sys-label-large);
+    }
     .numeric {
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -188,9 +243,9 @@ export class AdminNumbersPage implements OnInit {
   private readonly notify = inject(NotifyService);
   private readonly language = inject(LanguageService);
 
-  readonly availableColumns = ['number', 'label', 'country', 'direction', 'price', 'actions'];
+  readonly availableColumns = ['number', 'label', 'country', 'direction', 'price', 'sale', 'actions'];
   readonly assignedColumns = ['number', 'label', 'customer', 'since', 'price', 'actions'];
-  readonly available = signal<PhoneNumber[]>([]);
+  readonly available = signal<PoolNumber[]>([]);
   readonly assigned = signal<ResellerAssignedNumber[]>([]);
   readonly loading = signal(false);
 
@@ -213,7 +268,7 @@ export class AdminNumbersPage implements OnInit {
   async load(): Promise<void> {
     this.loading.set(true);
     const [available, assigned] = await Promise.allSettled([
-      firstValueFrom(this.hub.list<PhoneNumber>('/resellers/phone-numbers/available')),
+      firstValueFrom(this.hub.list<PoolNumber>('/resellers/phone-numbers/available')),
       firstValueFrom(this.hub.list<ResellerAssignedNumber>('/resellers/phone-numbers/assigned')),
     ]);
     this.loading.set(false);
@@ -221,6 +276,68 @@ export class AdminNumbersPage implements OnInit {
     if (assigned.status === 'fulfilled') this.assigned.set(assigned.value);
     const failed = [available, assigned].find((part) => part.status === 'rejected');
     if (failed) this.notify.apiError(failed.reason);
+  }
+
+  /** Only the operator's own imported numbers can be offered to its customers. */
+  isOwn(number: PoolNumber): boolean {
+    return number.ownership === 'partner';
+  }
+
+  /**
+   * Offers one of the operator's own numbers to its customers at a monthly
+   * price, or changes that price. Customers then find it among the numbers
+   * they can buy at once and pay it from their balance.
+   */
+  offer(number: PoolNumber): void {
+    const price = Number(number.monthlyPrice);
+    const data: SaleNumberDialogData = {
+      phoneNumber: number.phoneNumber,
+      monthlyPrice: number.isAvailableForPurchase && Number.isFinite(price) ? price : null,
+    };
+    this.dialog
+      .open<SaleNumberDialogComponent, SaleNumberDialogData, SaleNumberResult>(SaleNumberDialogComponent, {
+        data,
+      })
+      .afterClosed()
+      .subscribe(async (result) => {
+        if (!result) return;
+        await this.setSale(
+          number,
+          { onSale: true, monthlyPrice: result.monthlyPrice },
+          'admin.numbers.offered',
+        );
+      });
+  }
+
+  /** Takes a number off sale. It stays in the pool and can be offered again. */
+  withdraw(number: PoolNumber): void {
+    const data: ConfirmDialogData = {
+      titleKey: 'admin.numbers.stopSaleTitle',
+      messageKey: 'admin.numbers.stopSaleMessage',
+      params: { number: number.phoneNumber },
+      confirmKey: 'admin.numbers.stopSale',
+    };
+    this.dialog
+      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, { data })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) return;
+        await this.setSale(number, { onSale: false }, 'admin.numbers.saleStopped');
+      });
+  }
+
+  private async setSale(
+    number: PoolNumber,
+    body: { onSale: boolean; monthlyPrice?: number },
+    successKey: string,
+  ): Promise<void> {
+    try {
+      await firstValueFrom(this.hub.patch(`/resellers/phone-numbers/${number.id}/sale`, body));
+      this.notify.success(successKey, { number: number.phoneNumber });
+      await this.load();
+    } catch (err) {
+      this.notify.apiError(err);
+    }
   }
 
   /** Hands one number out. The customer can point an agent at it afterwards. */

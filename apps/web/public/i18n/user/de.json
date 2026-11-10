@@ -272,7 +272,10 @@
       "pending": "Der Nachweis wird geprüft. Das kann einige Werktage dauern.",
       "approved": "Der Nachweis wurde bestätigt. Die Nummer ist freigeschaltet.",
       "rejected": "Der Nachweis wurde abgelehnt. Bitte wenden Sie sich an den Support."
-    }
+    },
+    "instantTitle": "Sofort verfügbar",
+    "instantHint": "Diese Nummern sind sofort einsatzbereit. Der erste Monat wird beim Kauf aus Ihrem Guthaben bezahlt, zuzüglich Mehrwertsteuer.",
+    "searchTitle": "Weitere Nummern suchen"
   },
   "models": {
     "tts": {
@@ -728,7 +731,11 @@
       "medium": "Mittel",
       "high": "Hoch",
       "urgent": "Dringend"
-    }
+    },
+    "close": "Anfrage schließen",
+    "closeTitle": "Anfrage schließen",
+    "closeMessage": "Schließen Sie die Anfrage, wenn Ihr Anliegen erledigt ist. Danach sind keine Antworten mehr möglich, und sie lässt sich nicht wieder öffnen. Für neue Fragen stellen Sie eine neue Anfrage.",
+    "closed": "Die Anfrage ist geschlossen."
   },
   "notifications": {
     "title": "Benachrichtigungen",

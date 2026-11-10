@@ -139,6 +139,16 @@ describe('BillingPanel', () => {
     expect(fixture.componentInstance.downloading()).toBeNull();
   });
 
+  it("names the invoice's issuer, so an operator invoice is never mistaken for a platform one", async () => {
+    const fixture = await render();
+
+    const pending = fixture.componentInstance.download({ ...INVOICE, source: 'reseller' });
+    http.expectOne('/api/account/invoices/7/pdf?source=reseller').flush(new Blob(['%PDF-1.4']));
+    await pending;
+
+    expect(saved?.filename).toBe('INV-2026-014.pdf');
+  });
+
   it('asks for the page the paginator selected', async () => {
     const fixture = await render();
 

@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/decorators.js';
 import { type SessionUser } from '../auth/session.service.js';
 import { apiError } from '../common/http-error.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
-import { type AccountOverview, AccountService } from './account.service.js';
+import { type AccountOverview, AccountService, isInvoiceSource } from './account.service.js';
 import { type ProfileUpdateDto, profileUpdateSchema } from './dto.js';
 
 /** The signed-in user's own account; open to every role. */
@@ -17,15 +17,22 @@ export class AccountController {
     return this.account.overview(user);
   }
 
-  /** Streams one invoice; the hub link behind it is never handed to the browser. */
+  /**
+   * Streams one invoice; the hub link behind it is never handed to the browser.
+   * source says which list row the id belongs to: the hub numbers the platform's
+   * and the operator's invoices independently, so the same id can exist twice.
+   */
   @Get('invoices/:id/pdf')
   async invoicePdf(
     @CurrentUser() user: SessionUser,
     @Param('id') id: string,
+    @Query('source') source: unknown,
     @Res() res: Response,
   ): Promise<void> {
     if (!/^[0-9]+$/.test(id)) throw apiError(400, 'invalid_id', 'The invoice id must be a number');
-    const invoice = await this.account.invoicePdf(user, Number(id));
+    if (source !== undefined && !isInvoiceSource(source))
+      throw apiError(400, 'invalid_source', 'source must be platform or reseller');
+    const invoice = await this.account.invoicePdf(user, Number(id), source);
     res.setHeader('content-type', 'application/pdf');
     res.setHeader('content-disposition', `attachment; filename="${invoice.filename}"`);
     res.setHeader('cache-control', 'private, no-store');

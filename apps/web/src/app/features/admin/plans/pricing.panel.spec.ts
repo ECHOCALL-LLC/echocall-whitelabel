@@ -12,7 +12,11 @@ const PRICING = {
   resellerChatSessionPrice: 0.5,
   voiceMinuteMargin: 0.15,
   chatSessionMargin: 0.1,
+  numberMarkupPercent: 20,
 };
+
+/** An operator that bills its customers with its own payment account. */
+const OWN_PAYMENT = { stripeConfigured: true, stripePublishableKey: 'pk_test_x' };
 
 /** The four tiers the hub computes; their names arrive in English and are never shown raw. */
 const SUGGESTIONS = [
@@ -70,11 +74,15 @@ describe('AdminPricingPanel', () => {
 
   afterEach(() => http.verify());
 
-  async function render(pricing = PRICING) {
+  async function render(
+    pricing: Record<string, unknown> = PRICING,
+    settings: Record<string, unknown> = OWN_PAYMENT,
+  ) {
     const fixture = TestBed.createComponent(AdminPricingPanel);
     await fixture.whenStable();
     http.expectOne('/api/admin/hub/resellers/pricing').flush(pricing);
     http.expectOne('/api/admin/hub/resellers/pricing/suggestions').flush(SUGGESTIONS);
+    http.expectOne('/api/admin/hub/resellers/settings').flush(settings);
     await settle();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -175,6 +183,65 @@ describe('AdminPricingPanel', () => {
   it('refuses to save a price of zero', async () => {
     const fixture = await render();
     fixture.componentInstance.form.controls.voice.setValue(0);
+
+    void fixture.componentInstance.save();
+    await settle();
+
+    http.expectNone('/api/admin/hub/resellers/pricing');
+  });
+
+  it('shows the number markup and what a number costs the customer with it', async () => {
+    const fixture = await render();
+
+    expect(input(fixture, 'number-markup').value).toBe('20');
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="number-markup-example"]').textContent,
+    ).toContain('1.20');
+    expect(fixture.nativeElement.querySelector('[data-testid="number-markup-hint"]')).toBeNull();
+  });
+
+  it('says the markup waits for an own payment account', async () => {
+    const fixture = await render(PRICING, { stripeConfigured: false, stripePublishableKey: null });
+
+    expect(fixture.nativeElement.querySelector('[data-testid="number-markup-hint"]').textContent).toContain(
+      ADMIN_TEXTS.pricing.numbers.platformBilled,
+    );
+  });
+
+  it('stores a changed markup with its own call after the prices', async () => {
+    const fixture = await render();
+    fixture.componentInstance.form.controls.markup.setValue(35);
+
+    void fixture.componentInstance.save();
+    await settle();
+    http.expectOne({ method: 'PATCH', url: '/api/admin/hub/resellers/pricing' }).flush({ success: true });
+    await settle();
+    const markup = http.expectOne('/api/admin/hub/resellers/pricing/number-markup');
+
+    expect(markup.request.method).toBe('PUT');
+    expect(markup.request.body).toEqual({ numberMarkupPercent: 35 });
+    markup.flush({ success: true });
+    await settle();
+    http.expectOne('/api/admin/hub/resellers/pricing').flush({ ...PRICING, numberMarkupPercent: 35 });
+    await settle();
+  });
+
+  it('leaves the markup alone when only the prices changed', async () => {
+    const fixture = await render();
+    fixture.componentInstance.form.controls.voice.setValue(0.5);
+
+    void fixture.componentInstance.save();
+    await settle();
+    http.expectOne({ method: 'PATCH', url: '/api/admin/hub/resellers/pricing' }).flush({ success: true });
+    await settle();
+    http.expectNone('/api/admin/hub/resellers/pricing/number-markup');
+    http.expectOne('/api/admin/hub/resellers/pricing').flush(PRICING);
+    await settle();
+  });
+
+  it('refuses a markup above 500 percent', async () => {
+    const fixture = await render();
+    fixture.componentInstance.form.controls.markup.setValue(501);
 
     void fixture.componentInstance.save();
     await settle();

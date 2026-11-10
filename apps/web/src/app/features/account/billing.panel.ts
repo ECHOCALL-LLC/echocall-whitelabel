@@ -285,7 +285,9 @@ export class BillingPanel implements OnInit {
   async download(invoice: Invoice): Promise<void> {
     this.downloading.set(invoice.id);
     try {
-      const file = await firstValueFrom(this.api.blob(`/account/invoices/${invoice.id}/pdf`));
+      // Platform and operator invoices are numbered apart; the source picks the right one.
+      const source = invoice.source ? `?source=${invoice.source}` : '';
+      const file = await firstValueFrom(this.api.blob(`/account/invoices/${invoice.id}/pdf${source}`));
       this.downloads.save(file, `${invoice.invoiceNumber ?? `invoice-${invoice.id}`}.pdf`);
     } catch (err) {
       this.notify.apiError(err);

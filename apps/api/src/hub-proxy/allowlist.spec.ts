@@ -20,6 +20,14 @@ describe('matchCustomerCall', () => {
     expect(matchCustomerCall('PUT', '/integrations/7/permissions')).toBe(true);
   });
 
+  it('accepts the instant number purchase and closing a support request', () => {
+    expect(matchCustomerCall('GET', '/phone-numbers/instant')).toBe(true);
+    expect(matchCustomerCall('POST', '/phone-numbers/instant/7/purchase')).toBe(true);
+    expect(matchCustomerCall('POST', '/phone-numbers/instant')).toBe(false);
+    expect(matchCustomerCall('POST', '/tickets/7/close')).toBe(true);
+    expect(matchCustomerCall('DELETE', '/tickets/7')).toBe(false);
+  });
+
   it('refuses everything not listed', () => {
     expect(matchCustomerCall('GET', '/resellers/customers')).toBe(false);
     expect(matchCustomerCall('POST', '/provisioning/create')).toBe(false);

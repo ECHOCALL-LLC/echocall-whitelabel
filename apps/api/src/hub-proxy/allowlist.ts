@@ -34,6 +34,9 @@ const RULES: readonly (readonly [string, string])[] = [
   ['GET', '/phone-numbers/countries'],
   ['GET', '/phone-numbers/search'],
   ['POST', '/phone-numbers/purchase'],
+  // Numbers ready at once, among them the ones the operator offers; paid from the balance.
+  ['GET', '/phone-numbers/instant'],
+  ['POST', '/phone-numbers/instant/{id}/purchase'],
   ['GET|PATCH|DELETE', '/phone-numbers/{id}'],
   ['GET|POST', '/phone-numbers/{id}/kyc'],
   ['GET', '/phone-numbers/{id}/kyc/status'],
@@ -63,6 +66,7 @@ const RULES: readonly (readonly [string, string])[] = [
   ['GET|POST', '/tickets'],
   ['GET', '/tickets/{id}'],
   ['POST', '/tickets/{id}/messages'],
+  ['POST', '/tickets/{id}/close'],
   ['GET', '/notifications'],
   ['PATCH', '/notifications/{id}/read'],
   ['PATCH', '/notifications/read-all'],

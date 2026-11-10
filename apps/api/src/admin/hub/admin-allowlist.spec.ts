@@ -23,6 +23,13 @@ describe('matchOperatorCall', () => {
     expect(matchOperatorCall('GET', '/resellers/voice-agents')).toBe(true);
   });
 
+  it('accepts the markup on phone numbers and the sale of the operator’s own numbers', () => {
+    expect(matchOperatorCall('PUT', '/resellers/pricing/number-markup')).toBe(true);
+    expect(matchOperatorCall('PATCH', '/resellers/pricing/number-markup')).toBe(false);
+    expect(matchOperatorCall('PATCH', '/resellers/phone-numbers/7/sale')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/phone-numbers/7/sale')).toBe(false);
+  });
+
   it('accepts the language table the agent inventory is named from', () => {
     expect(matchOperatorCall('GET', '/languages/agent')).toBe(true);
     expect(matchOperatorCall('POST', '/languages/agent')).toBe(false);

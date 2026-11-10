@@ -250,6 +250,14 @@
       "standard": "Standard",
       "premium": "Premium",
       "enterprise": "Enterprise"
+    },
+    "numbers": {
+      "title": "Phone numbers",
+      "intro": "One markup in percent on the setup fee and monthly price of platform numbers. Your balance is charged the platform price, the difference is yours.",
+      "label": "Markup",
+      "invalid": "Please enter a markup between 0 and 500 %.",
+      "example": "Example: a number at {{base}} per month costs your customers {{price}} net.",
+      "platformBilled": "The markup applies once you have added your own payment details. Until then your customers buy numbers at the platform price."
     }
   },
   "subscriptions": {
@@ -518,6 +526,24 @@
       },
       "secretHint": "Credentials are only passed on to telephony and are not shown again afterwards.",
       "submit": "Import the number"
+    },
+    "sale": "Sale",
+    "onSale": "On offer",
+    "notOnSale": "Not offered",
+    "offer": "Offer",
+    "changePrice": "Change price",
+    "stopSale": "End offer",
+    "offered": "Your customers can now buy {{number}}.",
+    "saleStopped": "{{number}} is no longer offered.",
+    "stopSaleTitle": "End offer",
+    "stopSaleMessage": "Your customers can no longer buy {{number}}. It stays in the pool and can be offered again at any time.",
+    "saleDialog": {
+      "title": "Offer number",
+      "intro": "Your customers can buy {{number}} themselves at this monthly price. They pay from their balance.",
+      "price": "Monthly price, net",
+      "priceHint": "At most €1,000. VAT is added at purchase.",
+      "invalid": "Please enter a monthly price above 0 and at most €1,000.",
+      "submit": "Offer"
     }
   },
   "users": {

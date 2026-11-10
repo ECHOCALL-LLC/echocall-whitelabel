@@ -7,11 +7,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
-import { formatPercent, formatUnitPrice } from '../../../core/format/money';
+import { formatMoney, formatPercent, formatUnitPrice } from '../../../core/format/money';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
 import type {
   ResellerPricing,
   ResellerPricingSuggestion,
+  ResellerSettings,
   UpdatePricingInput,
 } from '../../../core/hub/hub.models';
 import { LanguageService } from '../../../core/i18n/language.service';
@@ -25,6 +26,9 @@ import { FieldErrorPipe } from '../../../shared/forms/field-error.pipe';
  */
 const TIERS = new Set(['minimal', 'standard', 'premium', 'enterprise']);
 
+/** The hub accepts a markup on phone numbers from 0 to 500 percent. */
+const MAX_NUMBER_MARKUP_PERCENT = 500;
+
 /**
  * The hub multiplies its base price by a margin, so a suggestion arrives as
  * 0.07500000000000001. Four decimals are as fine as a unit price ever gets.
@@ -36,9 +40,9 @@ function toPrice(value: number | null | undefined): number | null {
 
 /**
  * What the operator charges its customers for a voice minute and a chat
- * session, next to what the platform charges for the same. The suggestion
- * buttons only fill the two fields; nothing leaves the browser until the
- * operator saves.
+ * session, next to what the platform charges for the same, and the markup on
+ * the platform's phone numbers. The suggestion buttons only fill the two price
+ * fields; nothing leaves the browser until the operator saves.
  */
 @Component({
   selector: 'app-admin-pricing-panel',
@@ -111,6 +115,36 @@ function toPrice(value: number | null | undefined): number | null {
                 {{ t('admin.pricing.margin') }}: {{ price(pricing()?.chatSessionMargin) }}
               </p>
             </div>
+          </div>
+
+          <div class="numbers">
+            <h3 class="suggestions-title">{{ t('admin.pricing.numbers.title') }}</h3>
+            <p class="intro">{{ t('admin.pricing.numbers.intro') }}</p>
+            @if (ownPayment() === false) {
+              <p class="hint" data-testid="number-markup-hint">
+                <mat-icon>info</mat-icon>
+                <span>{{ t('admin.pricing.numbers.platformBilled') }}</span>
+              </p>
+            }
+            <mat-form-field appearance="outline">
+              <mat-label>{{ t('admin.pricing.numbers.label') }}</mat-label>
+              <input
+                matInput
+                type="number"
+                step="0.01"
+                min="0"
+                max="500"
+                formControlName="markup"
+                data-testid="number-markup"
+              />
+              <span matTextSuffix>&nbsp;%</span>
+              @if (form.controls.markup.invalid) {
+                <mat-error>{{ t('admin.pricing.numbers.invalid') }}</mat-error>
+              }
+            </mat-form-field>
+            <p class="price-base" data-testid="number-markup-example">
+              {{ t('admin.pricing.numbers.example', { base: money(1), price: money(examplePrice()) }) }}
+            </p>
           </div>
 
           @if (suggestions().length) {
@@ -211,6 +245,24 @@ function toPrice(value: number | null | undefined): number | null {
       font: var(--mat-sys-title-small);
       margin: 8px 0 4px;
     }
+    .numbers {
+      margin: 8px 0 16px;
+    }
+    .numbers mat-form-field {
+      width: 100%;
+      max-width: 240px;
+    }
+    .hint {
+      align-items: flex-start;
+      color: var(--mat-sys-on-surface-variant);
+      display: flex;
+      font: var(--mat-sys-body-small);
+      gap: 8px;
+      margin: 0 0 16px;
+    }
+    .hint mat-icon {
+      flex: none;
+    }
     /* Four tiers, four columns, halved and then stacked: the row is never
        three across with a stray fourth underneath. */
     .suggestions {
@@ -275,19 +327,39 @@ export class AdminPricingPanel implements OnInit {
   readonly suggestions = signal<ResellerPricingSuggestion[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
+  /**
+   * Whether the operator bills its customers with its own payment account. The
+   * number markup only applies then; null while unknown, so no hint flashes.
+   */
+  readonly ownPayment = signal<boolean | null>(null);
 
   readonly form = inject(NonNullableFormBuilder).group({
     voice: [null as number | null, [Validators.required, Validators.min(0.01)]],
     chat: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    markup: [
+      null as number | null,
+      [Validators.required, Validators.min(0), Validators.max(MAX_NUMBER_MARKUP_PERCENT)],
+    ],
   });
 
   ngOnInit(): void {
     void this.load();
     void this.loadSuggestions();
+    void this.loadPaymentAccount();
   }
 
   price(value: number | null | undefined): string {
     return formatUnitPrice(value ?? null, this.language.current());
+  }
+
+  money(value: number): string {
+    return formatMoney(value, this.language.current());
+  }
+
+  /** What a number at 1 EUR a month costs the customer with the markup in the field. */
+  examplePrice(): number {
+    const markup = Number(this.form.controls.markup.value);
+    return Number.isFinite(markup) && markup >= 0 ? Math.round((1 + markup / 100) * 100) / 100 : 1;
   }
 
   percent(value: number | null | undefined): string {
@@ -302,7 +374,7 @@ export class AdminPricingPanel implements OnInit {
 
   /** Fills the form with a suggested tier. Nothing is stored until the operator saves. */
   apply(suggestion: ResellerPricingSuggestion): void {
-    this.form.setValue({
+    this.form.patchValue({
       voice: toPrice(suggestion.voiceMinutePrice),
       chat: toPrice(suggestion.chatSessionPrice),
     });
@@ -319,9 +391,18 @@ export class AdminPricingPanel implements OnInit {
       resellerVoiceMinutePrice: Number(value.voice),
       resellerChatSessionPrice: Number(value.chat),
     };
+    const markup = Number(value.markup);
     this.saving.set(true);
     try {
       await firstValueFrom(this.hub.patch<{ success: boolean }>('/resellers/pricing', body));
+      // The markup has its own hub call; it is only sent when it changed.
+      if (markup !== this.pricing()?.numberMarkupPercent) {
+        await firstValueFrom(
+          this.hub.put<{ success: boolean }>('/resellers/pricing/number-markup', {
+            numberMarkupPercent: markup,
+          }),
+        );
+      }
       this.notify.success('admin.pricing.saved');
       await this.load();
     } catch (err) {
@@ -339,12 +420,26 @@ export class AdminPricingPanel implements OnInit {
       this.form.setValue({
         voice: pricing.resellerVoiceMinutePrice,
         chat: pricing.resellerChatSessionPrice,
+        markup: pricing.numberMarkupPercent ?? 0,
       });
       this.form.markAsPristine();
     } catch (err) {
       this.notify.apiError(err);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /**
+   * Own payment account means both payment keys are stored, the same rule the
+   * hub bills by. When the settings cannot be read the hint stays hidden.
+   */
+  private async loadPaymentAccount(): Promise<void> {
+    try {
+      const settings = await firstValueFrom(this.hub.get<ResellerSettings>('/resellers/settings'));
+      this.ownPayment.set(settings.stripeConfigured && !!settings.stripePublishableKey);
+    } catch {
+      this.ownPayment.set(null);
     }
   }
 

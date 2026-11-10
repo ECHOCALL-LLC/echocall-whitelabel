@@ -25,6 +25,13 @@ export interface InvoiceDocument {
   content: Buffer;
 }
 
+/** Who issued an invoice: the platform, or the operator running this portal. */
+export type InvoiceSource = 'platform' | 'reseller';
+
+export function isInvoiceSource(value: unknown): value is InvoiceSource {
+  return value === 'platform' || value === 'reseller';
+}
+
 /** Filenames the portal is willing to echo back into a Content-Disposition header. */
 const SAFE_FILENAME = /^[A-Za-z0-9._-]{1,120}\.pdf$/;
 
@@ -53,11 +60,12 @@ export class AccountService {
    * that asks for them; the link it returns otherwise needs a hub session, which
    * the portal deliberately never has.
    */
-  async invoicePdf(user: SessionUser, invoiceId: number): Promise<InvoiceDocument> {
+  async invoicePdf(user: SessionUser, invoiceId: number, source?: InvoiceSource): Promise<InvoiceDocument> {
     if (user.echocallCustomerId === null)
       throw apiError(409, 'customer_not_linked', 'This account is not linked to a customer yet');
     const result = await this.hub.raw('GET', `/billing/invoices/${invoiceId}/pdf`, {
       customerId: user.echocallCustomerId,
+      ...(source ? { query: new URLSearchParams({ source }) } : {}),
       accept: 'binary',
       headers: { accept: 'application/pdf' },
     });

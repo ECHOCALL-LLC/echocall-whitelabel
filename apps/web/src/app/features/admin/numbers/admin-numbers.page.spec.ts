@@ -20,6 +20,16 @@ const FREE = {
   ownerId: null,
 };
 
+/** The operator's own imported number, offered to its customers. */
+const OWN_ON_SALE = {
+  ...FREE,
+  id: 9,
+  phoneNumber: '+4989555666',
+  monthlyPrice: '4.50',
+  ownership: 'partner' as const,
+  isAvailableForPurchase: true,
+};
+
 const TAKEN = {
   phoneNumber: {
     id: 8,
@@ -177,5 +187,52 @@ describe('AdminNumbersPage', () => {
 
     expect(text).toContain(ADMIN_TEXTS.numbers.empty);
     expect(text).toContain(ADMIN_TEXTS.numbers.emptyAssigned);
+  });
+
+  it('offers only the operator’s own numbers for sale and says which are on offer', async () => {
+    const fixture = await render([{ ...FREE, ownership: 'platform' }, OWN_ON_SALE]);
+    const [platform, own] = tableRows(fixture, 'available-table');
+
+    expect(platform.querySelector('[data-testid="sale-start"]')).toBeNull();
+    expect(platform.querySelector('[data-testid="sale-stop"]')).toBeNull();
+    expect(own.querySelector('[data-testid="sale-state"]')?.textContent).toContain(
+      ADMIN_TEXTS.numbers.onSale,
+    );
+    expect(own.querySelector('[data-testid="sale-stop"]')).not.toBeNull();
+  });
+
+  it('puts an own number on sale at the price the dialog asked for', async () => {
+    const own = { ...OWN_ON_SALE, isAvailableForPurchase: false };
+    const fixture = await render([own]);
+    expect(tableRows(fixture, 'available-table')[0].textContent).toContain(ADMIN_TEXTS.numbers.notOnSale);
+    dialogResult = { monthlyPrice: 5 };
+
+    fixture.componentInstance.offer(own);
+    await settle();
+    const sale = http.expectOne('/api/admin/hub/resellers/phone-numbers/9/sale');
+
+    expect(sale.request.method).toBe('PATCH');
+    expect(sale.request.body).toEqual({ onSale: true, monthlyPrice: 5 });
+    sale.flush({ success: true });
+    await settle();
+    await answerLoad();
+  });
+
+  it('takes a number off sale only after the confirmation', async () => {
+    const fixture = await render([OWN_ON_SALE]);
+
+    dialogResult = false;
+    fixture.componentInstance.withdraw(OWN_ON_SALE);
+    await settle();
+    http.expectNone('/api/admin/hub/resellers/phone-numbers/9/sale');
+
+    dialogResult = true;
+    fixture.componentInstance.withdraw(OWN_ON_SALE);
+    await settle();
+    const sale = http.expectOne('/api/admin/hub/resellers/phone-numbers/9/sale');
+    expect(sale.request.body).toEqual({ onSale: false });
+    sale.flush({ success: true });
+    await settle();
+    await answerLoad();
   });
 });

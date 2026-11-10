@@ -45,12 +45,13 @@ describe('PurchaseDialogComponent', () => {
 
   afterEach(() => http.verify());
 
-  async function render() {
+  async function render(instant: unknown[] = []) {
     const fixture = TestBed.createComponent(PurchaseDialogComponent);
     await fixture.whenStable();
     http.expectOne('/api/hub/phone-numbers/countries').flush({
       data: [{ id: 'c-de', name: 'Germany', iso: 'DE', prefix: '49' }],
     });
+    http.expectOne('/api/hub/phone-numbers/instant').flush({ data: instant });
     await new Promise((resolve) => setTimeout(resolve, 0));
     await fixture.whenStable();
     return fixture;
@@ -116,5 +117,37 @@ describe('PurchaseDialogComponent', () => {
     await pending;
 
     expect(closedWith).toMatchObject({ phoneNumberId: 12, kycRequired: true });
+  });
+
+  it('lists the numbers ready at once and buys one from the balance', async () => {
+    const ready = {
+      id: 31,
+      phoneNumber: '+4989555666',
+      friendlyName: 'München',
+      monthlyPrice: '4.50',
+      countryCode: 'DE',
+      numberType: 'local',
+    };
+    const fixture = await render([ready]);
+    fixture.detectChanges();
+    const row = fixture.nativeElement.querySelector('[data-testid="instant-table"] tbody tr');
+    expect(row.textContent).toContain('+4989555666');
+    expect(row.textContent).toContain('4.50');
+    expect(fixture.nativeElement.textContent).toContain(USER_TEXTS.numbers.instantHint);
+
+    const pending = fixture.componentInstance.buyInstant(ready);
+    const request = http.expectOne('/api/hub/phone-numbers/instant/31/purchase');
+    expect(request.request.method).toBe('POST');
+    request.flush({ data: { id: 31, phoneNumber: '+4989555666', monthlyPrice: '4.50' } });
+    await pending;
+
+    expect(closedWith).toEqual({ phoneNumberId: 31, number: '+4989555666', kycRequired: false });
+  });
+
+  it('shows no ready section when there is nothing to buy at once', async () => {
+    const fixture = await render([]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="instant-numbers"]')).toBeNull();
   });
 });

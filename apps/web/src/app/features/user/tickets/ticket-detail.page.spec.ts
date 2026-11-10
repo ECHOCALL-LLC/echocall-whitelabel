@@ -1,7 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { provideTestI18n, USER_TEXTS } from '../../../testing/i18n';
 import { TicketDetailPage } from './ticket-detail.page';
 
@@ -35,14 +37,17 @@ function ticket(status: string) {
 
 describe('TicketDetailPage', () => {
   let http: HttpTestingController;
+  let confirmed: boolean;
 
   beforeEach(async () => {
+    confirmed = true;
     await TestBed.configureTestingModule({
       imports: [TicketDetailPage, provideTestI18n()],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(confirmed) }) } },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ id: 'ticket_5' }) } },
@@ -122,5 +127,34 @@ describe('TicketDetailPage', () => {
 
     expect(fixture.componentInstance.canSend()).toBe(false);
     await fixture.componentInstance.send();
+  });
+
+  it('closes an open request after the confirmation, by its bare number', async () => {
+    const fixture = await render('open');
+    expect(fixture.nativeElement.querySelector('[data-testid="ticket-close"]')).not.toBeNull();
+
+    const pending = fixture.componentInstance.close();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const request = http.expectOne('/api/hub/tickets/5/close');
+    expect(request.request.method).toBe('POST');
+    request.flush({ data: { closed: true } });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne('/api/hub/tickets/ticket_5').flush(ticket('closed'));
+    await pending;
+  });
+
+  it('keeps the request open when the confirmation is declined', async () => {
+    const fixture = await render('open');
+    confirmed = false;
+
+    await fixture.componentInstance.close();
+
+    http.expectNone('/api/hub/tickets/5/close');
+  });
+
+  it('offers no close button on a closed request', async () => {
+    const fixture = await render('closed');
+
+    expect(fixture.nativeElement.querySelector('[data-testid="ticket-close"]')).toBeNull();
   });
 });

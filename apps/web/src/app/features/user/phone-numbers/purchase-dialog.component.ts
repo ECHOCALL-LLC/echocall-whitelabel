@@ -12,7 +12,7 @@ import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { formatMoney } from '../../../core/format/money';
 import { HubService } from '../../../core/hub/hub.service';
-import type { Country, MarketplaceNumber } from '../../../core/hub/hub.models';
+import type { Country, InstantNumber, MarketplaceNumber } from '../../../core/hub/hub.models';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { NotifyService } from '../../../core/notify/notify.service';
 import { NUMBER_TYPE_OPTIONS } from './number-type.options';
@@ -25,9 +25,11 @@ export interface PurchaseResult {
 }
 
 /**
- * Searches the marketplace for a number and buys it. The offer is passed back
- * to the service unchanged: it prices the number itself, so the prices shown
- * here are what the account is charged, net of VAT.
+ * Buys a number. Numbers that are set up already, among them the ones the
+ * operator offers, are listed first and bought at once from the balance.
+ * Below that the marketplace is searched; the offer is passed back to the
+ * service unchanged: it prices the number itself, so the prices shown here
+ * are what the account is charged, net of VAT.
  */
 @Component({
   selector: 'app-purchase-dialog',
@@ -48,6 +50,48 @@ export interface PurchaseResult {
     <ng-container *transloco="let t">
       <h2 mat-dialog-title>{{ t('user.numbers.purchaseTitle') }}</h2>
       <mat-dialog-content>
+        @if (instant().length) {
+          <section data-testid="instant-numbers">
+            <h3 class="part-title">{{ t('user.numbers.instantTitle') }}</h3>
+            <p class="hint">{{ t('user.numbers.instantHint') }}</p>
+            <div class="table-wrap">
+              <table mat-table [dataSource]="instant()" data-testid="instant-table">
+                <ng-container matColumnDef="number">
+                  <th mat-header-cell *matHeaderCellDef>{{ t('user.numbers.number') }}</th>
+                  <td mat-cell *matCellDef="let n" [attr.data-label]="t('user.numbers.number')">
+                    {{ n.phoneNumber }}
+                    @if (n.friendlyName && n.friendlyName !== n.phoneNumber) {
+                      <span class="area">{{ n.friendlyName }}</span>
+                    }
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="monthly">
+                  <th mat-header-cell *matHeaderCellDef>{{ t('user.numbers.monthly') }}</th>
+                  <td mat-cell *matCellDef="let n" [attr.data-label]="t('user.numbers.monthly')">
+                    {{ money(n.monthlyPrice) }}
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let n" class="cell-actions">
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="buyInstant(n)"
+                      [disabled]="busy()"
+                      data-testid="instant-buy"
+                    >
+                      {{ t('user.numbers.buy') }}
+                    </button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="instantColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: instantColumns"></tr>
+              </table>
+            </div>
+          </section>
+          <h3 class="part-title">{{ t('user.numbers.searchTitle') }}</h3>
+        }
         <form class="search" (ngSubmit)="search()">
           <mat-form-field appearance="outline">
             <mat-label>{{ t('user.numbers.country') }}</mat-label>
@@ -158,6 +202,16 @@ export interface PurchaseResult {
     .hint {
       margin: 12px 0 0;
     }
+    .part-title {
+      font: var(--mat-sys-title-small);
+      margin: 8px 0 0;
+    }
+    section {
+      margin-bottom: 24px;
+    }
+    section .hint {
+      margin: 4px 0 8px;
+    }
   `,
 })
 export class PurchaseDialogComponent implements OnInit {
@@ -168,9 +222,11 @@ export class PurchaseDialogComponent implements OnInit {
 
   readonly countries = signal<Country[]>([]);
   readonly offers = signal<MarketplaceNumber[]>([]);
+  readonly instant = signal<InstantNumber[]>([]);
   readonly busy = signal(false);
   readonly searched = signal(false);
   readonly columns = ['number', 'setup', 'monthly', 'actions'];
+  readonly instantColumns = ['number', 'monthly', 'actions'];
   readonly numberTypes = NUMBER_TYPE_OPTIONS;
 
   countryIso = '';
@@ -179,9 +235,10 @@ export class PurchaseDialogComponent implements OnInit {
 
   ngOnInit(): void {
     void this.loadCountries();
+    void this.loadInstant();
   }
 
-  money(value: number): string {
+  money(value: string | number | null | undefined): string {
     return formatMoney(value, this.language.current());
   }
 
@@ -189,6 +246,32 @@ export class PurchaseDialogComponent implements OnInit {
     this.busy.set(true);
     try {
       this.countries.set(await firstValueFrom(this.hub.list<Country>('/phone-numbers/countries')));
+    } catch (err) {
+      this.notify.apiError(err);
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** The ready numbers are an extra: when they cannot be read the search still works. */
+  async loadInstant(): Promise<void> {
+    try {
+      this.instant.set(await firstValueFrom(this.hub.list<InstantNumber>('/phone-numbers/instant')));
+    } catch {
+      this.instant.set([]);
+    }
+  }
+
+  /** Pays the first month from the balance; the number is on the account at once. */
+  async buyInstant(number: InstantNumber): Promise<void> {
+    this.busy.set(true);
+    try {
+      const { data } = await firstValueFrom(
+        this.hub.post<{ data: { id: number; phoneNumber: string } }>(
+          `/phone-numbers/instant/${number.id}/purchase`,
+        ),
+      );
+      this.dialogRef.close({ phoneNumberId: data.id, number: data.phoneNumber, kycRequired: false });
     } catch (err) {
       this.notify.apiError(err);
     } finally {

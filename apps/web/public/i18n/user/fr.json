@@ -272,7 +272,10 @@
       "pending": "Le justificatif est en cours d'examen. Cela peut prendre quelques jours ouvrés.",
       "approved": "Le justificatif a été validé. Le numéro est activé.",
       "rejected": "Le justificatif a été refusé. Veuillez contacter le support."
-    }
+    },
+    "instantTitle": "Disponibles tout de suite",
+    "instantHint": "Ces numéros sont prêts à l'emploi. Le premier mois est payé avec votre solde lors de l'achat, TVA en sus.",
+    "searchTitle": "Rechercher d'autres numéros"
   },
   "models": {
     "tts": {
@@ -728,7 +731,11 @@
       "medium": "Moyenne",
       "high": "Haute",
       "urgent": "Urgente"
-    }
+    },
+    "close": "Clore la demande",
+    "closeTitle": "Clore la demande",
+    "closeMessage": "Clôturez la demande une fois votre problème résolu. Elle n'accepte ensuite plus de réponses et ne peut pas être rouverte. Pour toute nouvelle question, créez une nouvelle demande.",
+    "closed": "La demande est close."
   },
   "notifications": {
     "title": "Notifications",

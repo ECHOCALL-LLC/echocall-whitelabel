@@ -35,6 +35,8 @@ export type UpdateConversation = Schemas['UpdateConversation'];
 
 export type PhoneNumber = Schemas['PhoneNumber'];
 export type MarketplaceNumber = Schemas['MarketplaceNumber'];
+/** A number that is set up already and bought at once from the balance, among them the operator's own on offer. */
+export type InstantNumber = ListItem<GetBody<'/phone-numbers/instant'>>;
 export type Country = Schemas['Country'];
 export type KycRequirement = Schemas['KycRequirement'];
 

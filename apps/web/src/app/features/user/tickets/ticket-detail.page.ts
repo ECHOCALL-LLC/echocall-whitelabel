@@ -2,6 +2,7 @@ import { Component, computed, inject, type OnInit, signal } from '@angular/core'
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -12,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import type { Ticket, TicketMessage } from '../../../core/hub/hub.models';
 import { HubService } from '../../../core/hub/hub.service';
 import { NotifyService } from '../../../core/notify/notify.service';
+import { ConfirmDialogComponent, type ConfirmDialogData } from '../../../shared/confirm-dialog.component';
 import { LocalDatePipe } from '../../../shared/local-date.pipe';
 
 /** Roles that answer a ticket from the operator's side. */
@@ -36,10 +38,24 @@ const SUPPORT_ROLES = ['admin', 'reseller'];
     <ng-container *transloco="let t">
       <div class="page-head">
         <h1 class="page-title">{{ ticket()?.subject || t('user.tickets.title') }}</h1>
-        <a mat-stroked-button routerLink="/app/tickets">
-          <mat-icon>arrow_back</mat-icon>
-          {{ t('actions.back') }}
-        </a>
+        <div class="head-actions">
+          @if (canReply()) {
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="close()"
+              [disabled]="sending()"
+              data-testid="ticket-close"
+            >
+              <mat-icon>check_circle</mat-icon>
+              {{ t('user.tickets.close') }}
+            </button>
+          }
+          <a mat-stroked-button routerLink="/app/tickets">
+            <mat-icon>arrow_back</mat-icon>
+            {{ t('actions.back') }}
+          </a>
+        </div>
       </div>
 
       @if (loading()) {
@@ -120,6 +136,12 @@ const SUPPORT_ROLES = ['admin', 'reseller'];
     </ng-container>
   `,
   styles: `
+    .head-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
     .description {
       margin: 16px 0 0;
       white-space: pre-wrap;
@@ -169,6 +191,7 @@ export class TicketDetailPage implements OnInit {
   private readonly hub = inject(HubService);
   private readonly route = inject(ActivatedRoute);
   private readonly notify = inject(NotifyService);
+  private readonly dialog = inject(MatDialog);
 
   readonly id = signal('');
   readonly ticket = signal<Ticket | null>(null);
@@ -207,6 +230,35 @@ export class TicketDetailPage implements OnInit {
     try {
       await firstValueFrom(this.hub.post(`/tickets/${this.id()}/messages`, { message: this.reply().trim() }));
       this.reply.set('');
+      await this.load();
+    } catch (err) {
+      this.notify.apiError(err);
+    } finally {
+      this.sending.set(false);
+    }
+  }
+
+  /**
+   * Closes the request for good once the issue is solved. A closed request
+   * takes no more replies and cannot be reopened, so the confirmation says so.
+   */
+  async close(): Promise<void> {
+    const data: ConfirmDialogData = {
+      titleKey: 'user.tickets.closeTitle',
+      messageKey: 'user.tickets.closeMessage',
+      confirmKey: 'user.tickets.close',
+    };
+    const confirmed = await firstValueFrom(
+      this.dialog
+        .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, { data })
+        .afterClosed(),
+    );
+    if (!confirmed) return;
+    this.sending.set(true);
+    try {
+      // The close call takes the bare number; the prefix the list carries is dropped.
+      await firstValueFrom(this.hub.post(`/tickets/${this.id().replace(/^ticket_/, '')}/close`));
+      this.notify.success('user.tickets.closed');
       await this.load();
     } catch (err) {
       this.notify.apiError(err);

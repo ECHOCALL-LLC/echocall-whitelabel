@@ -272,7 +272,10 @@
       "pending": "The submission is being reviewed. This can take a few working days.",
       "approved": "The submission was approved. The number is cleared for traffic.",
       "rejected": "The submission was rejected. Please contact support."
-    }
+    },
+    "instantTitle": "Ready now",
+    "instantHint": "These numbers are ready to use at once. The first month is paid from your balance when you buy, plus VAT.",
+    "searchTitle": "Search for more numbers"
   },
   "models": {
     "tts": {
@@ -728,7 +731,11 @@
       "medium": "Medium",
       "high": "High",
       "urgent": "Urgent"
-    }
+    },
+    "close": "Close request",
+    "closeTitle": "Close request",
+    "closeMessage": "Close the request once your issue is solved. It then takes no more replies and cannot be reopened. For new questions, open a new request.",
+    "closed": "The request is closed."
   },
   "notifications": {
     "title": "Notifications",

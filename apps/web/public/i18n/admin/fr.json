@@ -250,6 +250,14 @@
       "standard": "Standard",
       "premium": "Premium",
       "enterprise": "Enterprise"
+    },
+    "numbers": {
+      "title": "Numéros de téléphone",
+      "intro": "Une majoration en pourcentage sur les frais d'activation et le prix mensuel des numéros de la plateforme. Votre solde est débité du prix de la plateforme, la différence vous revient.",
+      "label": "Majoration",
+      "invalid": "Veuillez saisir une majoration entre 0 et 500 %.",
+      "example": "Exemple : un numéro à {{base}} par mois coûte {{price}} HT à vos clients.",
+      "platformBilled": "La majoration s'applique dès que vous avez enregistré vos propres coordonnées de paiement. D'ici là, vos clients achètent les numéros au prix de la plateforme."
     }
   },
   "subscriptions": {
@@ -518,6 +526,24 @@
       },
       "secretHint": "Les identifiants ne sont transmis qu'à la téléphonie et ne sont plus affichés ensuite.",
       "submit": "Reprendre le numéro"
+    },
+    "sale": "Vente",
+    "onSale": "En vente",
+    "notOnSale": "Non proposé",
+    "offer": "Proposer",
+    "changePrice": "Modifier le prix",
+    "stopSale": "Arrêter l'offre",
+    "offered": "Vos clients peuvent désormais acheter le {{number}}.",
+    "saleStopped": "Le {{number}} n'est plus proposé.",
+    "stopSaleTitle": "Arrêter l'offre",
+    "stopSaleMessage": "Vos clients ne pourront plus acheter le {{number}}. Il reste dans le stock et peut être proposé à nouveau à tout moment.",
+    "saleDialog": {
+      "title": "Proposer le numéro",
+      "intro": "Vos clients peuvent acheter eux-mêmes le {{number}} à ce prix mensuel. Ils paient avec leur solde.",
+      "price": "Prix mensuel HT",
+      "priceHint": "Au maximum 1 000 €. La TVA est ajoutée lors de l'achat.",
+      "invalid": "Veuillez saisir un prix mensuel supérieur à 0 et au maximum 1 000 €.",
+      "submit": "Proposer"
     }
   },
   "users": {

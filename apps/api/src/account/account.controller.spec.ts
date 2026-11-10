@@ -121,6 +121,23 @@ describe('AccountController', () => {
     expect(call?.headers.get('x-echocall-customer')).toBe('501');
   });
 
+  it('asks the hub for the invoice of the source the list row named', async () => {
+    const res = await api()
+      .get('/api/account/invoices/7/pdf?source=reseller')
+      .set('Cookie', user.cookie)
+      .responseType('blob');
+    expect(res.status).toBe(200);
+    expect(t.hub.calls.at(-1)?.path).toBe('/billing/invoices/7/pdf?source=reseller');
+  });
+
+  it('rejects a source the hub does not know, without asking the hub', async () => {
+    const before = t.hub.calls.length;
+    const res = await api().get('/api/account/invoices/7/pdf?source=other').set('Cookie', user.cookie);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_source');
+    expect(t.hub.calls.length).toBe(before);
+  });
+
   it('rejects an invoice id that is not a number', async () => {
     const res = await api().get('/api/account/invoices/7x/pdf').set('Cookie', user.cookie);
     expect(res.status).toBe(400);

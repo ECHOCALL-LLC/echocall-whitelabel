@@ -250,6 +250,14 @@
       "standard": "Standard",
       "premium": "Premium",
       "enterprise": "Enterprise"
+    },
+    "numbers": {
+      "title": "Telefonnummern",
+      "intro": "Ein Aufschlag in Prozent auf Einrichtung und Monatspreis der Plattformnummern. Ihr Guthaben wird mit dem Plattformpreis belastet, die Differenz gehört Ihnen.",
+      "label": "Aufschlag",
+      "invalid": "Bitte einen Aufschlag zwischen 0 und 500 % eingeben.",
+      "example": "Beispiel: Eine Nummer für {{base}} im Monat kostet Ihre Kunden {{price}} netto.",
+      "platformBilled": "Der Aufschlag gilt, sobald Sie eigene Zahlungsdaten hinterlegt haben. Bis dahin kaufen Ihre Kunden Nummern zum Plattformpreis."
     }
   },
   "subscriptions": {
@@ -518,6 +526,24 @@
       },
       "secretHint": "Zugangsdaten werden nur an die Telefonie weitergereicht und danach nicht mehr angezeigt.",
       "submit": "Nummer übernehmen"
+    },
+    "sale": "Verkauf",
+    "onSale": "Im Angebot",
+    "notOnSale": "Nicht angeboten",
+    "offer": "Anbieten",
+    "changePrice": "Preis ändern",
+    "stopSale": "Angebot beenden",
+    "offered": "Die Nummer {{number}} wird Ihren Kunden angeboten.",
+    "saleStopped": "Die Nummer {{number}} wird nicht mehr angeboten.",
+    "stopSaleTitle": "Angebot beenden",
+    "stopSaleMessage": "Ihre Kunden können die Nummer {{number}} danach nicht mehr kaufen. Sie bleibt im Bestand und lässt sich jederzeit wieder anbieten.",
+    "saleDialog": {
+      "title": "Nummer anbieten",
+      "intro": "Ihre Kunden können die Nummer {{number}} zu diesem Monatspreis selbst kaufen. Bezahlt wird aus ihrem Guthaben.",
+      "price": "Monatspreis netto",
+      "priceHint": "Höchstens 1.000 €. Die Umsatzsteuer kommt beim Kauf hinzu.",
+      "invalid": "Bitte einen Monatspreis über 0 und höchstens 1.000 € eingeben.",
+      "submit": "Anbieten"
     }
   },
   "users": {
