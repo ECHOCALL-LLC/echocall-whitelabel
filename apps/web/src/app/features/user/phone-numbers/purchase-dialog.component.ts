@@ -60,8 +60,8 @@ export interface PurchaseResult {
                   <th mat-header-cell *matHeaderCellDef>{{ t('user.numbers.number') }}</th>
                   <td mat-cell *matCellDef="let n" [attr.data-label]="t('user.numbers.number')">
                     {{ n.phoneNumber }}
-                    @if (n.friendlyName && n.friendlyName !== n.phoneNumber) {
-                      <span class="area">{{ n.friendlyName }}</span>
+                    @if (area(n); as place) {
+                      <span class="area">{{ place }}</span>
                     }
                   </td>
                 </ng-container>
@@ -240,6 +240,13 @@ export class PurchaseDialogComponent implements OnInit {
 
   money(value: string | number | null | undefined): string {
     return formatMoney(value, this.language.current());
+  }
+
+  /** The place of a ready number. The hub names them "<place> <dash> <number>", so the number is cut off. */
+  area(number: InstantNumber): string {
+    const name = (number.friendlyName ?? '').trim();
+    const place = name.endsWith(number.phoneNumber) ? name.slice(0, -number.phoneNumber.length) : name;
+    return place.replace(/[\s–—:-]+$/u, '').trim();
   }
 
   async loadCountries(): Promise<void> {

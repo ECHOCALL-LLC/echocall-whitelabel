@@ -144,6 +144,33 @@ describe('PurchaseDialogComponent', () => {
     expect(closedWith).toEqual({ phoneNumberId: 31, number: '+4989555666', kycRequired: false });
   });
 
+  it('names only the place when the stored name repeats the number', async () => {
+    const fixture = await render([
+      {
+        id: 24,
+        phoneNumber: '13375902620',
+        friendlyName: 'Abbeville — 13375902620',
+        monthlyPrice: '5.00',
+        countryCode: 'US',
+        numberType: 'local',
+      },
+      {
+        id: 25,
+        phoneNumber: '4930123456',
+        friendlyName: '4930123456',
+        monthlyPrice: '5.00',
+        countryCode: 'DE',
+        numberType: 'local',
+      },
+    ]);
+    fixture.detectChanges();
+    const areas = [...fixture.nativeElement.querySelectorAll('[data-testid="instant-table"] .area')].map(
+      (el: Element) => el.textContent?.trim(),
+    );
+
+    expect(areas).toEqual(['Abbeville']);
+  });
+
   it('shows no ready section when there is nothing to buy at once', async () => {
     const fixture = await render([]);
     fixture.detectChanges();
