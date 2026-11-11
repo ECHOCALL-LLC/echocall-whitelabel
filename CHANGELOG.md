@@ -7,6 +7,47 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- A markup on phone numbers. The price panel sets it from 0 to 500 percent on top of the
+  service's price, and says so when it cannot apply because no own payment account is set
+  up yet.
+- Own numbers for sale. The operator offers a number of their own to the customers at a
+  monthly price, changes that price later or takes the number off sale again.
+- The purchase dialog of the customer portal lists numbers that are set up already, the
+  operator's own among them, and buys one at once from the balance.
+- A customer can close a support request.
+- These need API version 1.21.0 at the service.
+
+### Fixed
+
+- Downloading an invoice PDF on the account page no longer fails for an invoice the
+  operator issued. The service numbers its own invoices and the operator's independently,
+  so the same id can exist twice; the portal now says which list the invoice comes from
+  and refuses any other value with `invalid_source`.
+- The purchase dialog showed a ready number twice with a dash in between. It now shows the
+  number and its place alone.
+
+### Changed
+
+- The typed client was regenerated from API version 1.21.0 (98 operations more than
+  1.18.0, none removed).
+- Node.js 22.23.4 is the minimum (`engines`, `.nvmrc`), see Security.
+- The update commands in the self-hosting and operating guides build with `--pull`, so an
+  update also fetches the current Node 22 base image instead of reusing a cached one.
+- Dependencies updated, among them Angular 22.2.3 with a single hoisted runtime, NestJS
+  12.4, kysely 0.29.8 and mysql2 3.24.6, and in the development tools Vite 8.3.4,
+  Playwright 1.65, jsdom 31 and Vitest 5.1.
+
+### Security
+
+- Node.js 22.23.4 fixes a flaw in the Brotli decoder (CVE-2026-111497) that compressed
+  input from outside, such as a request body, can reach. An image built from a cached
+  Node 22 base image older than 21 October 2026 still carries it: rebuild with
+  `docker compose build --pull`.
+- Patched releases of express 5.3.0, body-parser 2.4.0, multer 2.5.0, qs 6.17.1 and
+  nodemailer 10.5.0 after new advisories; `npm audit --omit=dev` is clean.
+
 ## [0.4.0] - 2026-10-21
 
 ### Added
@@ -259,8 +300,8 @@ link below points at the commit that carried this version.
 - Documentation: README, architecture, configuration, self-hosting, database and operating
   guides, a written security review, security policy, contribution guidelines.
 
-[Unreleased]: https://github.com/kristiangasic/echocall-whitelabel/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/kristiangasic/echocall-whitelabel/releases/tag/v0.4.0
-[0.3.0]: https://github.com/kristiangasic/echocall-whitelabel/releases/tag/v0.3.0
-[0.2.0]: https://github.com/kristiangasic/echocall-whitelabel/releases/tag/v0.2.0
-[0.1.0]: https://github.com/kristiangasic/echocall-whitelabel/tree/c41c033
+[Unreleased]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases/tag/v0.4.0
+[0.3.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases/tag/v0.3.0
+[0.2.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases/tag/v0.2.0
+[0.1.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/tree/c41c033

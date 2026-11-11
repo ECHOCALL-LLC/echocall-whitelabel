@@ -5,7 +5,7 @@
   "description": "Self-hosted, white-label customer portal and admin panel on the EchoCall public API",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=22.22.3",
+    "node": ">=22.23.4",
     "npm": ">=12"
   },
   "workspaces": [

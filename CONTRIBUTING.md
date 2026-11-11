@@ -6,7 +6,7 @@ By taking part you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Setup
 
-- Node.js 22.22.3+ and npm 12 (`npm install -g npm@12`; the lockfile is written by npm 12
+- Node.js 22.23.4+ and npm 12 (`npm install -g npm@12`; the lockfile is written by npm 12
   and older versions fail to install it).
 - `npm ci` at the repository root (npm workspaces).
 - The `apps/api` tests need a disposable database, by default PostgreSQL on

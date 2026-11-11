@@ -5,10 +5,10 @@ and admin panel under your own brand and domain, invite your own customers, and 
 voice and chat agents as your own product. Angular and NestJS, Apache-2.0 licensed, up and
 running with one Docker command.
 
-[![CI](https://github.com/kristiangasic/echocall-whitelabel/actions/workflows/ci.yml/badge.svg)](https://github.com/kristiangasic/echocall-whitelabel/actions/workflows/ci.yml)
+[![CI](https://github.com/ECHOCALL-LLC/echocall-whitelabel/actions/workflows/ci.yml/badge.svg)](https://github.com/ECHOCALL-LLC/echocall-whitelabel/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/kristiangasic/echocall-whitelabel?display_name=tag&sort=semver)](https://github.com/kristiangasic/echocall-whitelabel/releases)
-[![Node](https://img.shields.io/badge/node-22.22.3%2B-339933)](https://nodejs.org)
+[![Release](https://img.shields.io/github/v/release/ECHOCALL-LLC/echocall-whitelabel?display_name=tag&sort=semver)](https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases)
+[![Node](https://img.shields.io/badge/node-22.23.4%2B-339933)](https://nodejs.org)
 
 > **Read this first.** The portal is the interface, not the telephony. Every AI feature it
 > offers is served by the [EchoCall](https://echocall.de) platform through a single
@@ -47,12 +47,14 @@ filled with invented example customers (`npm run screenshots` regenerates them).
 - You (the operator) sign in to the **admin panel** and run the business there: customers
   (create an EchoCall account and its portal login in one step, top up and withdraw
   balance, read transactions and usage), plans and pricing, subscriptions, add-ons,
-  invoices and their PDF, phone numbers, support tickets, revenue and cost analytics,
-  the agents your customers built, your own company data and payment keys, plus portal
-  branding, mail settings and the audit log.
+  invoices and their PDF, phone numbers (your markup on them, and your own numbers
+  offered at a monthly price), support tickets, revenue and cost analytics, the agents
+  your customers built, your own company data and payment keys, plus portal branding,
+  mail settings and the audit log.
 - Your customers sign in to the **customer portal**: voice agents and chatbots, phone
-  numbers, conversations with transcripts, analytics, knowledge base, integrations,
-  campaigns and support requests, next to usage, balance, plan and invoices.
+  numbers (ready ones bought at once from the balance), conversations with transcripts,
+  analytics, knowledge base, integrations, campaigns and support requests, next to usage,
+  balance, plan and invoices.
 - You can **open the portal as one of your customers** to see what they see. The session
   carries the customer's role while it lasts, so the administration stays out of reach, and
   both the start and the end are written to your audit log.
@@ -67,14 +69,14 @@ filled with invented example customers (`npm run screenshots` regenerates them).
   monthly fee on the pay as you go plan). The account is ready the moment that is done:
   nothing to apply for, nobody to write to. Then create the key under **Developer**; the
   portal uses it to create customer accounts on your behalf.
-- Docker (recommended), or Node.js 22.22.3+ with npm 12 for a manual install
+- Docker (recommended), or Node.js 22.23.4+ with npm 12 for a manual install
 - Optional: your own PostgreSQL 14+, MariaDB 10.6+ or MySQL 8 server
   (the Docker Compose setup ships a PostgreSQL container)
 
 ## Quick start with Docker Compose
 
 ```bash
-git clone https://github.com/kristiangasic/echocall-whitelabel.git
+git clone https://github.com/ECHOCALL-LLC/echocall-whitelabel.git
 cd echocall-whitelabel
 cp .env.example .env
 # Edit .env: set APP_URL, APP_SECRET, ECHOCALL_API_KEY and DB_PASSWORD
@@ -161,7 +163,7 @@ docker compose exec app node apps/api/dist/cli/sign-in-link.js you@example.com
 
 ## Development
 
-Requires Node.js 22.22.3+ and **npm 12** (`npm install -g npm@12`; the lockfile is written
+Requires Node.js 22.23.4+ and **npm 12** (`npm install -g npm@12`; the lockfile is written
 by npm 12 and older versions fail to install it).
 
 ```bash

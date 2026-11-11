@@ -3,7 +3,7 @@
 ## Docker Compose (recommended)
 
 ```bash
-git clone https://github.com/kristiangasic/echocall-whitelabel.git
+git clone https://github.com/ECHOCALL-LLC/echocall-whitelabel.git
 cd echocall-whitelabel
 cp .env.example .env
 # set APP_URL, APP_SECRET, ECHOCALL_API_KEY, DB_PASSWORD
@@ -99,7 +99,8 @@ they should not be reachable from the internet.
 ```bash
 git fetch --tags
 git checkout v0.4.0          # or: git pull, for the tip of main
-docker compose up -d --build
+docker compose build --pull  # also pulls the current Node 22 base image
+docker compose up -d
 ```
 
 Take a database dump first. Migrations run at startup, before the server listens, and a
