@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-11
+
 ### Added
 
 - A markup on phone numbers. The price panel sets it from 0 to 500 percent on top of the
@@ -38,6 +40,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Dependencies updated, among them Angular 22.2.3 with a single hoisted runtime, NestJS
   12.4, kysely 0.29.8 and mysql2 3.24.6, and in the development tools Vite 8.3.4,
   Playwright 1.65, jsdom 31 and Vitest 5.1.
+- The upgrade needs no database migration and no new setting.
 
 ### Security
 
@@ -46,7 +49,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Node 22 base image older than 21 October 2026 still carries it: rebuild with
   `docker compose build --pull`.
 - Patched releases of express 5.3.0, body-parser 2.4.0, multer 2.5.0, qs 6.17.1 and
-  nodemailer 10.5.0 after new advisories; `npm audit --omit=dev` is clean.
+  nodemailer 10.5.0 after new advisories; `npm audit --omit=dev` is clean. In the
+  development tools `fast-uri` moved to 3.1.9.
 
 ## [0.4.0] - 2026-10-21
 
@@ -300,7 +304,8 @@ link below points at the commit that carried this version.
 - Documentation: README, architecture, configuration, self-hosting, database and operating
   guides, a written security review, security policy, contribution guidelines.
 
-[Unreleased]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases/tag/v0.5.0
 [0.4.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases/tag/v0.4.0
 [0.3.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases/tag/v0.3.0
 [0.2.0]: https://github.com/ECHOCALL-LLC/echocall-whitelabel/releases/tag/v0.2.0

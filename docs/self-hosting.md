@@ -98,7 +98,7 @@ they should not be reachable from the internet.
 
 ```bash
 git fetch --tags
-git checkout v0.4.0          # or: git pull, for the tip of main
+git checkout v0.5.0          # or: git pull, for the tip of main
 docker compose build --pull  # also pulls the current Node 22 base image
 docker compose up -d
 ```

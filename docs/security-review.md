@@ -2,7 +2,7 @@
 
 Reviewed on 2026-09-17 against the state of `main` before the 0.1.0 release, and
 updated on 2026-09-18, when passwords were taken out of the product altogether. The
-dependency audit was repeated on 2026-10-21 for 0.4.0.
+dependency audit was repeated on 2026-10-21 for 0.4.0 and on 2026-11-11 for 0.5.0.
 
 How it was reviewed: every route, guard and service of the back end was read, the test
 suites of both applications were run, the browser smoke run was executed against a built
@@ -211,6 +211,15 @@ On 2026-10-21, for 0.4.0, `npm audit --omit=dev` still reports 0 vulnerabilities
 image: `vite` (through `@angular/build` and Vitest), `@angular/build` itself and
 `source-map-js` (through the coverage reporter). They are fixed by moving those tools to
 their next releases, which the dependency updates bring.
+
+On 2026-11-11, for 0.5.0, `npm audit --omit=dev` reports 0 vulnerabilities again, after
+express, body-parser, multer, qs and nodemailer moved to patched releases. Node.js 22.23.4
+became the minimum because older 22 releases carry a flaw in the Brotli decoder
+(CVE-2026-111497). The full `npm audit` reports one remaining advisory, in lint tooling
+that never ships in the image: `minimatch` 10 (through ESLint and typescript-eslint, a
+denial of service with crafted glob patterns) is fixed only in minimatch 11, which those
+tools do not accept yet. The lint run reads only the repository's own files. `fast-uri`
+(through the Nest CLI) was fixed with 3.1.9 in this release.
 
 ## What this review changed
 
