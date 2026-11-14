@@ -51,6 +51,25 @@ describe('translation files', () => {
     });
   }
 
+  it('has a text for every code a test call or voice sample can fail with', () => {
+    // From the portal API (voice.service.ts, http-exception.filter.ts) and the service's
+    // test call endpoint. Without a text the customer sees only errors.unknown.
+    const codes = [
+      'agent_not_ready',
+      'preview_in_progress',
+      'quota_exceeded',
+      'call_unavailable',
+      'preview_unavailable',
+      'service_unavailable',
+    ];
+    for (const [lang, file] of Object.entries(SCOPES.common)) {
+      const errors = (file as { errors: Record<string, string> }).errors;
+      for (const code of codes) {
+        expect(errors[code]?.trim(), `${lang} errors.${code}`).toBeTruthy();
+      }
+    }
+  });
+
   it('keeps the texts customers see free of the service brand', () => {
     for (const scope of ['common', 'user'] as const) {
       for (const [lang, file] of Object.entries(SCOPES[scope])) {

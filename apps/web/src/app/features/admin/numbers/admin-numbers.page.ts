@@ -27,8 +27,9 @@ import {
 
 /**
  * A number in the pool. The hub also says whose number it is and whether the
- * operator offers it to its customers; the API reference does not list these
- * two fields yet, so they are declared here and read defensively.
+ * operator offers it to its customers. The API reference lists these two fields
+ * since 1.22.0; hubs before that sent them undocumented, so they stay optional
+ * here and are read defensively.
  */
 export type PoolNumber = PhoneNumber & {
   ownership?: 'platform' | 'partner' | 'customer' | null;

@@ -7,6 +7,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- A test call or voice sample that could not start showed only the generic error. The
+  portal now says what went wrong: the agent has not been saved yet, a test call is already
+  running on the account, no voice minutes are left, or the service is not available right
+  now. In English, German and French.
+
+### Changed
+
+- The typed client was regenerated from API version 1.22.0 (no operation added or removed).
+  The number inventory now documents whose number it is and whether customers can buy it,
+  closing a ticket takes `ticket_12` as well as the bare number, and the test call says
+  that its time limit shrinks when fewer voice minutes are left.
+
 ## [0.5.0] - 2026-11-11
 
 ### Added

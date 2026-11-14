@@ -252,6 +252,12 @@
     "destination_changed": "La destination a changé. Saisissez à nouveau le mot de passe ou la clé.",
     "masked_without_stored_value": "Une valeur secrète manque. Saisissez-la à nouveau.",
     "conflict": "Ce n'est pas possible dans l'état actuel, ou cela existe déjà.",
+    "agent_not_ready": "Cet agent n'a pas encore été enregistré. Enregistrez-le une fois, puis relancez l'appel de test.",
+    "preview_in_progress": "Un appel de test est déjà en cours sur ce compte. Terminez-le, puis réessayez.",
+    "quota_exceeded": "Il ne reste plus de minutes vocales sur ce compte.",
+    "call_unavailable": "L'appel de test n'a pas pu être lancé. Veuillez réessayer dans un instant.",
+    "preview_unavailable": "L'échantillon de voix n'est pas disponible pour le moment.",
+    "service_unavailable": "Le service est momentanément indisponible. Veuillez réessayer dans un instant.",
     "invalid_config": "Certains paramètres ne sont pas valides. Vérifiez-les et saisissez à nouveau un secret enregistré si vous avez modifié ce à quoi il appartient.",
     "tool_not_permitted": "Cette action n'est pas autorisée par les autorisations du service connecté."
   }

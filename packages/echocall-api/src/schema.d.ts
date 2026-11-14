@@ -293,7 +293,7 @@ export interface paths {
         put?: never;
         /**
          * Start a browser test call with an agent
-         * @description Opens a test call to this agent from a browser, so a customer can hear their agent before it answers a real caller. The response carries no address of the speech engine: `streamPath` is a websocket path on this API host, and this server relays the audio in a format of its own, which is what keeps a portal built on this API free of any third-party name. Join `streamPath` to the API host and swap the scheme for `wss:` to get the address to open. The path may be opened once and within `expiresInSeconds`; afterwards it is refused with 403 and a new call has to be claimed here. On the socket the browser receives `ready` with the audio formats to use, then `audio`, `agent`, `user` and `interrupt` frames, and finally `end`; it sends `audio` frames of microphone data and `end` when the caller hangs up. A test call reaches the real agent and is billed like any other call, so the voice minutes of the account owning the agent are checked first and the call is cut off after `maxSeconds`. An agent that has never been published answers 409: save it once, then try again. This endpoint takes no request body.
+         * @description Opens a test call to this agent from a browser, so a customer can hear their agent before it answers a real caller. The response carries no address of the speech engine: `streamPath` is a websocket path on this API host, and this server relays the audio in a format of its own, which is what keeps a portal built on this API free of any third-party name. Join `streamPath` to the API host and swap the scheme for `wss:` to get the address to open. The path may be opened once and within `expiresInSeconds`; afterwards it is refused with 403 and a new call has to be claimed here. On the socket the browser receives `ready` with the audio formats to use, then `audio`, `agent`, `user` and `interrupt` frames, and finally `end`; it sends `audio` frames of microphone data and `end` when the caller hangs up. A test call reaches the real agent and is billed like any other call, so the voice minutes of the account owning the agent are checked first and the call is cut off after `maxSeconds`, which is at most 300 and shorter when fewer minutes are left. One test call per account runs at a time, shared with the dashboard: while one is on the line a new claim answers 409 with the code `preview_in_progress`, and a claimed path that was never opened is replaced by the next claim. An agent that has never been published answers 409 with the code `agent_not_ready`: save it once, then try again. This endpoint takes no request body.
          *
          *     Not available over MCP: it opens a browser audio stream.
          */
@@ -331,7 +331,7 @@ export interface paths {
                             };
                             /** @description How long the path stays open for the first connection. */
                             expiresInSeconds: number;
-                            /** @description How long the call may run before the server hangs up. Count it down in the interface as well. */
+                            /** @description How long the call may run before the server hangs up: 300 at most, less when the account has fewer voice minutes left. Count it down in the interface as well. */
                             maxSeconds: number;
                             /** @description Websocket path on this API host, including the one-time ticket. Relative on purpose: join it to the host you call this API on. */
                             streamPath: string;
@@ -4466,7 +4466,7 @@ export interface paths {
         };
         /**
          * List unassigned phone numbers
-         * @description Returns the reseller inventory that is not yet handed out: every number booked under the reseller whose owner is still empty. Results are sorted by the number itself in ascending order and are not paginated, so the whole inventory comes back in one response. Only public columns are selected: wholesale cost, carrier identifiers and the SIP trunk usernames and passwords are never part of the payload. The key used must belong to a reseller account.
+         * @description Returns the reseller inventory that is not yet handed out: every number booked under the reseller whose owner is still empty. Results are sorted by the number itself in ascending order and are not paginated, so the whole inventory comes back in one response. Only public columns are selected: wholesale cost, carrier identifiers and the SIP trunk usernames and passwords are never part of the payload. Each entry also says whose number it is and, for your own imported numbers, whether your customers can buy it (see `PATCH /resellers/phone-numbers/{id}/sale`). The key used must belong to a reseller account.
          *
          *     MCP tool: `reseller_list_available_phone_numbers` (read only).
          */
@@ -18307,7 +18307,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["PhoneNumber"][];
+                        data: (components["schemas"]["PhoneNumber"] & {
+                            /** @description True while your customers can buy the number at once at its `monthlyPrice`. */
+                            isAvailableForPurchase?: boolean;
+                            /**
+                             * @description Whose number it is: `partner` is one you imported yourself and the only kind you can put on sale, `platform` comes from our stock.
+                             * @enum {string}
+                             */
+                            ownership?: "platform" | "partner" | "customer";
+                        })[];
                     };
                 };
             };
@@ -20280,7 +20288,7 @@ export interface operations {
             };
             path: {
                 /** @description ticketId */
-                ticketId: number;
+                ticketId: string;
             };
             cookie?: never;
         };

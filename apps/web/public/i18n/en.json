@@ -252,6 +252,12 @@
     "destination_changed": "The destination changed. Enter the password or key again.",
     "masked_without_stored_value": "A secret value is missing. Enter it again.",
     "conflict": "This is not possible in its current state, or it already exists.",
+    "agent_not_ready": "This agent has not been saved yet. Save it once, then start the test call again.",
+    "preview_in_progress": "A test call is already running on this account. End it, then try again.",
+    "quota_exceeded": "There are no voice minutes left on this account.",
+    "call_unavailable": "The test call could not be started. Please try again in a moment.",
+    "preview_unavailable": "The voice sample is not available right now.",
+    "service_unavailable": "The service is not available right now. Please try again in a moment.",
     "invalid_config": "Some settings are not valid. Check them, and enter a stored secret again if you changed what it belongs to.",
     "tool_not_permitted": "This action is not allowed by the permissions of the connected service."
   }

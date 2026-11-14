@@ -252,6 +252,12 @@
     "destination_changed": "Das Ziel hat sich geändert. Bitte das Passwort bzw. den Schlüssel erneut eingeben.",
     "masked_without_stored_value": "Ein geheimer Wert fehlt. Bitte erneut eingeben.",
     "conflict": "Das ist im aktuellen Zustand nicht möglich oder existiert bereits.",
+    "agent_not_ready": "Dieser Agent wurde noch nicht gespeichert. Speichern Sie ihn einmal und starten Sie den Testanruf dann erneut.",
+    "preview_in_progress": "Auf diesem Konto läuft bereits ein Testanruf. Beenden Sie ihn und versuchen Sie es dann erneut.",
+    "quota_exceeded": "Auf diesem Konto sind keine Sprachminuten mehr übrig.",
+    "call_unavailable": "Der Testanruf konnte nicht gestartet werden. Bitte versuchen Sie es gleich noch einmal.",
+    "preview_unavailable": "Die Stimmprobe ist gerade nicht verfügbar.",
+    "service_unavailable": "Der Dienst ist gerade nicht verfügbar. Bitte versuchen Sie es gleich noch einmal.",
     "invalid_config": "Einige Einstellungen sind ungültig. Bitte prüfen Sie sie und geben Sie einen gespeicherten geheimen Wert erneut ein, wenn Sie geändert haben, wozu er gehört.",
     "tool_not_permitted": "Diese Aktion ist in den Berechtigungen des verbundenen Dienstes nicht freigegeben."
   }
