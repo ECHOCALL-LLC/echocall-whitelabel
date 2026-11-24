@@ -6,7 +6,14 @@ node_modules
 **/.angular
 .env
 .env.*
+**/.env
+**/.env.*
 !.env.example
+!**/.env.example
+*.pem
+**/*.pem
+*.key
+**/*.key
 docker
 docs
 *.log
