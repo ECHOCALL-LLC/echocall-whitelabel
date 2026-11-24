@@ -72,6 +72,7 @@ describe('ConversationDetailPage', () => {
       fromNumber: '+4930111111',
       toNumber: '+4930222222',
       duration: 65,
+      billedMinutes: 2,
       status: 'completed',
       transcription: 'Agent: Guten Tag.',
       createdAt: '2026-09-17T08:00:00.000Z',
@@ -82,6 +83,30 @@ describe('ConversationDetailPage', () => {
     );
     expect(fixture.nativeElement.querySelector('[data-testid="close-conversation"]')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain(USER_TEXTS.conversations.directions.outbound);
+    expect(fixture.nativeElement.querySelector('[data-testid="conversation-status"]').textContent).toContain(
+      USER_TEXTS.conversations.statuses.completed,
+    );
+    const billed = fixture.nativeElement.querySelector('[data-testid="conversation-billed"]').textContent;
+    expect(billed).toContain(USER_TEXTS.conversations.billedMinutes.replace('{{count}}', '2'));
+    expect(billed).toContain(USER_TEXTS.conversations.billedRule);
+  });
+
+  it('says a call that never connected cost nothing', async () => {
+    const fixture = await setup('32', {
+      type: 'voice',
+      id: 32,
+      direction: 'outbound',
+      fromNumber: '+4930111111',
+      toNumber: '+4930222222',
+      duration: 0,
+      billedMinutes: 0,
+      status: 'no-answer',
+      createdAt: '2026-09-17T08:00:00.000Z',
+    });
+
+    expect(fixture.nativeElement.querySelector('[data-testid="conversation-billed"]').textContent).toContain(
+      USER_TEXTS.conversations.billedNone,
+    );
   });
 
   it('closes a thread and reloads it', async () => {

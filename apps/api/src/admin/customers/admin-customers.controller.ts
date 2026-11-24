@@ -12,6 +12,8 @@ import {
   type CreateCustomerDto,
   createCustomerSchema,
   customerIdSchema,
+  type UpdateBillingDto,
+  updateBillingSchema,
   type UpdateCustomerDto,
   updateCustomerSchema,
 } from './dto.js';
@@ -45,6 +47,16 @@ export class AdminCustomersController {
     @Req() req: Request,
   ): Promise<CustomerLoginResult> {
     return this.customers.update(id, body, { actor, ip: req.ip });
+  }
+
+  @Patch(':id/billing')
+  updateBilling(
+    @Param('id', idPipe()) id: number,
+    @Body(new ZodValidationPipe(updateBillingSchema)) body: UpdateBillingDto,
+    @CurrentUser() actor: SessionUser,
+    @Req() req: Request,
+  ): Promise<{ success: true }> {
+    return this.customers.updateBilling(id, body, { actor, ip: req.ip });
   }
 
   @Post(':id/suspend')

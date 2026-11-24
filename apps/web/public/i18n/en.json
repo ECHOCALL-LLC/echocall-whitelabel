@@ -30,7 +30,8 @@
     "accountMenu": "Account menu",
     "notifications": "Notifications",
     "noNotifications": "No new notifications",
-    "showAllNotifications": "Show all"
+    "showAllNotifications": "Show all",
+    "services": "Services"
   },
   "languages": {
     "de": "Deutsch",
@@ -159,7 +160,9 @@
     "tabs": {
       "billing": "Billing",
       "profile": "Profile",
-      "security": "Security"
+      "security": "Security",
+      "warnings": "Warnings",
+      "services": "Services"
     },
     "profile": {
       "saved": "Profile saved."
@@ -182,6 +185,56 @@
       "disableIntro": "Enter a current code from the app to confirm this.",
       "disable": "Remove",
       "disabled": "Two-factor authentication removed."
+    },
+    "warningMails": {
+      "title": "Warnings by email",
+      "subtitle": "We only send the warnings you switch on here, and only as often as you choose.",
+      "loading": "Loading the settings",
+      "loadFailed": "The settings could not be loaded.",
+      "retry": "Try again",
+      "savedOn": "Saved. This warning now arrives by email.",
+      "savedOff": "Saved. This warning no longer arrives by email.",
+      "alwaysSent": "Replies to your tickets and notices about the security of your account always arrive, whatever you choose here.",
+      "categories": {
+        "balance": {
+          "title": "Balance",
+          "description": "When your balance drops below €5 and when it is almost used up."
+        },
+        "balancePortal": {
+          "title": "Portal balance",
+          "description": "When the portal balance drops below €5 and when it is almost used up."
+        },
+        "trial": {
+          "title": "Starting credit",
+          "description": "When half or almost all of your starting credit is used and when your trial ends."
+        },
+        "numbers": {
+          "title": "Phone numbers",
+          "description": "When the review status of one of your phone numbers changes, for example because documents are missing."
+        },
+        "integrations": {
+          "title": "Integrations",
+          "description": "When a connected app can no longer be reached."
+        },
+        "customerOrders": {
+          "title": "Your customers' purchases",
+          "description": "When a customer could not buy a phone number, a plan or balance because something is missing on the portal side, or when a renewal failed."
+        }
+      },
+      "intervals": {
+        "balance": {
+          "off": "Off",
+          "event": "When it runs low",
+          "daily": "Daily while it is low",
+          "weekly": "Weekly while it is low"
+        },
+        "event": {
+          "off": "Off",
+          "event": "Every time it happens",
+          "daily": "At most once a day",
+          "weekly": "At most once a week"
+        }
+      }
     }
   },
   "impersonation": {
@@ -259,6 +312,15 @@
     "preview_unavailable": "The voice sample is not available right now.",
     "service_unavailable": "The service is not available right now. Please try again in a moment.",
     "invalid_config": "Some settings are not valid. Check them, and enter a stored secret again if you changed what it belongs to.",
-    "tool_not_permitted": "This action is not allowed by the permissions of the connected service."
+    "tool_not_permitted": "This action is not allowed by the permissions of the connected service.",
+    "agent_not_found": "This agent was not found.",
+    "number_not_found": "This phone number was not found.",
+    "provider_unavailable": "The phone service is not available right now. Please try again shortly.",
+    "invoice_email_canceled": "Canceled invoices are not sent.",
+    "invoice_email_customer_gone": "The customer was deleted. The invoice can no longer be emailed.",
+    "invoice_email_no_billing_email": "No billing email is on file for this customer.",
+    "invoice_email_no_smtp": "No mail server is set up for sending.",
+    "invoice_email_daily_limit": "Today's limit for invoice emails is reached. Sending resumes tomorrow.",
+    "invoice_email_failed": "The mail server did not accept the email. Please try again later."
   }
 }

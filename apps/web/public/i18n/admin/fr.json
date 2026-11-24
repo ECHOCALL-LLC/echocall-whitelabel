@@ -182,6 +182,34 @@
         "admin_adjustment": "Ajustement",
         "bonus": "Bonus"
       }
+    },
+    "billing": {
+      "title": "Coordonnées de facturation",
+      "hint": "Où vont les factures du client et ce qu'elles indiquent.",
+      "noEmail": "Sans e-mail de facturation, les factures ne peuvent pas être envoyées par e-mail.",
+      "none": "Non renseigné",
+      "edit": "Modifier",
+      "saved": "Coordonnées de facturation enregistrées.",
+      "address": "Adresse de facturation",
+      "email": "E-mail de facturation",
+      "emailHint": "Les factures sont envoyées uniquement à cette adresse.",
+      "ccEmail": "Copie à (facultatif)",
+      "companyName": "Entreprise",
+      "street": "Rue et numéro",
+      "postalCode": "Code postal",
+      "city": "Ville",
+      "country": "Pays",
+      "noCountry": "Aucun pays",
+      "vatId": "N° de TVA",
+      "dialogTitle": "Modifier les coordonnées de facturation",
+      "dialogIntro": "Ces informations figurent sur les factures du client. Un champ vidé est supprimé.",
+      "errors": {
+        "invalid_country": "Ce pays n'est pas connu.",
+        "invalid_postal_code": "Le code postal ne correspond pas au pays.",
+        "invalid_vat_id": "Le format du n° de TVA n'est pas valide.",
+        "invalid_billing_email": "Cet e-mail de facturation n'est pas valide.",
+        "invalid_billing_cc_email": "L'adresse de copie n'est pas valide."
+      }
     }
   },
   "plans": {
@@ -444,7 +472,41 @@
       "gross": "Brut",
       "submit": "Créer la facture"
     },
-    "downloadPdf": "Télécharger en PDF"
+    "downloadPdf": "Télécharger en PDF",
+    "mail": {
+      "open": "Envoyer par e-mail",
+      "send": "Envoyer",
+      "resend": "Renvoyer",
+      "title": "Envoyer la facture {{number}} par e-mail",
+      "loadError": "L'aperçu n'a pas pu être chargé.",
+      "problem": {
+        "canceled": "Les factures annulées ne sont pas envoyées.",
+        "customer_gone": "Le client a été supprimé. La facture ne peut plus être envoyée par e-mail.",
+        "no_billing_email": "Aucun e-mail de facturation n'est enregistré pour ce client.",
+        "company_incomplete": "Les informations de votre entreprise sont incomplètes. Complétez dans les Réglages : {{fields}}.",
+        "no_smtp": "Aucun serveur de messagerie n'est configuré pour l'envoi.",
+        "daily_limit": "{{limit}} factures ont déjà été envoyées par e-mail aujourd'hui. L'envoi reprend demain."
+      },
+      "editCustomer": "Ouvrir les coordonnées de facturation du client",
+      "editCompany": "Ouvrir les réglages",
+      "to": "À",
+      "cc": "Copie",
+      "from": "Expéditeur",
+      "attachment": "Pièce jointe",
+      "noAddress": "Aucun e-mail de facturation enregistré",
+      "lastSent": "Dernier envoi",
+      "sentAt": "{{date}} à {{to}}",
+      "language": "Langue",
+      "fallbackLang": "Il n'existe pas de modèle dans cette langue. Le texte anglais est utilisé.",
+      "subject": "Objet",
+      "body": "Message",
+      "templateHint": "Proposé par votre modèle de facture. Le logo, les coordonnées et le PDF sont ajoutés automatiquement.",
+      "bcc": "Envoyer une copie cachée à {{address}}",
+      "dailyUsage": "Envoyés aujourd'hui : {{sent}} sur {{limit}}",
+      "status": "E-mail",
+      "notSent": "Pas encore envoyée par e-mail",
+      "sent": "Facture envoyée à {{to}}."
+    }
   },
   "numbers": {
     "title": "Numéros",
@@ -699,7 +761,10 @@
       "bic": "BIC",
       "paymentTerms": "Délai de paiement (jours)",
       "invoiceFooter": "Pied de page de la facture",
-      "incomplete": "Aucune facture ne peut être émise tant que ces mentions manquent : {{fields}}."
+      "incomplete": "Aucune facture ne peut être émise tant que ces mentions manquent : {{fields}}.",
+      "taxExemptionNote": "Mention d'exonération de TVA (facultatif)",
+      "taxExemptionPlaceholder": "TVA non applicable, art. 293 B du CGI",
+      "taxExemptionHint": "Figure sur chaque facture sous les montants, par exemple pour les micro-entreprises."
     }
   },
   "audit": {
@@ -788,7 +853,8 @@
       "users_invited": "Accès invité",
       "users_sign_in_link_sent": "Lien de connexion envoyé",
       "users_two_factor_cleared": "Double facteur réinitialisé",
-      "users_updated": "Accès modifié"
+      "users_updated": "Accès modifié",
+      "customers_billing_updated": "Coordonnées de facturation modifiées"
     },
     "fields": {
       "changed": "Modifié",
@@ -807,7 +873,15 @@
       "role": "Rôle",
       "secure": "Chiffré",
       "user": "Utilisateur de la boîte",
-      "userId": "Accès"
+      "userId": "Accès",
+      "companyName": "Entreprise",
+      "billingStreet": "Rue",
+      "billingPostalCode": "Code postal",
+      "billingCity": "Ville",
+      "billingCountry": "Pays",
+      "vatId": "N° de TVA",
+      "billingEmail": "E-mail de facturation",
+      "billingCcEmail": "Copie à"
     },
     "yes": "Oui",
     "no": "Non",
@@ -815,6 +889,146 @@
       "customer": "Client",
       "settings": "Paramètres",
       "user": "Accès"
+    }
+  },
+  "serviceOrders": {
+    "title": "Commande de service",
+    "buyerLabel": "Commandé par",
+    "buyer": "Client n° {{id}}",
+    "priceLabel": "Prix",
+    "paid": "{{gross}} prélevés sur le solde, dont {{net}} HT",
+    "free": "Commandé gratuitement",
+    "etaLabel": "Délai de traitement",
+    "eta": {
+      "range": "en général {{min}} à {{max}} heures",
+      "upTo": "en général {{max}} heures maximum",
+      "about": "en général {{min}} heures"
+    },
+    "refundedLabel": "Avoir",
+    "refunded": "{{amount}} recrédités au client",
+    "status": {
+      "open": "Reçue",
+      "in_progress": "En cours",
+      "waiting_customer": "Question au client",
+      "done": "Terminée",
+      "cancelled": "Annulée"
+    },
+    "start": "Commencer le traitement",
+    "ask": "Poser une question au client",
+    "resume": "Reprendre le traitement",
+    "finish": "Terminer",
+    "cancel": "Annuler la commande",
+    "askHint": "Écrivez votre question ci-dessous comme réponse dans le ticket. Le client reçoit un e-mail et confirme dès qu’il a répondu.",
+    "cancelTitle": "Annuler la commande ?",
+    "cancelDesc": "La commande prend fin et le ticket est fermé. Cette action est irréversible.",
+    "refund": "Recréditer {{amount}} sur le solde du client",
+    "refundNote": "Aucune facture d’avoir n’est créée.",
+    "keep": "Ne pas annuler",
+    "confirmCancel": "Annuler la commande",
+    "saved": "Statut enregistré : {{status}}",
+    "cancelled": "Commande annulée",
+    "cancelledRefund": "Commande annulée, {{amount}} recrédités",
+    "forwardTitle": "Confier à la plateforme",
+    "forwardHint": "L’équipe de la plateforme se charge du travail. Votre solde est débité de {{gross}} ({{net}} HT). Votre client continue de parler uniquement avec vous.",
+    "forwardShort": "Votre solde ne suffit pas : {{balance}} disponibles, {{gross}} nécessaires. Rechargez d’abord votre solde.",
+    "forward": "Transmettre",
+    "forwardConfirmTitle": "Transmettre à la plateforme ?",
+    "forwardConfirmDesc": "Votre solde est débité maintenant de {{gross}} ({{net}} HT), et un ticket est ouvert auprès de l’équipe de la plateforme. Vous suivez l’avancement ici dans le ticket.",
+    "forwardConfirm": "Transmettre pour {{amount}}",
+    "notNow": "Pas maintenant",
+    "forwardDone": "Transmis comme ticket n° {{ticket}}, {{amount}} débités de votre solde",
+    "forwardErrors": {
+      "INSUFFICIENT_BALANCE": "Votre solde ne suffit pas. Rechargez votre solde et réessayez.",
+      "ALREADY_FORWARDED": "Cette commande a déjà été transmise.",
+      "NOT_AVAILABLE": "La plateforme ne propose pas ce service en ce moment, il ne peut pas être transmis."
+    },
+    "forwardedTitle": "Transmis à la plateforme",
+    "forwardedState": "Ticket n° {{ticket}} de la plateforme, statut : {{status}}",
+    "ownHint": "C’est votre propre service. Vous le réalisez vous-même, il ne peut pas être transmis à la plateforme."
+  },
+  "services": {
+    "title": "Services",
+    "intro": "Ce que vos clients peuvent commander dans leur compte sous Services. Chaque commande vous arrive comme ticket, où vous la traitez.",
+    "loadError": "Les services n’ont pas pu être chargés.",
+    "offers": {
+      "title": "Services de la plateforme",
+      "intro": "Tous les prix sont HT. Vos clients paient en plus {{vat}} % de TVA sur leur solde. Sans prix de votre part, ils paient votre prix d’achat.",
+      "empty": "La plateforme ne propose aucun service en ce moment.",
+      "enabled": "Proposer à vos clients",
+      "offHint": "Vos clients ne voient pas ce service.",
+      "purchase": "Achat",
+      "price": "Votre prix HT",
+      "margin": "Marge",
+      "minimum": "Au moins {{price}}, votre prix d’achat",
+      "saved": "{{name}} enregistré",
+      "errors": {
+        "PRICE_BELOW_COST": "Un prix est inférieur à votre prix d’achat.",
+        "PRICE_INVALID": "Saisissez un prix en euros, par exemple 79,00.",
+        "NOT_FOUND": "Ce service n’existe plus. La liste a été rechargée."
+      }
+    },
+    "own": {
+      "title": "Vos propres services",
+      "intro": "Les services que vous proposez et réalisez vous-même. Vous fixez le prix, les variantes et les informations que le client donne à la commande.",
+      "create": "Ajouter un service",
+      "created": "Service ajouté",
+      "saved": "Service enregistré",
+      "empty": "Vous n’avez pas encore de services propres.",
+      "hidden": "Masqué",
+      "priceNetValue": "{{price}} HT",
+      "priceFrom": "à partir de {{price}} HT",
+      "fieldCount": "{{count}} informations du client",
+      "editLabel": "Modifier {{name}}",
+      "deleteLabel": "Supprimer {{name}}",
+      "deleteTitle": "Supprimer ce service ?",
+      "deleteMessage": "« {{name}} » disparaît pour vos clients. Les commandes existantes gardent leur ticket. Cette action est irréversible.",
+      "delete": "Supprimer",
+      "deleted": "{{name}} supprimé",
+      "createTitle": "Ajouter votre propre service",
+      "editTitle": "Modifier le service",
+      "nameDe": "Nom (allemand)",
+      "nameEn": "Nom (anglais)",
+      "descriptionDe": "Description (allemand)",
+      "descriptionEn": "Description (anglais)",
+      "descriptionHint": "Vos clients lisent ce texte avant de commander. {price} est remplacé par le prix.",
+      "priceSection": "Prix",
+      "priceNet": "Prix HT",
+      "variantNameDe": "Variante (allemand)",
+      "variantNameEn": "Variante (anglais)",
+      "addVariant": "Ajouter une variante",
+      "removeVariant": "Retirer la variante",
+      "variantHint": "Avec des variantes, chacune a son propre prix et le client en choisit une.",
+      "fieldsSection": "Informations du client",
+      "fieldLabelDe": "Question (allemand)",
+      "fieldLabelEn": "Question (anglais)",
+      "fieldType": "Type",
+      "fieldTypes": {
+        "text": "Texte court",
+        "textarea": "Texte long",
+        "country": "Pays",
+        "datetime": "Date et heure"
+      },
+      "fieldRequired": "Obligatoire",
+      "addField": "Ajouter une information",
+      "removeField": "Retirer l’information",
+      "fieldsHint": "Les réponses figurent dans le ticket de la commande.",
+      "slaSection": "Délai de traitement",
+      "slaMin": "Au moins (heures)",
+      "slaMax": "Au plus (heures)",
+      "hoursInvalid": "Heures entières de 1 à {{max}}",
+      "visible": "Visible pour les clients",
+      "visibleHint": "Les services masqués restent enregistrés, mais vos clients ne peuvent pas les commander.",
+      "errors": {
+        "NAME_REQUIRED": "Donnez un nom au service.",
+        "TOO_MANY_FIELDS": "12 informations au maximum par service.",
+        "TOO_MANY_VARIANTS": "12 variantes au maximum par service.",
+        "FIELD_LABEL_REQUIRED": "Chaque information a besoin d’une question.",
+        "VARIANT_NAME_REQUIRED": "Chaque variante a besoin d’un nom.",
+        "PRICE_INVALID": "Saisissez un prix en euros jusqu’à 100 000, par exemple 79,00.",
+        "SLA_INVALID": "Le délai le plus court ne peut pas dépasser le plus long.",
+        "POSITION_LIMIT": "Vous avez atteint le nombre maximal de services propres. Supprimez-en d’abord un.",
+        "NOT_FOUND": "Ce service n’existe plus."
+      }
     }
   }
 }

@@ -44,6 +44,29 @@ const DETAIL = {
   ],
 };
 
+const ORDER = {
+  id: 88,
+  ticketId: 31,
+  status: 'open',
+  name: 'Rufnummer einrichten',
+  nameEn: 'Number setup',
+  variantName: null,
+  variantNameEn: null,
+  answers: {},
+  priceNet: 50,
+  vatEur: 9.5,
+  priceGross: 59.5,
+  refundedEur: 0,
+  customerId: 501,
+  ownService: false,
+  refundable: true,
+  forwarded: null,
+  forwardQuote: null,
+  forwardBlocked: null,
+};
+
+const ORDER_URL = '/api/admin/hub/resellers/services/orders/by-ticket/31';
+
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('AdminTicketDetailPage', () => {
@@ -65,7 +88,11 @@ describe('AdminTicketDetailPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // The service order panel asks once per ticket; these tickets hold none.
+    for (const request of http.match(ORDER_URL)) request.flush({ data: null });
+    http.verify();
+  });
 
   async function answerLoad(body: object = DETAIL, status = 200) {
     const request = http.expectOne('/api/admin/hub/resellers/tickets/31');
@@ -210,6 +237,27 @@ describe('AdminTicketDetailPage', () => {
 
     expect(fixture.nativeElement.querySelector('[data-testid="missing"]')?.textContent).toContain(
       ADMIN_TEXTS.tickets.detail.missing,
+    );
+  });
+
+  it('shows the service order behind the ticket and reads the ticket again after a step', async () => {
+    const fixture = await render();
+    http.expectOne(ORDER_URL).flush({ data: { ...ORDER } });
+    await settle();
+    fixture.detectChanges();
+
+    const panel = fixture.nativeElement.querySelector('[data-testid="service-order"]') as HTMLElement;
+    expect(panel.textContent).toContain('Number setup');
+    (fixture.nativeElement.querySelector('[data-testid="service-start"]') as HTMLButtonElement).click();
+    http
+      .expectOne('/api/admin/hub/resellers/services/orders/88/status')
+      .flush({ data: { ...ORDER, status: 'in_progress' } });
+    await settle();
+    await answerLoad({ ...DETAIL, ticket: { ...DETAIL.ticket, status: 'in_progress' } });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="ticket-status"]').textContent).toContain(
+      ADMIN_TEXTS.tickets.statuses.in_progress,
     );
   });
 });

@@ -15,7 +15,9 @@ import { LANGUAGES, type SessionUser } from '../../core/models';
 import { NotifyService } from '../../core/notify/notify.service';
 import { applyServerErrors } from '../../shared/forms/server-errors';
 import { BillingPanel } from './billing.panel';
+import { ServicesPanel } from './services.panel';
 import { TwoFactorPanel } from './two-factor.panel';
+import { WarningMailsPanel } from './warning-mails.panel';
 
 /** Profile and security of the signed-in person; available to both roles. */
 @Component({
@@ -30,7 +32,9 @@ import { TwoFactorPanel } from './two-factor.panel';
     MatTabsModule,
     TranslocoDirective,
     BillingPanel,
+    ServicesPanel,
     TwoFactorPanel,
+    WarningMailsPanel,
   ],
   template: `
     <ng-container *transloco="let t">
@@ -83,10 +87,24 @@ import { TwoFactorPanel } from './two-factor.panel';
             </div>
           </ng-template>
         </mat-tab>
+        @if (warningMails(); as source) {
+          <mat-tab [label]="t('account.tabs.warnings')" data-testid="warnings-tab">
+            <ng-template matTabContent>
+              <div class="cards">
+                <app-warning-mails-panel [operator]="source === 'operator'" />
+              </div>
+            </ng-template>
+          </mat-tab>
+        }
         @if (showBilling()) {
           <mat-tab [label]="t('account.tabs.billing')" data-testid="billing-tab">
             <ng-template matTabContent>
               <app-billing-panel />
+            </ng-template>
+          </mat-tab>
+          <mat-tab [label]="t('account.tabs.services')" data-testid="services-tab">
+            <ng-template matTabContent>
+              <app-services-panel />
             </ng-template>
           </mat-tab>
         }
@@ -127,6 +145,17 @@ export class AccountPage {
 
   /** Billing belongs to the hub customer, which an operator account does not have. */
   readonly showBilling = computed(() => this.user()?.echocallCustomerId !== null);
+
+  /**
+   * Warning mails go to a hub account: the customer's own, or for an operator
+   * the account the portal is connected with. A person with neither has none.
+   */
+  readonly warningMails = computed<'customer' | 'operator' | null>(() => {
+    const user = this.user();
+    if (!user) return null;
+    if (user.echocallCustomerId !== null) return 'customer';
+    return user.role === 'admin' ? 'operator' : null;
+  });
 
   readonly profile = this.fb.group({
     firstName: [this.user()?.firstName ?? '', Validators.maxLength(100)],

@@ -1,11 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { DownloadService } from '../../../core/download/download.service';
 import { NotifyService } from '../../../core/notify/notify.service';
 import { ADMIN_TEXTS, provideTestI18n } from '../../../testing/i18n';
 import { AdminInvoiceDetailPage } from './invoice-detail.page';
+import { InvoiceSendDialogComponent } from './invoice-send-dialog.component';
 
 const DETAIL = {
   invoice: {
@@ -54,10 +57,16 @@ describe('AdminInvoiceDetailPage', () => {
   let http: HttpTestingController;
   let saved: { name: string; type: string }[];
   let errors: string[];
+  let successes: { key: string; params?: object }[];
+  let opened: { component: unknown; data: unknown }[];
+  let dialogResult: unknown;
 
   beforeEach(async () => {
     saved = [];
     errors = [];
+    successes = [];
+    opened = [];
+    dialogResult = undefined;
     await TestBed.configureTestingModule({
       imports: [AdminInvoiceDetailPage, provideTestI18n()],
       providers: [
@@ -74,8 +83,17 @@ describe('AdminInvoiceDetailPage', () => {
           useValue: {
             error: (key: string) => errors.push(key),
             errorKey: (code: string) => 'errors.' + code,
-            success: () => undefined,
+            success: (key: string, params?: object) => successes.push({ key, params }),
             apiError: () => undefined,
+          },
+        },
+        {
+          provide: MatDialog,
+          useValue: {
+            open: (component: unknown, config: { data: unknown }) => {
+              opened.push({ component, data: config.data });
+              return { afterClosed: () => of(dialogResult) };
+            },
           },
         },
       ],
@@ -183,5 +201,63 @@ describe('AdminInvoiceDetailPage', () => {
     expect(errors).toEqual(['errors.company_details_incomplete']);
     expect(saved).toEqual([]);
     expect(fixture.componentInstance.downloading()).toBe(false);
+  });
+
+  it('says the invoice has not been mailed yet and offers to send it', async () => {
+    const fixture = await render();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="mail-status"]').textContent).toContain(
+      ADMIN_TEXTS.invoices.mail.notSent,
+    );
+    expect(fixture.nativeElement.querySelector('[data-testid="send-mail"]').textContent).toContain(
+      ADMIN_TEXTS.invoices.mail.open,
+    );
+  });
+
+  it('names when and to whom it was mailed, and offers to send it again', async () => {
+    const fixture = await render({
+      ...DETAIL,
+      invoice: { ...DETAIL.invoice, emailSentAt: '2026-11-20T09:00:00.000Z', emailSentTo: 'rechnung@example.com' },
+    });
+
+    expect(fixture.nativeElement.querySelector('[data-testid="mail-status"]').textContent).toContain(
+      'rechnung@example.com',
+    );
+    expect(fixture.nativeElement.querySelector('[data-testid="send-mail"]').textContent).toContain(
+      ADMIN_TEXTS.invoices.mail.resend,
+    );
+  });
+
+  it('offers no mail for a canceled invoice', async () => {
+    const fixture = await render({ ...DETAIL, invoice: { ...DETAIL.invoice, status: 'canceled' } });
+
+    expect(fixture.nativeElement.querySelector('[data-testid="send-mail"]')).toBeNull();
+  });
+
+  it('confirms a sent mail and reads the invoice again, since a draft turns into a sent invoice', async () => {
+    const fixture = await render({ ...DETAIL, invoice: { ...DETAIL.invoice, status: 'draft' } });
+    dialogResult = { success: true, invoiceId: 21, status: 'sent', emailSentTo: 'rechnung@example.com' };
+
+    (fixture.nativeElement.querySelector('[data-testid="send-mail"]') as HTMLButtonElement).click();
+    await settle();
+    http.expectOne('/api/admin/hub/resellers/invoices/21').flush({
+      ...DETAIL,
+      invoice: { ...DETAIL.invoice, emailSentAt: '2026-11-24T09:00:00.000Z', emailSentTo: 'rechnung@example.com' },
+    });
+    await settle();
+
+    expect(opened).toEqual([
+      { component: InvoiceSendDialogComponent, data: { invoiceId: 21, invoiceNumber: 'R7-202609-0001' } },
+    ]);
+    expect(successes).toEqual([{ key: 'admin.invoices.mail.sent', params: { to: 'rechnung@example.com' } }]);
+    expect(fixture.componentInstance.detail()?.invoice.status).toBe('sent');
+  });
+
+  it('leaves the invoice as it is when the mail dialog is closed without sending', async () => {
+    const fixture = await render();
+
+    await fixture.componentInstance.mail(fixture.componentInstance.detail()!);
+
+    expect(successes).toEqual([]);
   });
 });

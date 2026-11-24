@@ -110,6 +110,13 @@ type PatchBody<P extends keyof paths> = paths[P] extends {
   ? B
   : never;
 
+/** The JSON body of the 200 answer of a POST path. */
+type PostResult<P extends keyof paths> = paths[P] extends {
+  post: { responses: { 200: { content: { 'application/json': infer B } } } };
+}
+  ? B
+  : never;
+
 export type ResellerCustomer = Schemas['ResellerCustomer'];
 export type ResellerStats = Schemas['ResellerStats'];
 export type ResellerActivity = Schemas['ResellerActivity'];
@@ -150,3 +157,27 @@ export type ResellerPricingSuggestion = ListItem<ResellerPricingSuggestions>;
 export type CreatePlanInput = PostBody<'/resellers/plans'>;
 export type UpdatePlanInput = PatchBody<'/resellers/plans/{id}'>;
 export type UpdatePricingInput = PatchBody<'/resellers/pricing'>;
+
+/** What mailing an invoice would send, and why it cannot go out when it cannot. */
+export type ResellerInvoiceMailPreview = GetBody<'/resellers/invoices/{id}/email-preview'>;
+export type SendInvoiceInput = PostBody<'/resellers/invoices/{id}/send'>;
+export type SendInvoiceResult = PostResult<'/resellers/invoices/{id}/send'>;
+
+/** The JSON body a PUT path expects. */
+type PutBody<P extends keyof paths> = paths[P] extends {
+  put: { requestBody: { content: { 'application/json': infer B } } };
+}
+  ? B
+  : never;
+
+/** A customer's service order behind a ticket, with what handing it on would cost. */
+export type ResellerServiceOrder = NonNullable<GetBody<'/resellers/services/orders/by-ticket/{ticketId}'>['data']>;
+export type ServiceOrderStep = PostBody<'/resellers/services/orders/{orderId}/status'>['status'];
+export type ServiceForwardResult = PostResult<'/resellers/services/orders/{orderId}/forward'>['data'];
+/** The platform's services with the operator's purchase and customer prices. */
+export type ResellerServiceOffers = GetBody<'/resellers/services/offers'>['data'];
+export type ResellerServiceOffer = ResellerServiceOffers['services'][number];
+export type UpdateServiceOfferInput = PutBody<'/resellers/services/offers/{positionId}'>;
+/** A service the operator offers and does themselves. */
+export type ResellerOwnService = ListItem<GetBody<'/resellers/services/own'>>;
+export type OwnServiceInput = PostBody<'/resellers/services/own'>;

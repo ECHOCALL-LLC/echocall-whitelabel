@@ -28,6 +28,35 @@ describe('matchCustomerCall', () => {
     expect(matchCustomerCall('DELETE', '/tickets/7')).toBe(false);
   });
 
+  it('accepts reading and choosing the warning mails, nothing else under the account', () => {
+    expect(matchCustomerCall('GET', '/users/me/warning-mails')).toBe(true);
+    expect(matchCustomerCall('PUT', '/users/me/warning-mails/numbers')).toBe(true);
+    expect(matchCustomerCall('PUT', '/users/me/warning-mails/customer_orders')).toBe(true);
+    expect(matchCustomerCall('PATCH', '/users/me/warning-mails/numbers')).toBe(false);
+    expect(matchCustomerCall('PUT', '/users/me/warning-mails')).toBe(false);
+    expect(matchCustomerCall('GET', '/users/me/billing-address')).toBe(false);
+  });
+
+  it('accepts reading and changing the summary of one agent, nothing more', () => {
+    expect(matchCustomerCall('GET', '/agents/agent_12/call-summary')).toBe(true);
+    expect(matchCustomerCall('PATCH', '/agents/12/call-summary')).toBe(true);
+    expect(matchCustomerCall('PUT', '/agents/12/call-summary')).toBe(false);
+    expect(matchCustomerCall('DELETE', '/agents/12/call-summary')).toBe(false);
+    expect(matchCustomerCall('POST', '/agents/12/call-summary')).toBe(false);
+    expect(matchCustomerCall('GET', '/agents/12/call-summary/1')).toBe(false);
+  });
+
+  it('accepts the services catalog and the own orders, never changing an order', () => {
+    expect(matchCustomerCall('GET', '/billing/services')).toBe(true);
+    expect(matchCustomerCall('POST', '/billing/services/orders')).toBe(true);
+    expect(matchCustomerCall('GET', '/billing/services/orders')).toBe(true);
+    expect(matchCustomerCall('POST', '/billing/services/orders/41/answered')).toBe(true);
+    expect(matchCustomerCall('POST', '/billing/services')).toBe(false);
+    expect(matchCustomerCall('GET', '/billing/services/orders/41')).toBe(false);
+    expect(matchCustomerCall('POST', '/billing/services/orders/41/cancel')).toBe(false);
+    expect(matchCustomerCall('POST', '/billing/services/orders/41/status')).toBe(false);
+  });
+
   it('refuses everything not listed', () => {
     expect(matchCustomerCall('GET', '/resellers/customers')).toBe(false);
     expect(matchCustomerCall('POST', '/provisioning/create')).toBe(false);

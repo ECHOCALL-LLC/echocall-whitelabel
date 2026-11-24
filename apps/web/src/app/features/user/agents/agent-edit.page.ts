@@ -26,6 +26,7 @@ import { VoiceSampleError, VoiceService } from '../../../core/voice/voice.servic
 import { AgentCallDialogComponent, type AgentCallDialogData } from './agent-call-dialog.component';
 import { KnowledgePanelComponent } from '../shared/knowledge-panel.component';
 import { IntegrationsPanelComponent } from '../shared/integrations-panel.component';
+import { CallSummaryPanelComponent } from './call-summary-panel.component';
 import { FieldErrorPipe } from '../../../shared/forms/field-error.pipe';
 
 const SYSTEM_TOOLS = [
@@ -53,6 +54,7 @@ const SYSTEM_TOOLS = [
     TranslocoDirective,
     KnowledgePanelComponent,
     IntegrationsPanelComponent,
+    CallSummaryPanelComponent,
     FieldErrorPipe,
   ],
   providers: [provideTranslocoScope('user')],
@@ -352,6 +354,18 @@ const SYSTEM_TOOLS = [
       </form>
 
       @if (!isNew()) {
+        <mat-card appearance="outlined" class="knowledge" data-testid="call-summary-card">
+          <mat-card-header>
+            <mat-card-title>{{ t('user.agents.callSummary.title') }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ t('user.agents.callSummary.description', { name: title() || form.controls.name.value }) }}
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <app-call-summary-panel [agentId]="id()!" />
+          </mat-card-content>
+        </mat-card>
+
         <mat-card appearance="outlined" class="knowledge">
           <mat-card-header>
             <mat-card-title>{{ t('user.knowledge.title') }}</mat-card-title>

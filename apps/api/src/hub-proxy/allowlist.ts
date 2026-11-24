@@ -19,6 +19,7 @@ const RULES: readonly (readonly [string, string])[] = [
   ['POST', '/agents/{id}/knowledge/{id}/refresh'],
   ['GET|POST', '/agents/{id}/integrations'],
   ['PATCH|DELETE', '/agents/{id}/integrations/{id}'],
+  ['GET|PATCH', '/agents/{id}/call-summary'],
   ['GET|POST', '/chatbots'],
   ['GET|PATCH|DELETE', '/chatbots/{id}'],
   ['GET|POST', '/chatbots/{id}/knowledge'],
@@ -70,12 +71,19 @@ const RULES: readonly (readonly [string, string])[] = [
   ['GET', '/notifications'],
   ['PATCH', '/notifications/{id}/read'],
   ['PATCH', '/notifications/read-all'],
+  // Which warnings reach the customer's account by email, and how often.
+  ['GET', '/users/me/warning-mails'],
+  ['PUT', '/users/me/warning-mails/{id}'],
   ['GET', '/billing/balance'],
   ['GET', '/billing/transactions'],
   ['GET', '/billing/invoices'],
   ['GET', '/billing/subscription'],
   ['GET', '/billing/plans'],
   ['GET', '/billing/addons'],
+  // Services: the catalog, ordering one from the balance, the own orders and saying the ticket was answered.
+  ['GET', '/billing/services'],
+  ['GET|POST', '/billing/services/orders'],
+  ['POST', '/billing/services/orders/{id}/answered'],
 ];
 
 interface CompiledRule {

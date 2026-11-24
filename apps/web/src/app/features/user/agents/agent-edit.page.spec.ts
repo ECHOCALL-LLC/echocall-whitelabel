@@ -14,6 +14,17 @@ describe('AgentEditPage', () => {
   let http: HttpTestingController;
   let router: Router;
 
+  // The summary card loads its own settings for a saved agent.
+  const SUMMARY = {
+    agentId: 'agent_5',
+    available: true,
+    enabled: false,
+    email: null,
+    anonymous: false,
+    vipNumbers: [],
+    phoneNumbers: [],
+  };
+
   async function setup(id: string) {
     await TestBed.configureTestingModule({
       imports: [AgentEditPage, provideTestI18n()],
@@ -124,10 +135,12 @@ describe('AgentEditPage', () => {
     http.expectOne('/api/hub/agents/agent_5/knowledge').flush({ data: [] });
     http.expectOne('/api/hub/agents/agent_5/integrations').flush({ data: [] });
     http.expectOne('/api/hub/integrations').flush([]);
+    http.expectOne('/api/hub/agents/agent_5/call-summary').flush({ data: SUMMARY });
     await fixture.whenStable();
 
     const form = fixture.componentInstance.form;
     expect(form.controls.name.value).toBe('Support Line');
+    expect(fixture.nativeElement.querySelector('[data-testid="call-summary-card"]')).not.toBeNull();
     form.controls.systemPrompt.setValue('New prompt');
     form.controls.systemPrompt.markAsDirty();
     const pending = fixture.componentInstance.save();
@@ -170,6 +183,8 @@ describe('AgentEditPage', () => {
     await fresh.whenStable();
     fresh.detectChanges();
     expect(fresh.nativeElement.querySelector('[data-testid="agent-test-call"]')).toBeNull();
+    // A new agent has no summary yet: it is stored per saved agent.
+    expect(fresh.nativeElement.querySelector('[data-testid="call-summary-card"]')).toBeNull();
 
     TestBed.resetTestingModule();
     const saved = await setup('agent_5');
@@ -179,6 +194,7 @@ describe('AgentEditPage', () => {
     http.expectOne('/api/hub/agents/agent_5/knowledge').flush({ data: [] });
     http.expectOne('/api/hub/agents/agent_5/integrations').flush({ data: [] });
     http.expectOne('/api/hub/integrations').flush([]);
+    http.expectOne('/api/hub/agents/agent_5/call-summary').flush({ data: SUMMARY });
     saved.detectChanges();
 
     expect(saved.nativeElement.querySelector('[data-testid="agent-test-call"]')).not.toBeNull();

@@ -11,6 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
+import { readApiError } from '../../../core/errors/api-error';
 import { formatMoney } from '../../../core/format/money';
 import { agentNumber } from '../../../core/hub/agent-id';
 import { HubService } from '../../../core/hub/hub.service';
@@ -279,8 +280,14 @@ export class PhoneNumbersPage implements OnInit {
       this.notify.success(successKey);
       await this.load();
     } catch (err) {
-      this.notify.apiError(err);
-      this.loading.set(false);
+      // The shared agent_not_ready text speaks of a test call; here the number could not be pointed at the agent.
+      if ('voiceAgentId' in body && readApiError(err).code === 'agent_not_ready') {
+        this.notify.error('user.numbers.agentNotReady');
+      } else {
+        this.notify.apiError(err);
+      }
+      // The select already shows the new choice; reloading puts it back to what the number really answers with.
+      await this.load();
     }
   }
 }

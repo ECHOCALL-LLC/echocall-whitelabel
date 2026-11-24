@@ -8,6 +8,8 @@ export interface ConfirmDialogData {
   messageKey: string;
   params?: Record<string, unknown>;
   confirmKey?: string;
+  /** The label of the way out, when "Cancel" would read wrong next to the action. */
+  cancelKey?: string;
   /** Renders the confirm button in the error colour for destructive actions. */
   destructive?: boolean;
 }
@@ -20,14 +22,14 @@ export interface ConfirmDialogData {
       <h2 mat-dialog-title>{{ t(data.titleKey, data.params) }}</h2>
       <mat-dialog-content>{{ t(data.messageKey, data.params) }}</mat-dialog-content>
       <mat-dialog-actions align="end">
-        <button mat-button mat-dialog-close>{{ t('actions.cancel') }}</button>
+        <button mat-button mat-dialog-close>{{ t(data.cancelKey ?? 'actions.cancel', data.params) }}</button>
         <button
           mat-flat-button
           [mat-dialog-close]="true"
           [class.destructive]="data.destructive"
           cdkFocusInitial
         >
-          {{ t(data.confirmKey ?? 'actions.confirm') }}
+          {{ t(data.confirmKey ?? 'actions.confirm', data.params) }}
         </button>
       </mat-dialog-actions>
     </ng-container>

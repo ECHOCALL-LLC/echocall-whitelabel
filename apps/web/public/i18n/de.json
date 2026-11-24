@@ -30,7 +30,8 @@
     "accountMenu": "Kontomenü",
     "notifications": "Benachrichtigungen",
     "noNotifications": "Keine neuen Benachrichtigungen",
-    "showAllNotifications": "Alle anzeigen"
+    "showAllNotifications": "Alle anzeigen",
+    "services": "Services"
   },
   "languages": {
     "de": "Deutsch",
@@ -159,7 +160,9 @@
     "tabs": {
       "billing": "Abrechnung",
       "profile": "Profil",
-      "security": "Sicherheit"
+      "security": "Sicherheit",
+      "warnings": "Warnungen",
+      "services": "Services"
     },
     "profile": {
       "saved": "Profil gespeichert."
@@ -182,6 +185,56 @@
       "disableIntro": "Bestätigen Sie mit einem aktuellen Code aus der App.",
       "disable": "Entfernen",
       "disabled": "Zwei-Faktor-Authentifizierung entfernt."
+    },
+    "warningMails": {
+      "title": "Warnungen per E-Mail",
+      "subtitle": "Wir schicken nur die Warnungen, die Sie hier einschalten, und nur so oft, wie Sie es festlegen.",
+      "loading": "Einstellungen werden geladen",
+      "loadFailed": "Die Einstellungen konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "savedOn": "Gespeichert. Diese Warnung kommt jetzt per E-Mail.",
+      "savedOff": "Gespeichert. Diese Warnung kommt nicht mehr per E-Mail.",
+      "alwaysSent": "Antworten auf Ihre Tickets und Hinweise zur Sicherheit Ihres Kontos bekommen Sie immer, unabhängig von diesen Einstellungen.",
+      "categories": {
+        "balance": {
+          "title": "Guthaben",
+          "description": "Wenn Ihr Guthaben unter 5 € fällt und wenn es fast aufgebraucht ist."
+        },
+        "balancePortal": {
+          "title": "Guthaben des Portals",
+          "description": "Wenn das Guthaben des Portals unter 5 € fällt und wenn es fast aufgebraucht ist."
+        },
+        "trial": {
+          "title": "Startguthaben",
+          "description": "Wenn Ihr Startguthaben zur Hälfte oder fast verbraucht ist und wenn Ihre Testphase endet."
+        },
+        "numbers": {
+          "title": "Telefonnummern",
+          "description": "Wenn sich der Prüfstatus einer Ihrer Telefonnummern ändert, etwa weil Unterlagen fehlen."
+        },
+        "integrations": {
+          "title": "Integrationen",
+          "description": "Wenn eine verbundene Anwendung nicht mehr erreichbar ist."
+        },
+        "customerOrders": {
+          "title": "Käufe Ihrer Kunden",
+          "description": "Wenn ein Kunde eine Telefonnummer, ein Paket oder Guthaben nicht kaufen konnte, weil beim Portal etwas fehlt, oder wenn eine Verlängerung fehlgeschlagen ist."
+        }
+      },
+      "intervals": {
+        "balance": {
+          "off": "Aus",
+          "event": "Wenn es knapp wird",
+          "daily": "Täglich, solange es knapp ist",
+          "weekly": "Wöchentlich, solange es knapp ist"
+        },
+        "event": {
+          "off": "Aus",
+          "event": "Bei jedem Ereignis",
+          "daily": "Höchstens einmal am Tag",
+          "weekly": "Höchstens einmal pro Woche"
+        }
+      }
     }
   },
   "impersonation": {
@@ -259,6 +312,15 @@
     "preview_unavailable": "Die Stimmprobe ist gerade nicht verfügbar.",
     "service_unavailable": "Der Dienst ist gerade nicht verfügbar. Bitte versuchen Sie es gleich noch einmal.",
     "invalid_config": "Einige Einstellungen sind ungültig. Bitte prüfen Sie sie und geben Sie einen gespeicherten geheimen Wert erneut ein, wenn Sie geändert haben, wozu er gehört.",
-    "tool_not_permitted": "Diese Aktion ist in den Berechtigungen des verbundenen Dienstes nicht freigegeben."
+    "tool_not_permitted": "Diese Aktion ist in den Berechtigungen des verbundenen Dienstes nicht freigegeben.",
+    "agent_not_found": "Dieser Agent wurde nicht gefunden.",
+    "number_not_found": "Diese Rufnummer wurde nicht gefunden.",
+    "provider_unavailable": "Der Telefondienst ist gerade nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.",
+    "invoice_email_canceled": "Stornierte Rechnungen werden nicht versendet.",
+    "invoice_email_customer_gone": "Der Kunde wurde gelöscht. Die Rechnung kann nicht mehr per E-Mail versendet werden.",
+    "invoice_email_no_billing_email": "Für diesen Kunden ist keine Rechnungs-E-Mail hinterlegt.",
+    "invoice_email_no_smtp": "Es ist kein Mailserver für den Versand eingerichtet.",
+    "invoice_email_daily_limit": "Das Tageslimit für Rechnungs-E-Mails ist erreicht. Morgen geht es weiter.",
+    "invoice_email_failed": "Der Mailserver hat die E-Mail nicht angenommen. Bitte versuchen Sie es später erneut."
   }
 }

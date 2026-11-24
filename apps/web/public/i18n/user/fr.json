@@ -134,7 +134,65 @@
     "deleteMessage": "« {{name}} » sera supprimé définitivement.",
     "created": "Agent créé.",
     "saved": "Modifications enregistrées.",
-    "deleted": "Agent supprimé."
+    "deleted": "Agent supprimé.",
+    "callSummary": {
+      "title": "Résumé après chaque appel",
+      "description": "{{name}} envoie un court e-mail après chaque appel : qui a appelé, à quel sujet, avec quelle urgence et le numéro pour rappeler.",
+      "loading": "Chargement du résumé",
+      "loadFailed": "Les paramètres du résumé n'ont pas pu être chargés.",
+      "retry": "Réessayer",
+      "enabled": "Envoyer les résumés",
+      "enabledHint": "Valable pour les appels à partir de l'activation. L'e-mail arrive en général dans les 5 minutes après l'appel.",
+      "email": "Adresse e-mail",
+      "emailHint": "Chaque résumé est envoyé ici.",
+      "emailInvalid": "Veuillez saisir une adresse e-mail valide.",
+      "anonymous": "Envoyer anonymement",
+      "anonymousHint": "L'e-mail n'indique ni le nom ni le numéro de l'appelant, seulement qu'ils ont été laissés. Le portail affiche tout comme d'habitude.",
+      "zeroPii": {
+        "title": "Cet agent ne conserve aucune donnée personnelle",
+        "body": "C'est pourquoi il ne peut pas envoyer de résumé. Pour les utiliser, désactivez « Ne conserver aucune donnée personnelle » sous Confidentialité ci-dessus et enregistrez l'agent."
+      },
+      "vip": {
+        "title": "Numéros importants",
+        "hint": "Les appels de ces numéros sont marqués urgents dans l'e-mail.",
+        "labelPlaceholder": "Qui, p. ex. Maman",
+        "numberPlaceholder": "+49 171 1234567",
+        "labelAria": "Nom du numéro important {{n}}",
+        "numberAria": "Numéro important {{n}}",
+        "numberInvalid": "Ce n'est pas un numéro de téléphone valide.",
+        "remove": "Supprimer le numéro important {{n}}",
+        "add": "Ajouter un numéro"
+      },
+      "forwarding": {
+        "title": "Renvoyer votre mobile",
+        "forNumber": "Avec ces codes, votre mobile renvoie les appels vers {{number}}.",
+        "kind": {
+          "busy": "Si occupé",
+          "noAnswer": "Si vous ne répondez pas",
+          "unreachable": "Si injoignable"
+        },
+        "off": "Désactiver :",
+        "allAtOnce": "Les trois à la fois :",
+        "allLabel": "Les trois à la fois",
+        "offLabel": "{{label}}, désactiver",
+        "howTo": "Touchez un code pour le copier, collez-le dans l'application Téléphone de votre mobile et appuyez sur appeler. Les codes fonctionnent sur tous les réseaux mobiles allemands.",
+        "cost": "Selon votre forfait mobile, le renvoi coûte comme un appel vers ce numéro. Beaucoup de forfaits l'incluent. En cas de doute, demandez à votre opérateur.",
+        "copyLabel": "Copier {{label}} : {{code}}",
+        "copyFailed": "La copie n'a pas fonctionné. Veuillez sélectionner le code à la main.",
+        "noNumber": "Cet agent n'a pas encore de numéro de téléphone.",
+        "toNumbers": "Vers les numéros de téléphone"
+      },
+      "savedOn": "Les résumés sont activés",
+      "savedOff": "Les résumés sont désactivés",
+      "errors": {
+        "zeroPii": "Cet agent ne conserve aucune donnée personnelle et ne peut donc pas envoyer de résumé.",
+        "notReady": "Les résumés ne sont pas encore disponibles. Veuillez réessayer plus tard.",
+        "invalid": "Veuillez vérifier l'adresse e-mail et vos saisies.",
+        "invalidVip": "Le numéro important {{n}} n'est pas un numéro de téléphone valide.",
+        "notFound": "Cet agent n'existe plus.",
+        "provider": "La modification n'a pas pu être appliquée pour le moment. Veuillez réessayer dans un instant."
+      }
+    }
   },
   "knowledge": {
     "title": "Sources de connaissances",
@@ -275,7 +333,8 @@
     },
     "instantTitle": "Disponibles tout de suite",
     "instantHint": "Ces numéros sont prêts à l'emploi. Le premier mois est payé avec votre solde lors de l'achat, TVA en sus.",
-    "searchTitle": "Rechercher d'autres numéros"
+    "searchTitle": "Rechercher d'autres numéros",
+    "agentNotReady": "Cet agent n'est pas encore prêt à prendre des appels. Enregistrez-le une fois, puis attribuez à nouveau le numéro."
   },
   "models": {
     "tts": {
@@ -323,7 +382,11 @@
     "noTranscript": "Aucune transcription pour cette conversation.",
     "close": "Clôturer la conversation",
     "closed": "Conversation clôturée.",
-    "empty": "Aucune conversation pour l’instant."
+    "empty": "Aucune conversation pour l’instant.",
+    "billed": "Facturé",
+    "billedMinutes": "{{count}} min",
+    "billedNone": "Appel non abouti, aucun coût",
+    "billedRule": "Chaque minute entamée compte"
   },
   "analytics": {
     "title": "Analyses",
@@ -798,6 +861,70 @@
       "subscription": "Abonnement",
       "refund": "Remboursement",
       "usage": "Consommation"
+    }
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "Faites réaliser des travaux pour votre compte. Ils sont payés avec votre solde et chaque commande ouvre un ticket.",
+    "loading": "Chargement des services",
+    "loadFailed": "Les services n'ont pas pu être chargés.",
+    "retry": "Réessayer",
+    "empty": "Aucun service n'est disponible pour le moment.",
+    "notEligible": "Aucun service n'est disponible pour votre compte.",
+    "price": "{{amount}} HT",
+    "priceFrom": "à partir de {{amount}} HT",
+    "turnaround": {
+      "range": "réalisé en général en {{min}} à {{max}} heures",
+      "upTo": "réalisé en général en {{max}} heures maximum",
+      "about": "réalisé en général en {{min}} heures"
+    },
+    "orderNamed": "Commander {{name}}",
+    "ordered": "Commandé. La suite se passe dans le ticket #{{id}}.",
+    "orderedPlain": "Commandé. Vous pouvez le suivre dans vos commandes.",
+    "order": {
+      "open": "Commander",
+      "variant": "Option",
+      "noCountry": "Aucun pays",
+      "field": {
+        "required": "Veuillez remplir ce champ.",
+        "invalid": "Cette saisie ne convient pas. Veuillez la vérifier."
+      },
+      "net": "Prix HT",
+      "vat": "TVA {{percent}} %",
+      "total": "Total",
+      "pickVariant": "Veuillez choisir une option.",
+      "balanceShort": "Votre solde ({{balance}}) ne suffit pas. Il manque {{missing}}.",
+      "paidFrom": "Le montant est débité immédiatement de votre solde, actuellement {{balance}}.",
+      "ticketHint": "Un ticket s'ouvre ensuite pour discuter du travail avec vous.",
+      "submit": "Commander pour {{amount}}",
+      "submitPlain": "Commander",
+      "errors": {
+        "balance": "Votre solde ne suffit pas. Il manque {{missing}}.",
+        "required": "Veuillez remplir tous les champs obligatoires.",
+        "invalid": "Une saisie ne convient pas. Veuillez vérifier le champ marqué.",
+        "variant": "Veuillez choisir une option.",
+        "notAvailable": "Ce service n'est pas disponible pour votre compte en ce moment.",
+        "tooMany": "Vous avez commandé beaucoup de services au cours de la dernière heure. Veuillez réessayer plus tard."
+      }
+    },
+    "orders": {
+      "title": "Vos commandes",
+      "service": "Service",
+      "created": "Commandé le",
+      "status": "État",
+      "total": "Montant",
+      "ticket": "Ticket",
+      "ticketLink": "Ticket #{{id}}",
+      "refunded": "{{amount}} remboursés",
+      "answered": "J'ai répondu",
+      "answeredSaved": "Merci. La commande continue."
+    },
+    "statuses": {
+      "open": "Ouvert",
+      "in_progress": "En cours",
+      "waiting_customer": "En attente de votre réponse",
+      "done": "Terminé",
+      "cancelled": "Annulé"
     }
   }
 }

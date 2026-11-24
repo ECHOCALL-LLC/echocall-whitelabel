@@ -33,6 +33,7 @@ const ADMIN_NAV: NavItem[] = [
   { path: '/admin/plans', icon: 'sell', label: 'nav.plans', exact: false },
   { path: '/admin/subscriptions', icon: 'autorenew', label: 'nav.subscriptions', exact: false },
   { path: '/admin/addons', icon: 'add_shopping_cart', label: 'nav.addons', exact: false },
+  { path: '/admin/services', icon: 'handyman', label: 'nav.services', exact: false },
   { path: '/admin/invoices', icon: 'receipt_long', label: 'nav.invoices', exact: false },
   { path: '/admin/numbers', icon: 'dialpad', label: 'nav.numbers', exact: false },
   { path: '/admin/agents', icon: 'smart_toy', label: 'nav.customerAgents', exact: false },

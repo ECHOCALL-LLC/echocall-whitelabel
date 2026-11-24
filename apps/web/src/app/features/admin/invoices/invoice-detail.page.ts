@@ -1,5 +1,6 @@
 import { Component, inject, type OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -11,11 +12,12 @@ import { DownloadService } from '../../../core/download/download.service';
 import { readApiError, readBlobApiError } from '../../../core/errors/api-error';
 import { formatMoney, formatUnitPrice } from '../../../core/format/money';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
-import type { ResellerInvoiceDetail } from '../../../core/hub/hub.models';
+import type { ResellerInvoiceDetail, SendInvoiceResult } from '../../../core/hub/hub.models';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { NotifyService } from '../../../core/notify/notify.service';
 import { LocalDatePipe } from '../../../shared/local-date.pipe';
 import { invoiceStatusLabel } from './invoice-status';
+import { type InvoiceSendDialogData, InvoiceSendDialogComponent } from './invoice-send-dialog.component';
 
 /**
  * One invoice with everything it charges for. The amounts are the ones the hub
@@ -58,6 +60,12 @@ import { invoiceStatusLabel } from './invoice-status';
             <span class="status" [class]="'status status-' + d.invoice.status">
               {{ statusLabel(d.invoice.status, t) }}
             </span>
+            @if (d.invoice.status !== 'canceled') {
+              <button mat-stroked-button type="button" (click)="mail(d)" data-testid="send-mail">
+                <mat-icon>send</mat-icon>
+                {{ t(d.invoice.emailSentAt ? 'admin.invoices.mail.resend' : 'admin.invoices.mail.open') }}
+              </button>
+            }
             <button
               mat-stroked-button
               type="button"
@@ -101,6 +109,16 @@ import { invoiceStatusLabel } from './invoice-status';
               <dd>{{ d.invoice.paidDate | localDate: 'date' }}</dd>
             </div>
           }
+          <div>
+            <dt>{{ t('admin.invoices.mail.status') }}</dt>
+            <dd data-testid="mail-status">
+              @if (d.invoice.emailSentAt) {
+                {{ t('admin.invoices.mail.sentAt', { date: (d.invoice.emailSentAt | localDate), to: d.invoice.emailSentTo ?? '' }) }}
+              } @else {
+                <span class="sub">{{ t('admin.invoices.mail.notSent') }}</span>
+              }
+            </dd>
+          </div>
           @if (period(d); as span) {
             <div>
               <dt>{{ t('admin.invoices.detail.period') }}</dt>
@@ -193,6 +211,7 @@ import { invoiceStatusLabel } from './invoice-status';
     }
     .head-actions {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 12px;
     }
@@ -226,6 +245,7 @@ export class AdminInvoiceDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly notify = inject(NotifyService);
   private readonly language = inject(LanguageService);
+  private readonly dialog = inject(MatDialog);
 
   readonly columns = ['description', 'type', 'quantity', 'unitPrice', 'amount'];
   readonly detail = signal<ResellerInvoiceDetail | null>(null);
@@ -285,6 +305,25 @@ export class AdminInvoiceDetailPage implements OnInit {
     } finally {
       this.downloading.set(false);
     }
+  }
+
+  /**
+   * Opens the mail to the customer. A sent draft turns into a sent invoice in
+   * the service, so the invoice is read again rather than patched here.
+   */
+  async mail(detail: ResellerInvoiceDetail): Promise<void> {
+    const ref = this.dialog.open<InvoiceSendDialogComponent, InvoiceSendDialogData, SendInvoiceResult>(
+      InvoiceSendDialogComponent,
+      {
+        data: { invoiceId: detail.invoice.id, invoiceNumber: detail.invoice.invoiceNumber ?? String(detail.invoice.id) },
+        panelClass: 'dialog-wide',
+        autoFocus: 'first-tabbable',
+      },
+    );
+    const result = await firstValueFrom(ref.afterClosed());
+    if (!result) return;
+    this.notify.success('admin.invoices.mail.sent', { to: result.emailSentTo ?? '' });
+    await this.load(detail.invoice.id);
   }
 
   private async load(id: number): Promise<void> {

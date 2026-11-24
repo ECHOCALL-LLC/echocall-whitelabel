@@ -38,6 +38,11 @@ describe('AdminCustomersController', () => {
     'DELETE /resellers/customers/950': { status: 204 },
     // The hub cannot say who this is (no GET route), but still deletes.
     'DELETE /resellers/customers/960': { status: 204 },
+    // The hub checks billing details against each other and names what does not fit.
+    'PATCH /resellers/customers/970': {
+      status: 400,
+      body: { error: { code: 'invalid_billing_details', message: 'invalid_postal_code' } },
+    },
   });
 
   beforeAll(async () => {
@@ -158,6 +163,50 @@ describe('AdminCustomersController', () => {
       firstName: '',
       lastName: 'Bauer',
     });
+  });
+
+  it('passes billing details to the hub, clears empty ones and records only which fields changed', async () => {
+    const res = await api()
+      .patch('/api/admin/customers/901/billing')
+      .set(asAdmin)
+      .send({
+        billingEmail: ' Rechnung@Example.com ',
+        billingCcEmail: '',
+        billingStreet: 'Hauptstr. 1\nHinterhaus',
+        vatId: 'DE123456789',
+        unknown: 'dropped',
+      });
+
+    expect(res.status).toBe(200);
+    expect(JSON.parse(hubCalls('PATCH', '/resellers/customers/901').at(-1)?.body ?? '{}')).toEqual({
+      billingEmail: 'rechnung@example.com',
+      billingCcEmail: null,
+      billingStreet: 'Hauptstr. 1 Hinterhaus',
+      vatId: 'DE123456789',
+    });
+    const entry = await lastAudit();
+    expect(entry).toMatchObject({ action: 'customers.billing_updated', targetId: '901' });
+    expect(JSON.stringify(entry)).not.toContain('rechnung@example.com');
+  });
+
+  it('refuses a billing address that is not one before it calls the hub, and an empty change', async () => {
+    const before = hub.calls.length;
+    const bad = await api().patch('/api/admin/customers/901/billing').set(asAdmin).send({ billingEmail: 'nope' });
+    const empty = await api().patch('/api/admin/customers/901/billing').set(asAdmin).send({});
+
+    expect(bad.status).toBe(400);
+    expect(empty.status).toBe(400);
+    expect(hub.calls.length).toBe(before);
+  });
+
+  it('hands on what the hub says does not fit', async () => {
+    const res = await api()
+      .patch('/api/admin/customers/970/billing')
+      .set(asAdmin)
+      .send({ billingPostalCode: '1', billingCountry: 'DE' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatchObject({ code: 'invalid_billing_details', message: 'invalid_postal_code' });
   });
 
   it('suspends in the hub and in the portal, and lets the customer back in again', async () => {

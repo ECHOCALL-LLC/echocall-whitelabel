@@ -17,6 +17,7 @@ import type { ResellerTicketDetail, ResellerTicketMessage } from '../../../core/
 import { NotifyService } from '../../../core/notify/notify.service';
 import { ConfirmDialogComponent, type ConfirmDialogData } from '../../../shared/confirm-dialog.component';
 import { LocalDatePipe } from '../../../shared/local-date.pipe';
+import { AdminServiceOrderPanel } from './admin-service-order.panel';
 
 /** The states the hub stores on a ticket; the picker offers them and nothing else. */
 const STATUSES = ['open', 'in_progress', 'waiting', 'resolved', 'closed'] as const;
@@ -45,6 +46,7 @@ const OPERATOR_ROLES = ['admin', 'reseller'];
     RouterLink,
     TranslocoDirective,
     LocalDatePipe,
+    AdminServiceOrderPanel,
   ],
   providers: [provideTranslocoScope('admin')],
   template: `
@@ -95,6 +97,8 @@ const OPERATOR_ROLES = ['admin', 'reseller'];
             <p class="description">{{ detail.description }}</p>
           </mat-card-content>
         </mat-card>
+
+        <app-admin-service-order-panel [ticketId]="id()" (changed)="load()" />
 
         <div class="controls">
           <mat-form-field appearance="outline">

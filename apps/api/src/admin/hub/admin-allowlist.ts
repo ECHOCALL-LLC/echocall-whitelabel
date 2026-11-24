@@ -19,7 +19,8 @@
  *   to one of its own session-protected routes, which a portal browser cannot
  *   read. /api/admin/invoices/{id}/pdf fetches the document itself instead.
  * - everything outside /resellers: the customer surfaces belong to the customer
- *   proxy, which scopes them to the signed-in customer.
+ *   proxy, which scopes them to the signed-in customer. The exceptions below read
+ *   the operator's own account (agent language names, warning mails).
  */
 
 /** One path segment: hub ids are numeric or prefixed (agent_12), never contain a slash. */
@@ -62,6 +63,21 @@ const RULES: readonly (readonly [string, string])[] = [
   ['GET', '/resellers/invoices/{id}'],
   ['POST', '/resellers/invoices/{id}/mark-sent'],
   ['POST', '/resellers/invoices/{id}/mark-paid'],
+  // Mails the invoice to the address on file for its customer; the recipients
+  // are never taken from the request, only subject, text and the copy to self.
+  ['GET', '/resellers/invoices/{id}/email-preview'],
+  ['POST', '/resellers/invoices/{id}/send'],
+
+  // The services the operator sells: platform offers switched on and priced,
+  // their own services, and the orders that arrive with a ticket.
+  ['GET', '/resellers/services/offers'],
+  ['PUT', '/resellers/services/offers/{id}'],
+  ['GET|POST', '/resellers/services/own'],
+  ['PUT|DELETE', '/resellers/services/own/{id}'],
+  ['GET', '/resellers/services/orders/by-ticket/{id}'],
+  ['POST', '/resellers/services/orders/{id}/status'],
+  ['POST', '/resellers/services/orders/{id}/cancel'],
+  ['POST', '/resellers/services/orders/{id}/forward'],
 
   ['GET', '/resellers/phone-numbers/available'],
   ['GET', '/resellers/phone-numbers/assigned'],
@@ -91,6 +107,11 @@ const RULES: readonly (readonly [string, string])[] = [
 
   // Names the language code every agent row carries.
   ['GET', '/languages/agent'],
+
+  // Which warnings reach the connected account by email (the portal balance, the
+  // purchases of its customers), and how often. The hub answers for the key's owner.
+  ['GET', '/users/me/warning-mails'],
+  ['PUT', '/users/me/warning-mails/{id}'],
 ];
 
 interface CompiledRule {

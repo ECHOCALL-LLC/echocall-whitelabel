@@ -11,7 +11,14 @@ import { firstValueFrom } from 'rxjs';
 import { HubService } from '../../../core/hub/hub.service';
 import type { ConversationTranscriptMessage } from '../../../core/hub/hub.models';
 import { NotifyService } from '../../../core/notify/notify.service';
-import { conversationTitle, isChat, type AnyConversation } from './conversation.model';
+import {
+  billedMinutes,
+  conversationDuration,
+  conversationStatusLabel,
+  conversationTitle,
+  isChat,
+  type AnyConversation,
+} from './conversation.model';
 
 type ConversationDetail = AnyConversation & { messages?: ConversationTranscriptMessage[] };
 
@@ -54,7 +61,7 @@ type ConversationDetail = AnyConversation & { messages?: ConversationTranscriptM
             <dl class="facts inline">
               <div>
                 <dt>{{ t('fields.status') }}</dt>
-                <dd data-testid="conversation-status">{{ c.status || '' }}</dd>
+                <dd data-testid="conversation-status">{{ statusLabel(t, c) }}</dd>
               </div>
               <div>
                 <dt>{{ t('user.conversations.started') }}</dt>
@@ -64,6 +71,19 @@ type ConversationDetail = AnyConversation & { messages?: ConversationTranscriptM
                 <dt>{{ t('user.conversations.duration') }}</dt>
                 <dd>{{ duration(c.duration) }}</dd>
               </div>
+              @if (billed(); as minutes) {
+                <div>
+                  <dt>{{ t('user.conversations.billed') }}</dt>
+                  <dd data-testid="conversation-billed">
+                    @if (minutes.count === 0) {
+                      {{ t('user.conversations.billedNone') }}
+                    } @else {
+                      {{ t('user.conversations.billedMinutes', { count: minutes.count }) }}
+                      <div class="hint">{{ t('user.conversations.billedRule') }}</div>
+                    }
+                  </dd>
+                </div>
+              }
               @if (!isChatThread()) {
                 <div>
                   <dt>{{ t('user.conversations.direction') }}</dt>
@@ -170,6 +190,12 @@ export class ConversationDetailPage implements OnInit {
     const c = this.conversation();
     return c && !isChat(c) ? c.direction : 'inbound';
   });
+  /** Wrapped so a call that never connected (0 minutes) still gets its line. */
+  readonly billed = computed(() => {
+    const c = this.conversation();
+    const count = c ? billedMinutes(c) : null;
+    return count === null ? null : { count };
+  });
   readonly plainTranscript = computed(() => {
     const c = this.conversation();
     return c && !isChat(c) ? (c.transcription ?? '') : '';
@@ -185,9 +211,11 @@ export class ConversationDetailPage implements OnInit {
   }
 
   duration(seconds: number | null | undefined): string {
-    if (seconds === null || seconds === undefined) return '';
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
+    return conversationDuration(seconds);
+  }
+
+  statusLabel(t: (key: string) => string, conversation: AnyConversation): string {
+    return conversationStatusLabel(t, conversation);
   }
 
   async load(): Promise<void> {

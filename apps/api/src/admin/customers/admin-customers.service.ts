@@ -12,7 +12,7 @@ import {
   AdminUsersService,
   toAdminRow,
 } from '../users/admin-users.service.js';
-import type { CreateCustomerDto, UpdateCustomerDto } from './dto.js';
+import type { CreateCustomerDto, UpdateBillingDto, UpdateCustomerDto } from './dto.js';
 
 /** A new customer: the account in the hub plus the portal login that was invited for it. */
 export interface CreateCustomerResult {
@@ -113,6 +113,21 @@ export class AdminCustomersService {
       changed: (Object.keys(patch) as (keyof UpdateCustomerDto)[]).filter((key) => patch[key] !== undefined),
     });
     return { user };
+  }
+
+  /**
+   * Changes the details the customer's invoices carry and are mailed to. They
+   * live only in the hub, so nothing in the portal follows; the trail records
+   * which fields changed, never their values.
+   */
+  async updateBilling(customerId: number, patch: UpdateBillingDto, ctx: ActionContext): Promise<{ success: true }> {
+    const body: Record<string, string | null> = {};
+    for (const [key, value] of Object.entries(patch)) {
+      if (value !== undefined) body[key] = value === '' ? null : value;
+    }
+    await this.hub.raw('PATCH', `/resellers/customers/${customerId}`, { body });
+    await this.record(ctx, 'customers.billing_updated', customerId, { changed: Object.keys(body) });
+    return { success: true };
   }
 
   /** Locks the customer out of the hub and of the portal, and ends any portal session it holds. */

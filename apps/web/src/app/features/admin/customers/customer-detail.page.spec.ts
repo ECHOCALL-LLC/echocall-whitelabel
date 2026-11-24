@@ -87,6 +87,8 @@ const TRANSACTION = {
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 interface Parts {
+  /** The customer as the hub answers it, when a test needs other details than the default. */
+  customer?: unknown;
   balance?: number;
   usage?: unknown;
   subscriptions?: unknown[];
@@ -123,7 +125,7 @@ describe('AdminCustomerDetailPage', () => {
   /** Answers the customer itself, then the four calls that follow it, then
    *  the paged transactions. The four only leave once the customer is here. */
   async function answerLoad(parts: Parts = {}) {
-    http.expectOne('/api/admin/hub/resellers/customers/501').flush(CUSTOMER);
+    http.expectOne('/api/admin/hub/resellers/customers/501').flush(parts.customer ?? CUSTOMER);
     await settle();
     return answerParts(parts);
   }
@@ -346,4 +348,51 @@ describe('AdminCustomerDetailPage', () => {
     });
     return request.request;
   }
+
+  it('warns that invoices cannot be mailed while no billing email is on file', async () => {
+    const fixture = await render();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="billing-no-email"]').textContent).toContain(
+      ADMIN_TEXTS.customer.billing.noEmail,
+    );
+    expect(fixture.nativeElement.querySelector('[data-testid="billing-email-value"]').textContent).toContain(
+      ADMIN_TEXTS.customer.billing.none,
+    );
+  });
+
+  it('shows the billing details the way the invoice prints them', async () => {
+    const fixture = await render({
+      customer: {
+        ...CUSTOMER,
+        user: {
+          ...CUSTOMER.user,
+          companyName: 'Mayer GmbH',
+          billingStreet: 'Hauptstr. 1',
+          billingPostalCode: '10115',
+          billingCity: 'Berlin',
+          billingCountry: 'DE',
+          vatId: 'DE123456789',
+          billingEmail: 'rechnung@example.com',
+          billingCcEmail: null,
+        },
+      },
+    });
+    const card = fixture.nativeElement.querySelector('[data-testid="billing-card"]') as HTMLElement;
+
+    expect(card.querySelector('[data-testid="billing-no-email"]')).toBeNull();
+    expect(card.textContent).toContain('rechnung@example.com');
+    expect(card.textContent).toContain('Hauptstr. 1');
+    expect(card.textContent).toContain('10115 Berlin');
+    expect(card.textContent).toContain('Germany');
+    expect(card.textContent).toContain('DE123456789');
+  });
+
+  it('reads the customer again once the billing details were saved', async () => {
+    const fixture = await render();
+    dialogResult = true;
+
+    (fixture.nativeElement.querySelector('[data-testid="edit-billing"]') as HTMLButtonElement).click();
+    await settle();
+    await answerLoad();
+  });
 });

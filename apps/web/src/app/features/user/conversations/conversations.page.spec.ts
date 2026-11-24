@@ -39,6 +39,7 @@ describe('ConversationsPage', () => {
         fromNumber: '+4930111111',
         toNumber: '+4930222222',
         duration: 95,
+        billedMinutes: 2,
         status: 'completed',
         createdAt: '2026-09-17T08:00:00.000Z',
       },
@@ -48,6 +49,9 @@ describe('ConversationsPage', () => {
     expect(row.textContent).toContain('+4930111111');
     expect(row.textContent).toContain('1:35');
     expect(row.textContent).toContain(USER_TEXTS.conversations.statuses.completed);
+    expect(row.querySelector('[data-testid="conversation-billed"]').textContent.trim()).toBe(
+      USER_TEXTS.conversations.billedMinutes.replace('{{count}}', '2'),
+    );
   });
 
   it('switches to chat threads and names the visitor', async () => {
@@ -81,5 +85,8 @@ describe('ConversationsPage', () => {
     const row = fixture.nativeElement.querySelector('table tbody tr');
     expect(row.textContent).toContain('Mara Sole');
     expect(row.textContent).toContain(USER_TEXTS.conversations.statuses.active);
+    // A chat counts no voice minutes, so the call column is gone.
+    expect(fixture.nativeElement.querySelector('[data-testid="conversation-billed"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain(USER_TEXTS.conversations.billed);
   });
 });

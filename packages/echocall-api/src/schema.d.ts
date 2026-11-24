@@ -66,6 +66,34 @@ export interface paths {
         patch: operations["update_agent"];
         trace?: never;
     };
+    "/agents/{agentId}/call-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the call summary settings of a voice agent
+         * @description Whether the agent emails a short summary after every call (who called, what about, how urgent, callback number), where it goes, the important numbers and, for each number of the agent, the codes that forward a mobile phone to it when busy, not answered or unreachable. Only agents of your own account.
+         *
+         *     MCP tool: `get_agent_call_summary` (read only).
+         */
+        get: operations["get_agent_call_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change the call summary of a voice agent
+         * @description Switches the summary email after every call on or off and sets where it goes, whether it leaves out name and number (`anonymous`) and the important numbers. Fields left out keep their value. Only calls that start after switching on get a summary, usually within five minutes after the call. 409 with `details.reason` `ZERO_PII` when the agent keeps no call data, 400 with `details.reason` `INVALID_VIP` and `details.index` for a number that is not a phone number. Only agents of your own account.
+         *
+         *     MCP tool: `update_agent_call_summary` (writes).
+         */
+        patch: operations["update_agent_call_summary"];
+        trace?: never;
+    };
     "/agents/{agentId}/integrations": {
         parameters: {
             query?: never;
@@ -626,7 +654,7 @@ export interface paths {
         get?: never;
         /**
          * Turn automatic top-ups on or off
-         * @description When minutes or conversations run out, the amount set here is bought again and charged automatically. Not during a trial.
+         * @description When the minutes or conversations already paid for run low, the amount set here is bought again automatically: from your prepaid euro balance, and when the balance is not enough your stored card is charged (at least 5 euro). Not during a trial. Turning it on needs a default card (see `list_payment_methods`): without one it is refused with 400 and `details.reason` `NO_CARD`; turning it off or changing the amounts always works.
          *
          *     MCP tool: `set_auto_topup` (costs money).
          */
@@ -671,7 +699,7 @@ export interface paths {
         put?: never;
         /**
          * Top up the balance
-         * @description Charges one of your stored cards right away and adds the amount to your prepaid euro balance; this cannot be undone over the API. `amountEur` is net: the balance carries no VAT, VAT is charged when the balance is used. The balance pays for orders placed with `place_order` and payment method `balance`. To buy a plan or add-on directly use `place_order`; for automatic refills of minutes and conversations use `set_auto_topup`. `paymentMethodId` is an `id` from `list_payment_methods`. Refused with 400 when the card holder has to confirm the payment (top up in the dashboard then), when top ups are not available for your account or when the payment fails. Returns the new balance.
+         * @description Charges one of your stored cards right away and adds the amount to your prepaid euro balance; this cannot be undone over the API. `amountEur` is net and at least 5 euro: the balance carries no VAT, VAT is charged when the balance is used. The balance pays for every minute and conversation on pay as you go, and for orders placed with `place_order` and payment method `balance`. To buy a plan or add-on directly use `place_order`; for automatic refills of minutes and conversations use `set_auto_topup`. `paymentMethodId` is an `id` from `list_payment_methods`. Refused with 400 when the card holder has to confirm the payment (top up in the dashboard then), when top ups are not available for your account or when the payment fails. Returns the new balance.
          *
          *     MCP tool: `deposit_balance` (costs money).
          */
@@ -835,6 +863,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/billing/pay-as-you-go": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start pay as you go
+         * @description Moves voice and chat to pay as you go: no monthly price and no term, every minute and conversation is paid from the prepaid euro balance (top it up with `deposit_balance`). A running plan for voice or chat ends here; the minutes and conversations it still holds carry over. An account already on pay as you go stays as it is, so calling this again changes nothing. A plan renewed by card subscription is left as it is and reported as `stripe_backed`. Refused with 400 and `details.reason` `TRIAL_RUNNING` while the trial runs (the account moves over by itself when the trial ends), `NOT_DIRECT` for customers of a reseller (their reseller sets their plans) and `SIGNUP_REVIEW_PENDING` while the sign-up is still being reviewed.
+         *
+         *     MCP tool: `start_pay_as_you_go` (irreversible).
+         */
+        post: operations["start_pay_as_you_go"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/billing/payment-methods": {
         parameters: {
             query?: never;
@@ -991,6 +1041,78 @@ export interface paths {
         get: operations["get_presence_billing"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List services you can order
+         * @description Services EchoCall does for your account ("Add-ons & Services"): price or variants, fields to fill in, usual turnaround, plus the VAT rate and your balance they are paid from. Empty with `eligible` false when your account cannot order. Order with `order_service`. Read only.
+         *
+         *     MCP tool: `list_services` (read only).
+         */
+        get: operations["list_services"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/services/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List your service orders
+         * @description Your service orders, newest first, with status, price, what was filled in, the ticket the work is discussed in and how long it usually takes. Read only.
+         *
+         *     MCP tool: `list_service_orders` (read only).
+         */
+        get: operations["list_service_orders"];
+        put?: never;
+        /**
+         * Order a service
+         * @description Orders a service from `list_services`, pays it gross (net plus VAT) from your balance and opens a support ticket with your answers, where the work is discussed. Set `variantKey` when it has variants and fill every required field. 402 with `details.balanceEur` and `details.grossEur` when the balance is short, 400 with `details.reason` (and `details.field`) when something is missing or invalid, 404 when not offered, 429 after 10 an hour.
+         *
+         *     MCP tool: `order_service` (costs money).
+         */
+        post: operations["order_service"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/services/orders/{orderId}/answered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Say a service question is answered
+         * @description When an order is `waiting_customer`, answer the question in its ticket (`POST /tickets/{ticketId}/messages`), then call this so the work goes on. 400 when the order is not waiting for you.
+         *
+         *     MCP tool: `answer_service_question` (writes).
+         */
+        post: operations["answer_service_question"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1532,7 +1654,7 @@ export interface paths {
         };
         /**
          * List conversations
-         * @description Returns a page of conversations, newest first. One `type` is listed at a time: `voice` returns call records and `chat` returns widget and WhatsApp threads. Every item carries a `type` field so a client can tell the two shapes apart without remembering which query it sent. The pagination object reports `page`, `perPage`, the `type` that was listed and `total`, a real count of the conversations of that type on the account.
+         * @description Returns a page of conversations, newest first. One `type` is listed at a time: `voice` returns call records and `chat` returns widget and WhatsApp threads. A call record carries its length in seconds and `billedMinutes`, the voice minutes it counts (every started minute counts, a call that never connected counts 0). Every item carries a `type` field so a client can tell the two shapes apart without remembering which query it sent. The pagination object reports `page`, `perPage`, the `type` that was listed and `total`, a real count of the conversations of that type on the account.
          *
          *     MCP tool: `list_conversations` (read only).
          */
@@ -1918,7 +2040,7 @@ export interface paths {
         put?: never;
         /**
          * Connect an integration
-         * @description Stores the credentials and settings for one third-party service and returns the new integration's identifier. The integration is created active, but connecting it does not by itself let an agent use it: it still has to be assigned to an agent or chatbot. `config` is a JSON string, not a nested object, so serialise it before sending; the keys it must contain are the ones listed under `configFields` for this type in GET /integrations/types. A `config` that contains the mask `********` anywhere is refused with 400 and error code `masked_without_stored_value`: the mask stands for a stored secret, and a new integration has none, so send the real values. Keys inside `config` that only the server writes (the connection keys and `toolPermissions`) are dropped before the integration is stored. Nothing is contacted at creation time, so a wrong credential is only noticed later: call the test endpoint afterwards to confirm the connection works. A WhatsApp integration whose phone number is already connected in an active integration of another account is refused with 409 and error code `conflict`. A Genesys Cloud integration (type `genesys_cloud`) follows its own rules. An account can have one, and a second one is refused with 409 and error code `conflict`. Its `config` is described by the `GenesysCloudConfig` schema and is checked at once: an invalid value is refused with 400 and error code `invalid_config`, and `error.field` names the part that is wrong (`region`, `organization`, `oauth`, `target`, `table` or `limits`). An `oauthClientSecret` sent as `********` is refused the same way with the field `oauth`. The response never contains the access data Genesys Cloud uses to reach EchoCall: they are generated once in the dashboard under Setup. Link agents with POST /agents/{agentId}/integrations or POST /chatbots/{chatbotId}/integrations; the dashboard then shows the connector id of each linked agent.
+         * @description Stores the credentials and settings for one third-party service and returns the new integration's identifier. The integration is created active, but connecting it does not by itself let an agent use it: it still has to be assigned to an agent or chatbot. `config` is a JSON string, not a nested object, so serialise it before sending; the keys it must contain are the ones listed under `configFields` for this type in GET /integrations/types. A `config` that contains the mask `********` anywhere is refused with 400 and error code `masked_without_stored_value`: the mask stands for a stored secret, and a new integration has none, so send the real values. Keys inside `config` that only the server writes (the connection keys and `toolPermissions`) are dropped before the integration is stored. Nothing is contacted at creation time, so a wrong credential is only noticed later: call the test endpoint afterwards to confirm the connection works. A WhatsApp integration whose phone number is already connected in an active integration of another account is refused with 409 and error code `conflict`. A Genesys Cloud integration (type `genesys_cloud`) follows its own rules. An account can have one, and a second one is refused with 409 and error code `conflict`. Its `config` is described by the `GenesysCloudConfig` schema and is checked at once: an invalid value is refused with 400 and error code `invalid_config`, and `error.field` names the part that is wrong (`region`, `organization`, `oauth`, `target`, `table` or `limits`). An `oauthClientSecret` sent as `********` is refused the same way with the field `oauth`. The response never contains the access data Genesys Cloud uses to reach EchoCall: they are generated once in the dashboard under Setup. Link agents with POST /agents/{agentId}/integrations or POST /chatbots/{chatbotId}/integrations; the dashboard then shows the connector id of each linked agent. An SMTP integration (type `smtp`) can carry email templates the agent sends after a conversation in `config.templates`, a list of objects with `id`, `name`, `subject`, `body`, `cc` (a list of addresses) and `description`, plus two switches. `anonymous` set to true leaves personal data such as names, phone numbers, email and postal addresses out of the subject and text, writes the transcript as customer and agent, and ends the mail with a link to the conversation in the dashboard (a customer of a reseller is led over the portal sign in of the reseller). `showAgentName` set to true writes the name of the agent in the transcript instead of the word agent. Both false or left out send the mail as before; the dashboard always shows the full conversation.
          *
          *     MCP tool: `create_integration` (writes).
          */
@@ -2286,7 +2408,7 @@ export interface paths {
         };
         /**
          * List available interface locales
-         * @description Returns the user interface locales the platform ships, for populating a language picker or for validating a value before writing it to a profile or an agent. The list is read from the locale directories on disk, so it reflects the running build rather than a database table; reseller-specific locale folders are excluded. If that directory cannot be read the handler falls back to `en` and `de` instead of failing. Note two things about the shape: the response is a bare JSON array, not the usual `{ data: [...] }` envelope, and each entry carries only a `code`, with no display name. The route requires a valid API key but checks no scope.
+         * @description Returns the user interface locales the platform ships, for populating a language picker or for validating a value before writing it to a profile or an agent. The list is read from the locale directories on disk, so it reflects the running build rather than a database table; reseller-specific locale folders are excluded, and so are right to left locales such as Arabic, Hebrew, Persian or Urdu, because the interface does not mirror its layout yet. Locales the platform offers only on request are left out as well, the same way the dashboard's language switcher leaves them out. If that directory cannot be read the handler falls back to `en` and `de` instead of failing. Note two things about the shape: the response is a bare JSON array, not the usual `{ data: [...] }` envelope, and each entry carries only a `code`, with no display name. The route requires a valid API key but checks no scope.
          *
          *     MCP tool: `list_languages` (read only).
          */
@@ -2374,7 +2496,7 @@ export interface paths {
         };
         /**
          * List announcements
-         * @description Announcements from EchoCall shown in the dashboard, for example planned maintenance, newest first.
+         * @description Announcements from EchoCall shown in the dashboard, for example planned maintenance, newest first. An announcement is no longer listed once it has expired.
          *
          *     MCP tool: `list_announcements` (read only).
          */
@@ -2480,7 +2602,7 @@ export interface paths {
         head?: never;
         /**
          * Update a phone number
-         * @description Changes which agent answers on a number and the label it carries in the dashboard. Only the fields present in the body are written, everything else is left alone; a body with no known field is rejected with 400. The response is an acknowledgement message only, it does not echo the updated record: read the number back with the GET endpoint if you need the new state. Assigning an agent here does not itself provision the number at the carrier, it only changes the routing recorded for it.
+         * @description Changes which agent answers on a number and the label it carries in the dashboard. Only the fields present in the body are written, everything else is left alone; a body with no known field is rejected with 400. The response is an acknowledgement message only, it does not echo the updated record: read the number back with the GET endpoint if you need the new state. `voiceAgentId` takes the id GET /phone-numbers/assignable-agents returns (`agent_12`) or the bare number. The agent has to be one of the account's own voice agents and ready to take calls, and the number is pointed at it at the phone service in the same step, so calls are answered by it right away. An agent of another account answers 404 `agent_not_found`, an agent that is not set up yet 409 `agent_not_ready`, and when the phone service cannot be reached the answer is 503 `provider_unavailable` and nothing is changed.
          *
          *     MCP tool: `update_phone_number` (writes).
          */
@@ -2685,7 +2807,7 @@ export interface paths {
         };
         /**
          * Agents a number can be assigned to
-         * @description The voice agents of your account that a phone number can answer with, as the assign menu on the billing page lists them. Pass `id` as `agentId` when you update a number.
+         * @description The voice agents of your account that a phone number can answer with, as the assign menu on the billing page lists them. Pass `id` as `voiceAgentId` to `PATCH /phone-numbers/{phoneNumberId}` to let that agent answer the number.
          *
          *     MCP tool: `list_assignable_agents` (read only).
          */
@@ -3264,6 +3386,7 @@ export interface paths {
                         city?: string;
                         company?: string;
                         country?: string;
+                        /** Format: email */
                         email: string;
                         firstName?: string;
                         /**
@@ -3681,7 +3804,7 @@ export interface paths {
         };
         /**
          * Get the prepaid EUR balance
-         * @description Returns the reseller own prepaid EUR balance as a plain figure, with the currency and a preformatted string. This is the same balance that GET /resellers/balance-status reports, without the warning level, and it is kept deliberately small so external billing systems can poll it cheaply. Answers 404 when the reseller record behind the key cannot be found. Not reachable with a non-reseller API key.
+         * @description Returns the prepaid EUR balance the reseller can spend as a plain figure, with the currency and a preformatted string. This is the same balance that GET /resellers/balance-status reports, without the warning level, and it is kept deliberately small so external billing systems can poll it cheaply. Answers 404 when the reseller record behind the key cannot be found. Not reachable with a non-reseller API key.
          *
          *     MCP tool: `reseller_get_balance` (read only).
          */
@@ -3703,7 +3826,7 @@ export interface paths {
         };
         /**
          * Get the balance with a warning level
-         * @description Returns the reseller prepaid EUR balance together with a health classification meant for dashboard banners. The level is `healthy` at 5 EUR or more, `warning` from 1 EUR up to 5 EUR, and `critical` below 1 EUR, and `shouldShowBanner` is true whenever the balance is under 5 EUR. A preformatted string with a euro sign is included so a caller does not have to format it. Answers 404 when the reseller record behind the key no longer exists. Use GET /resellers/balance for the plain figure. A non-reseller key is refused with 403.
+         * @description Returns the prepaid EUR balance the reseller can spend (top-ups plus the partner account, which usage can leave below zero until the next top-up settles it) together with a health classification meant for dashboard banners. The level is `healthy` at 5 EUR or more, `warning` from 1 EUR up to 5 EUR, and `critical` below 1 EUR, and `shouldShowBanner` is true whenever the balance is under 5 EUR. A preformatted string with a euro sign is included so a caller does not have to format it. Answers 404 when the reseller record behind the key no longer exists. Use GET /resellers/balance for the plain figure. A non-reseller key is refused with 403.
          *
          *     MCP tool: `reseller_get_balance_status` (read only).
          */
@@ -4157,8 +4280,8 @@ export interface paths {
          */
         get: operations["list_reseller_email_templates"];
         /**
-         * Save a ticket email template
-         * @description Saves your template for one event and language. Disabled templates fall back to the EchoCall template.
+         * Save an email template
+         * @description Saves your template for one event and language. Disabled templates fall back to the EchoCall template. For `reseller_invoice`, the text you send by hand from your invoice list, the placeholders are {{customerName}}, {{invoiceNumber}}, {{amount}}, {{dueDate}} and {{resellerName}}; logo, colour, company details and the PDF are added around it, and a language without a template of yours falls back to the default text of that language, then English.
          *
          *     MCP tool: `save_reseller_email_template` (writes).
          */
@@ -4229,11 +4352,33 @@ export interface paths {
         };
         /**
          * Get one invoice with its line items
-         * @description Returns a single invoice raised by this reseller, together with the customer it is addressed to and its line items. An invoice of another reseller answers 404 `not_found`. The recipient details are a snapshot taken when the invoice was raised, so a later change to the customer record leaves the document as it went out. `pdfUrl` is null until a document has been rendered; render one with GET /resellers/invoices/{id}/pdf. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`.
+         * @description Returns a single invoice raised by this reseller, together with the customer it is addressed to and its line items. An invoice of another reseller answers 404 `not_found`. The recipient details are a snapshot taken when the invoice was issued, so a later change to the customer record leaves the document as it went out; a `draft` still follows the customer's current billing details. `pdfUrl` is null until a document has been rendered; render one with GET /resellers/invoices/{id}/pdf. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`.
          *
          *     MCP tool: `reseller_get_invoice` (read only).
          */
         get: operations["reseller_get_invoice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/invoices/{id}/email-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview the invoice email
+         * @description Shows the email POST /resellers/invoices/{id}/send would write, without sending anything: the recipient and copy address stored on the customer, the language, subject and text from the template, the sender name and address, the attachment name and whether a portal button is added. `problem` names what stands in the way while the mail cannot go out: `canceled`, `customer_gone`, `no_billing_email` (set `billingEmail` with PATCH /resellers/customers/{id}), `company_incomplete` (see `missingCompanyFields`), `no_smtp` or `daily_limit`; null when it can be sent. Without a mail server of its own the reseller sends through the platform: the sender name is the reseller, the address is the platform's, and replies go to the reseller's company email. An invoice of another reseller answers 404. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`.
+         *
+         *     MCP tool: `reseller_preview_invoice_email` (read only).
+         */
+        get: operations["reseller_preview_invoice_email"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4275,7 +4420,7 @@ export interface paths {
         put?: never;
         /**
          * Mark an invoice as sent
-         * @description Moves an invoice of this reseller from `draft` to `pending`, recording that it has gone out to the customer. It only sets the status: no mail is sent and no document is produced, delivery itself is up to the reseller. The status is written whatever the current one is, so calling this on a paid invoice would move it back to pending. An invoice of another reseller answers 404. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`. This endpoint takes no request body.
+         * @description Moves an invoice of this reseller from `draft` to `sent`, recording that the reseller delivered it some other way. It only sets the status: no mail is sent and no document is produced. To email the invoice with its PDF, use POST /resellers/invoices/{id}/send instead, which sets the status itself. On the move from `draft` the recipient is fixed as the customer's billing details stand at that moment. An invoice that is already `sent`, `paid`, `overdue` or `failed` keeps its status, so a paid invoice is never reopened. A `canceled` invoice answers 409 `invoice_canceled`. An invoice of another reseller answers 404. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`. This endpoint takes no request body.
          *
          *     MCP tool: `reseller_mark_invoice_sent` (writes).
          */
@@ -4295,7 +4440,7 @@ export interface paths {
         };
         /**
          * Render an invoice as PDF
-         * @description Renders an invoice this reseller raised and answers in whichever form the `Accept` header asks for. Send `Accept: application/pdf` and the body is the document itself, which is what an API key should use: the `pdfUrl` of the JSON form points at a route only a signed-in browser session can read. The document carries the reseller as its sender and the recipient details as they stood when the invoice was raised. It is drawn on every call rather than served from a cache, so a correction to the company details is on the next copy. An invoice of another reseller answers 404 `not_found`. While the company details required on an invoice are incomplete nothing is rendered at all: the call answers 409 `company_details_incomplete` and lists the missing fields in `error.missing`, which are filled in with PATCH /resellers/settings/company. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`.
+         * @description Renders an invoice this reseller raised and answers in whichever form the `Accept` header asks for. Send `Accept: application/pdf` and the body is the document itself, which is what an API key should use: the `pdfUrl` of the JSON form points at a route only a signed-in browser session can read. The document carries the reseller as its sender and the recipient details as they stood when the invoice was issued; a `draft` still follows the customer's current billing details. It is drawn on every call rather than served from a cache, so a correction to the company details is on the next copy. An invoice of another reseller answers 404 `not_found`. While the company details required on an invoice are incomplete nothing is rendered at all: the call answers 409 `company_details_incomplete` and lists the missing fields in `error.missing`, which are filled in with PATCH /resellers/settings/company. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`.
          *
          *     Not available over MCP: it answers with a PDF file.
          */
@@ -4341,6 +4486,28 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/invoices/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Email an invoice to the customer
+         * @description Emails an invoice of this reseller with its PDF attached, entirely in the reseller's name: its template text in the chosen language, its logo, colour and company details. It goes to the `billingEmail` stored on the customer, with `billingCcEmail` in copy; recipients cannot be given in the request. Subject and text may be replaced for this one mail. The PDF is rendered fresh; a `draft` takes the customer's billing details as they are now. A `draft` becomes `sent`, any other status stays, and `emailSentAt` and `emailSentTo` are recorded. Nothing is ever sent automatically. Over the reseller's own mail server up to 1000 invoice emails per 24 hours are allowed, over the platform 200; beyond that the call answers 429 `invoice_email_daily_limit`. 409 answers name what stands in the way: `invoice_email_canceled`, `invoice_email_customer_gone`, `invoice_email_no_billing_email`, `invoice_email_no_smtp` or `company_details_incomplete` with `error.missing`. 502 `invoice_email_failed` means the mail server refused the message; only the reseller's own server's answer is passed on. An invoice of another reseller answers 404. One quirk of the error shape here: when the body fails validation this route answers 400 with `error.message` set to the raw list of validation issues, an array rather than a string, and without `error.details`. Reseller keys only, as everywhere in this group; other keys get 403 `forbidden`.
+         *
+         *     MCP tool: `reseller_send_invoice` (writes).
+         */
+        post: operations["reseller_send_invoice"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4629,6 +4796,194 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/resellers/services/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Your prices for our services
+         * @description Every service we offer with our price, your customer price and margin, per variant. Without a price of your own your customers pay ours.
+         *
+         *     MCP tool: `list_reseller_service_offers` (read only).
+         */
+        get: operations["list_reseller_service_offers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/services/offers/{positionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set your price for a service
+         * @description Turns a service on or off for your customers and sets your net prices, at least ours. Prices left out fall back to ours. 400 with `details.reason` PRICE_BELOW_COST or PRICE_INVALID.
+         *
+         *     MCP tool: `set_reseller_service_offer` (writes).
+         */
+        put: operations["set_reseller_service_offer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/services/orders/{orderId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a service order
+         * @description Ends the order and closes its ticket. With `refund` your customer gets the price back on his balance. Cannot be undone.
+         *
+         *     MCP tool: `cancel_reseller_service_order` (irreversible).
+         */
+        post: operations["cancel_reseller_service_order"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/services/orders/{orderId}/forward": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forward a service order to us
+         * @description Our team does the work: your balance pays our price plus VAT (`forwardQuote`). Your customer keeps talking to you. 402 when your balance is short, 400 with `details.reason` when it cannot be forwarded.
+         *
+         *     MCP tool: `forward_reseller_service_order` (costs money).
+         */
+        post: operations["forward_reseller_service_order"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/services/orders/{orderId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move a service order on
+         * @description Starts the work, asks your customer a question (write it into the ticket) or finishes it. The ticket follows and your customer is told.
+         *
+         *     MCP tool: `set_reseller_service_order_status` (writes).
+         */
+        post: operations["set_reseller_service_order_status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/services/orders/by-ticket/{ticketId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The service order behind a ticket
+         * @description The order of your customer behind a ticket from `GET /resellers/tickets`, with what forwarding to us would cost. `null` when the ticket holds none.
+         *
+         *     MCP tool: `get_reseller_service_order` (read only).
+         */
+        get: operations["get_reseller_service_order"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/services/own": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List your own services
+         * @description Services you do yourself and sell to your customers from their balance. Their orders reach your tickets and cannot be forwarded to us.
+         *
+         *     MCP tool: `list_reseller_own_services` (read only).
+         */
+        get: operations["list_reseller_own_services"];
+        put?: never;
+        /**
+         * Create one of your own services
+         * @description Adds a service you do yourself. Give `priceNet` or `variants`. 400 with `details.reason` when something is missing, at most 100.
+         *
+         *     MCP tool: `create_reseller_own_service` (writes).
+         */
+        post: operations["create_reseller_own_service"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/services/own/{positionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace one of your own services
+         * @description Replaces a service of yours as a whole. Orders already placed keep what was bought.
+         *
+         *     MCP tool: `update_reseller_own_service` (writes).
+         */
+        put: operations["update_reseller_own_service"];
+        post?: never;
+        /**
+         * Delete one of your own services
+         * @description Your customers can no longer buy it. Cannot be undone.
+         *
+         *     MCP tool: `delete_reseller_own_service` (irreversible).
+         */
+        delete: operations["delete_reseller_own_service"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/resellers/settings": {
         parameters: {
             query?: never;
@@ -4666,7 +5021,7 @@ export interface paths {
         head?: never;
         /**
          * Update the invoicing company data
-         * @description Updates the company details that appear on invoices the reseller issues to its customers. All fields are optional and the object you send is written as given, so sending a field with an empty string does clear it, unlike the trading name, which must be at least one character when present. The email field must be a valid address. The change is recorded in the activity log as `company_data_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. The calling key has to belong to a reseller.
+         * @description Updates the company details that appear on invoices the reseller issues to its customers. All fields are optional and the object you send is written as given, so sending a field with an empty string does clear it, unlike the trading name, which must be at least one character when present. The email field must be a valid address. `defaultMailAnonymous` sets whether `anonymous` starts as true on a new email template one of the customers of the reseller creates; templates that exist keep their own setting. The change is recorded in the activity log as `company_data_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. The calling key has to belong to a reseller.
          *
          *     MCP tool: `reseller_update_invoice_company` (writes).
          */
@@ -4834,6 +5189,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         connectionTimeout?: number;
+                        /** Format: email */
                         fromEmail: string;
                         fromName: string;
                         greetingTimeout?: number;
@@ -4926,6 +5282,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** Format: email */
                         fromEmail: string;
                         fromName: string;
                         host: string;
@@ -5255,6 +5612,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** Format: email */
                         email: string;
                         /** @description Per dashboard page, whether the member may view and edit it. */
                         permissions: {
@@ -5460,7 +5818,9 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** Format: uri */
                         avatarUrl?: string;
+                        /** Format: email */
                         email: string;
                         name: string;
                         /**
@@ -5556,6 +5916,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** Format: email */
                         email?: string;
                         /** @enum {string} */
                         role?: "owner" | "agent";
@@ -6009,6 +6370,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/me/warning-mails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List your warning mail settings
+         * @description Which warning mails your account gets and how often, as in the notification settings of the dashboard. One entry per warning that can reach you: `balance` (balance runs low; for a partner, `partner` true, the partner balance), `trial` (starting credit runs out), `numbers` (phone number documents or renewal), `integrations` (a connected service stopped working), for partners `customer_orders` (a customer could not buy a number, plan or credit). `interval` is `event`, `daily`, `weekly` or `off`; every warning is `off` until switched on. Tickets, sign in codes and security mails always arrive and are not listed. Change one with `set_warning_mail`. Owner only, a team member gets 403.
+         *
+         *     MCP tool: `get_warning_mail_settings` (read only).
+         */
+        get: operations["get_warning_mail_settings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/me/warning-mails/{category}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set how often a warning mail arrives
+         * @description Sets how often one warning mail may arrive, as in the notification settings of the dashboard: `event` every time, `daily` or `weekly` at most once per day or week, `off` never. `category` must be one that `get_warning_mail_settings` lists for your account, otherwise 400. Applies from the next warning on. Owner only, a team member gets 403.
+         *
+         *     MCP tool: `set_warning_mail` (writes).
+         */
+        put: operations["set_warning_mail"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/voices": {
         parameters: {
             query?: never;
@@ -6285,7 +6690,10 @@ export interface components {
                 mimeType: string;
                 /** @description File size in bytes. */
                 size: number;
-                /** @description The public URL where the attachment is hosted. */
+                /**
+                 * Format: uri
+                 * @description The public URL where the attachment is hosted.
+                 */
                 url: string;
             }[];
             /** @description The content of your reply or update. */
@@ -6565,7 +6973,7 @@ export interface components {
             /** @description Where to hear this voice: the path of GET /voices/{voiceId}/preview for it, relative to the API host. Add a `language` parameter to hear it in the language the agent will speak. */
             previewUrl?: string | null;
         };
-        /** @description Prepaid balance and remaining allowances. */
+        /** @description Prepaid balance and remaining allowances. For a reseller on pay as you go, the remaining figures are its start units and the balance is what it can spend, top-ups plus the partner account. */
         Balance: {
             /** @description Wallet balance in EUR. */
             balanceEur: number;
@@ -6892,8 +7300,10 @@ export interface components {
             /** @description ID of the plan to purchase */
             planId: number;
         };
-        /** @description A voice call. These are the columns of the call record that are public: the carrier call identifier and the internal credit cost are not. */
+        /** @description A voice call: a phone call or a spoken call from the chat widget, the same calls the call list in the dashboard shows and the voice minutes are counted from. Internal cost figures are not part of it. */
         Conversation: {
+            /** @description Voice minutes this call counts. Every started minute counts: 61 seconds are 2 minutes, 2 minutes and 5 seconds are 3 minutes. A call that never connected counts 0. The same number the dashboard, the balance and the invoices use. */
+            billedMinutes: number;
             /**
              * Format: date-time
              * @description When the record was written.
@@ -6904,18 +7314,18 @@ export interface components {
              * @enum {string}
              */
             direction: "inbound" | "outbound";
-            /** @description Length of the call in seconds. Null while the call is still running. */
+            /** @description Length of the call in seconds. 0 while the call is still running and for a call that never connected. */
             duration?: number | null;
             /**
              * Format: date-time
-             * @description When the call finished.
+             * @description When the call finished, from its start and its length. Null while it has no length.
              */
             endedAt?: string | null;
-            /** @description Calling party, in E.164 form. */
+            /** @description Calling party, in E.164 form. Currently always null. */
             fromNumber?: string | null;
             /** @description Identifier of the call. */
             id: number;
-            /** @description Identifier of the phone number the call used. */
+            /** @description Identifier of the phone number the call used. Currently always null. */
             phoneNumberId?: number | null;
             /**
              * Format: uri
@@ -6924,12 +7334,15 @@ export interface components {
             recordingUrl?: string | null;
             /**
              * Format: date-time
-             * @description When the call connected.
+             * @description When the call started.
              */
             startedAt?: string | null;
-            /** @description Outcome of the call as reported by the carrier. */
-            status?: string | null;
-            /** @description Called party, in E.164 form. */
+            /**
+             * @description Outcome of the call. `failed` means the agent judged the call unsuccessful, the call still ran and counts its minutes. `abandoned` means the call never connected or is still running.
+             * @enum {string}
+             */
+            status?: "completed" | "failed" | "abandoned";
+            /** @description Called party, in E.164 form. Currently always null. */
             toNumber?: string | null;
             /** @description Full transcript of the call, when one was produced. */
             transcription?: string | null;
@@ -6938,7 +7351,7 @@ export interface components {
              * @enum {string}
              */
             type: "voice";
-            /** @description Numeric id of the agent that handled the call. */
+            /** @description Numeric id of the voice agent that handled the call. Null for a spoken call from a chatbot widget. */
             voiceAgentId?: number | null;
         };
         /** @description A message as returned inside a conversation detail response. Narrower than the LiveMessage returned by the messages endpoint: no read flag, sender id or file size. */
@@ -7118,7 +7531,10 @@ export interface components {
              * @default EchoCall-Smart
              */
             llmModel: string;
-            /** @description URL to a custom logo image for the chat widget. */
+            /**
+             * Format: uri
+             * @description URL to a custom logo image for the chat widget.
+             */
             logoUrl?: string;
             /** @description Internal name of the chatbot for identification in the dashboard. */
             name: string;
@@ -7679,7 +8095,7 @@ export interface components {
             /** @description BCP-47 locale code, for example `de`, `en` or `fr`. */
             code: string;
         };
-        /** @description What the account has left to spend. */
+        /** @description What the account has left to spend. For a reseller on pay as you go, the voice and chat figures are its start units (granted once, used before the balance) and the balance is what it can spend, top-ups plus the partner account. */
         Limits: {
             /** @description State of the account, for example `active`, `trial` or `suspended`. */
             accountStatus: string | null;
@@ -8105,7 +8521,7 @@ export interface components {
             companyLegalName?: string | null;
             /**
              * Format: uri
-             * @description Logo used on invoices.
+             * @description Logo used on invoices and invoice emails. Empty: the brand logo is used. Only a file uploaded in the partner panel is printed; an external address is not fetched.
              */
             companyLogo?: string | null;
             /** @description Trading name. */
@@ -8114,6 +8530,8 @@ export interface components {
             companyPaymentTermsDays?: number;
             /** @description Postal code of the sender address. */
             companyPostalCode?: string | null;
+            /** @description Printed instead of the reverse charge line on an invoice at 0 % VAT, for example a small business note. Empty keeps the reverse charge line. */
+            companyTaxExemptionNote?: string | null;
             /** @description Tax number, for a sender that has no VAT identification number. */
             companyTaxNumber?: string | null;
             /** @description VAT identification number. */
@@ -8206,10 +8624,30 @@ export interface components {
                 accountStatus?: "active" | "suspended" | "trial";
                 /** @description Prepaid wallet balance in EUR. Returned as a decimal string, not a float. */
                 balanceEur?: string;
+                /**
+                 * Format: email
+                 * @description Second address that receives a copy of every invoice mail.
+                 */
+                billingCcEmail?: string | null;
+                /** @description City of the billing address. */
+                billingCity?: string | null;
+                /** @description Country of the billing address, ISO 3166-1 alpha-2. */
+                billingCountry?: string | null;
+                /**
+                 * Format: email
+                 * @description Where invoices are emailed. Null while none is set; an invoice cannot be emailed then.
+                 */
+                billingEmail?: string | null;
+                /** @description Postal code of the billing address. */
+                billingPostalCode?: string | null;
+                /** @description Street of the billing address. */
+                billingStreet?: string | null;
                 /** @description Chat conversations remaining. */
                 chatConversations?: number | null;
                 /** @description Company name. */
                 company?: string | null;
+                /** @description Company the invoices are addressed to. */
+                companyName?: string | null;
                 /**
                  * Format: date-time
                  * @description When the account was created.
@@ -8226,6 +8664,8 @@ export interface components {
                 id?: number;
                 /** @description Last name. */
                 lastName?: string | null;
+                /** @description VAT identification number or tax number of the customer. */
+                vatId?: string | null;
                 /** @description Voice minutes remaining. */
                 voiceMinutes?: number | null;
             };
@@ -8253,17 +8693,41 @@ export interface components {
         ResellerSettings: {
             /** @description Postal address used on invoices. */
             companyAddress?: string | null;
+            /** @description Bank the payment is to reach. */
+            companyBankName?: string | null;
+            /** @description BIC printed alongside the IBAN. */
+            companyBic?: string | null;
+            /** @description City of the sender address. */
+            companyCity?: string | null;
+            /** @description Country of the sender address. */
+            companyCountry?: string | null;
             /**
              * Format: email
-             * @description Contact email.
+             * @description Contact email. Replies to invoice emails go here, and it can receive a blind copy of each.
              */
             companyEmail?: string | null;
+            /** @description IBAN printed on an unpaid invoice. */
+            companyIban?: string | null;
+            /** @description Free text printed at the foot of every invoice. */
+            companyInvoiceFooter?: string | null;
             /** @description Trading name. */
             companyName?: string | null;
+            /** @description Days an invoice is given to be paid. 14 when it was never set. */
+            companyPaymentTermsDays?: number;
             /** @description Contact phone number. */
             companyPhone?: string | null;
+            /** @description Postal code of the sender address. */
+            companyPostalCode?: string | null;
+            /** @description Printed instead of the reverse charge line on an invoice at 0 % VAT, for example a small business note. Empty keeps the reverse charge line. */
+            companyTaxExemptionNote?: string | null;
+            /** @description Tax number, for a sender that has no VAT identification number. */
+            companyTaxNumber?: string | null;
             /** @description VAT identification number. */
             companyVatId?: string | null;
+            /** @description Whether `anonymous` starts as true on a new email template a customer creates. false when it was never set. */
+            defaultMailAnonymous?: boolean;
+            /** @description Which of the details an invoice has to carry are still missing. */
+            missingCompanyFields?: string[];
             /** @description Whether PayPal credentials are stored. */
             paypalConfigured: boolean;
             /** @description Whether a Stripe secret key is stored. */
@@ -8558,7 +9022,10 @@ export interface components {
             language?: string;
             /** @description LLM Model for the brain */
             llmModel?: string;
-            /** @description URL to chatbot logo */
+            /**
+             * Format: uri
+             * @description URL to chatbot logo
+             */
             logoUrl?: string;
             /** @description Name of the chatbot */
             name?: string;
@@ -8825,7 +9292,7 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
-        /** @description The per-key, per-second request limit was exceeded. `error.code` is `rate_limit_exceeded`. Wait for the interval named by `Retry-After` and retry. */
+        /** @description The per-key, per-second request limit was exceeded. `error.code` is `rate_limit_exceeded`. Wait for the interval named by `Retry-After` and retry. A few endpoints also answer 429 for a daily allowance with an `error.code` of their own, named in their description; those carry no `Retry-After`. */
         RateLimited: {
             headers: {
                 /** @description Seconds to wait before retrying. Always 1, because the limit is measured per second. */
@@ -8842,6 +9309,15 @@ export interface components {
         };
         /** @description No usable API key. The `Authorization` header was missing or not a `Bearer` header (`error.code` `unauthorized`), the key did not match the `eck_live_...` format (`invalid_api_key`), the key is unknown, revoked or expired, or the account has no active subscription. */
         Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description A server this request depends on refused it, for example the mail server rejecting a message. `error.code` names the operation, for example `invoice_email_failed`. Nothing was changed; check the setting the description names and retry. */
+        UpstreamError: {
             headers: {
                 [name: string]: unknown;
             };
@@ -9249,6 +9725,162 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    get_agent_call_summary: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path: {
+                /** @description agentId */
+                agentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read the call summary settings of a voice agent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            agentId: string;
+                            /** @description When true, the email says that a name and a number were left but shows neither; both stay visible in the dashboard. */
+                            anonymous: boolean;
+                            /** @description False when the agent keeps no call data (zero PII): it cannot send summaries. */
+                            available: boolean;
+                            /** @description Where the summaries go. The account address until one is set. */
+                            email: string;
+                            enabled: boolean;
+                            /** @description Calls that started before this moment get no summary. */
+                            enabledAt?: string | null;
+                            /** @description Numbers that ring this agent, each with the codes that forward a mobile phone to it. */
+                            phoneNumbers: {
+                                /** @description GSM codes, the same in every German mobile network. */
+                                forwardingCodes: {
+                                    /**
+                                     * @description `busy`, `noAnswer` and `unreachable` forward one case each, `allConditional` all three at once.
+                                     * @enum {string}
+                                     */
+                                    kind: "busy" | "noAnswer" | "unreachable" | "allConditional";
+                                    /** @description Dial to switch it off again. */
+                                    off: string;
+                                    /** @description Dial on the mobile phone to switch the forwarding on. */
+                                    on: string;
+                                }[];
+                                number: string;
+                            }[];
+                            /** @description `secretary` when the agent was made from the Chef-Sekretär template. */
+                            template?: string | null;
+                            /** @description Calls from these numbers are marked urgent in the email; agents made from the Chef-Sekretär template also greet them by name. */
+                            vipNumbers: {
+                                /** @description Who it is, e.g. `Mama` or `Stammkunde Weber`. */
+                                label: string;
+                                /** @description Phone number in international format, e.g. `+4917112345678`. */
+                                number: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    update_agent_call_summary: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path: {
+                /** @description agentId */
+                agentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    anonymous?: boolean;
+                    /** @description Where the summaries go. */
+                    email?: string;
+                    enabled?: boolean;
+                    /** @description Replaces the whole list. Up to 50. */
+                    vipNumbers?: {
+                        label: string;
+                        /** @description National (`0171 1234567`, read as German) or international (`+49 171 1234567`). */
+                        number: string;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Change the call summary of a voice agent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            agentId: string;
+                            /** @description When true, the email says that a name and a number were left but shows neither; both stay visible in the dashboard. */
+                            anonymous: boolean;
+                            /** @description False when the agent keeps no call data (zero PII): it cannot send summaries. */
+                            available: boolean;
+                            /** @description Where the summaries go. The account address until one is set. */
+                            email: string;
+                            enabled: boolean;
+                            /** @description Calls that started before this moment get no summary. */
+                            enabledAt?: string | null;
+                            /** @description Numbers that ring this agent, each with the codes that forward a mobile phone to it. */
+                            phoneNumbers: {
+                                /** @description GSM codes, the same in every German mobile network. */
+                                forwardingCodes: {
+                                    /**
+                                     * @description `busy`, `noAnswer` and `unreachable` forward one case each, `allConditional` all three at once.
+                                     * @enum {string}
+                                     */
+                                    kind: "busy" | "noAnswer" | "unreachable" | "allConditional";
+                                    /** @description Dial to switch it off again. */
+                                    off: string;
+                                    /** @description Dial on the mobile phone to switch the forwarding on. */
+                                    on: string;
+                                }[];
+                                number: string;
+                            }[];
+                            /** @description `secretary` when the agent was made from the Chef-Sekretär template. */
+                            template?: string | null;
+                            /** @description Calls from these numbers are marked urgent in the email; agents made from the Chef-Sekretär template also greet them by name. */
+                            vipNumbers: {
+                                /** @description Who it is, e.g. `Mama` or `Stammkunde Weber`. */
+                                label: string;
+                                /** @description Phone number in international format, e.g. `+4917112345678`. */
+                                number: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     list_agent_integrations: {
         parameters: {
             query?: never;
@@ -9544,7 +10176,10 @@ export interface operations {
                     title?: string;
                     /** @enum {string} */
                     type: "url";
-                    /** @description Web URL to crawl and index as knowledge */
+                    /**
+                     * Format: uri
+                     * @description Web URL to crawl and index as knowledge
+                     */
                     url: string;
                 };
             };
@@ -10190,7 +10825,10 @@ export interface operations {
                         /** @description E.164 format phone number, e.g. +491234567890 */
                         phoneNumber: string;
                     }[];
-                    /** @description ISO 8601 timestamp. If omitted, calls start immediately upon submission. */
+                    /**
+                     * Format: date-time
+                     * @description ISO 8601 timestamp. If omitted, calls start immediately upon submission.
+                     */
                     scheduledTime?: string;
                 };
             };
@@ -10432,6 +11070,15 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            /** @description The balance of the account does not cover another voice minute, so no call was placed and the campaign stays a draft. The error body carries the code `insufficient_balance`. Top up the balance, then submit again. For an account managed by a provider (a partner of EchoCall) the provider has to settle first; the message then asks to contact the provider. */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             403: components["responses"]["InsufficientScope"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
@@ -10571,7 +11218,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description Net amount in euro. */
+                    /** @description Net amount in euro, at least 5. */
                     amountEur: number;
                     /** @description `id` from `GET /billing/payment-methods`. */
                     paymentMethodId: string;
@@ -10825,6 +11472,47 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    start_pay_as_you_go: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Start pay as you go */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /**
+                             * @description The same for chat.
+                             * @enum {string|null}
+                             */
+                            chat?: "kept" | "converted" | "created" | "stripe_backed" | null;
+                            /**
+                             * @description What happened to voice: `kept` was on pay as you go already, `converted` a plan moved over, `created` started new.
+                             * @enum {string|null}
+                             */
+                            voice?: "kept" | "converted" | "created" | "stripe_backed" | null;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     list_payment_methods: {
         parameters: {
             query?: never;
@@ -11032,6 +11720,260 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    list_services: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List services you can order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            balanceEur: number;
+                            eligible: boolean;
+                            services: {
+                                description: string;
+                                descriptionEn: string;
+                                fields: {
+                                    /** @description Key to use in `answers` when ordering. */
+                                    key: string;
+                                    labelDe: string;
+                                    labelEn: string;
+                                    required: boolean;
+                                    /**
+                                     * @description `country` takes an ISO 3166 code such as `DE`, `datetime` an ISO 8601 date and time in the future.
+                                     * @enum {string}
+                                     */
+                                    type: "text" | "textarea" | "country" | "datetime";
+                                }[];
+                                /** @description `positionId` when ordering. */
+                                id: number;
+                                /** @description The integration this service sets up, when it belongs to one. */
+                                integrationKey?: string | null;
+                                name: string;
+                                nameEn: string;
+                                /**
+                                 * @description Where the dashboard offers it besides the list: `phone_numbers` also on Billing > Phone numbers, `integration` also on the tile of `integrationKey` under Integrations.
+                                 * @enum {string}
+                                 */
+                                placement: "list" | "phone_numbers" | "integration";
+                                /** @description Net price in EUR when the service has no variants. 0 means free. */
+                                priceNet: number;
+                                /** @description Latest the work is usually done, in hours after the order. */
+                                slaMaxHours?: number | null;
+                                /** @description Earliest the work is usually done, in hours after the order. */
+                                slaMinHours?: number | null;
+                                /** @description When not empty, one of them has to be picked and its price applies. */
+                                variants: {
+                                    /** @description `variantKey` when ordering. */
+                                    key: string;
+                                    nameDe: string;
+                                    nameEn: string;
+                                    /** @description Net price in EUR; VAT comes on top. */
+                                    priceNet: number;
+                                }[];
+                            }[];
+                            vatPercent: number;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    list_service_orders: {
+        parameters: {
+            query?: {
+                /** @description Most orders returned, 1 to 200, newest first. */
+                limit?: number;
+            };
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List your service orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @description What was filled in when ordering, by field key. */
+                            answers: {
+                                [key: string]: string | null;
+                            };
+                            createdAt?: string | null;
+                            finishedAt?: string | null;
+                            id: number;
+                            invoiceId?: number | null;
+                            name: string;
+                            nameEn: string;
+                            /** @description What was taken from the balance. */
+                            priceGross: number;
+                            priceNet: number;
+                            /** @description Credited back to the balance after a cancellation. */
+                            refundedEur: number;
+                            slaMaxHours?: number | null;
+                            slaMinHours?: number | null;
+                            startedAt?: string | null;
+                            /**
+                             * @description `waiting_customer` means we asked a question in the ticket; answer there, then call `POST /billing/services/orders/{orderId}/answered`.
+                             * @enum {string}
+                             */
+                            status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                            /** @description The support ticket the work is discussed in; read it with `GET /tickets/{ticketId}`. */
+                            ticketId?: number | null;
+                            variantName?: string | null;
+                            variantNameEn?: string | null;
+                            vatEur: number;
+                            vatPercent: number;
+                        }[];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    order_service: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Field `key` to value: text up to 200 characters, long text up to 4000, country as ISO code, date and time as ISO 8601. */
+                    answers?: {
+                        [key: string]: string | null;
+                    };
+                    /** @description `id` from `list_services`. */
+                    positionId: number;
+                    /** @description `key` of a variant. */
+                    variantKey?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Order a service */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @description Taken from the balance. */
+                            grossEur: number;
+                            orderId: number;
+                            /** @description The ticket the work is discussed in. */
+                            ticketId?: number | null;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            402: components["responses"]["PaymentRequired"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    answer_service_question: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path: {
+                /** @description `id` from `list_service_orders`. */
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Say a service question is answered */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @description What was filled in when ordering, by field key. */
+                            answers: {
+                                [key: string]: string | null;
+                            };
+                            createdAt?: string | null;
+                            finishedAt?: string | null;
+                            id: number;
+                            invoiceId?: number | null;
+                            name: string;
+                            nameEn: string;
+                            /** @description What was taken from the balance. */
+                            priceGross: number;
+                            priceNet: number;
+                            /** @description Credited back to the balance after a cancellation. */
+                            refundedEur: number;
+                            slaMaxHours?: number | null;
+                            slaMinHours?: number | null;
+                            startedAt?: string | null;
+                            /**
+                             * @description `waiting_customer` means we asked a question in the ticket; answer there, then call `POST /billing/services/orders/{orderId}/answered`.
+                             * @enum {string}
+                             */
+                            status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                            /** @description The support ticket the work is discussed in; read it with `GET /tickets/{ticketId}`. */
+                            ticketId?: number | null;
+                            variantName?: string | null;
+                            variantNameEn?: string | null;
+                            vatEur: number;
+                            vatPercent: number;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
         };
@@ -11492,7 +12434,10 @@ export interface operations {
                      * @default EchoCall-Smart
                      */
                     llmModel?: string;
-                    /** @description URL to a custom logo image for the chat widget. */
+                    /**
+                     * Format: uri
+                     * @description URL to a custom logo image for the chat widget.
+                     */
                     logoUrl?: string;
                     /** @description Internal name of the chatbot for identification in the dashboard. */
                     name: string;
@@ -11681,7 +12626,10 @@ export interface operations {
                     language?: string;
                     /** @description LLM Model for the brain */
                     llmModel?: string;
-                    /** @description URL to chatbot logo */
+                    /**
+                     * Format: uri
+                     * @description URL to chatbot logo
+                     */
                     logoUrl?: string;
                     /** @description Name of the chatbot */
                     name?: string;
@@ -12472,6 +13420,7 @@ export interface operations {
                     chatbotDisplayName?: string;
                     /** @description Copyright text in the widget footer. */
                     customBranding?: string;
+                    /** Format: uri */
                     customBrandingUrl?: string;
                     /** @description Extra CSS for the widget. Cleaned the same way as in the dashboard. */
                     customCss?: string;
@@ -12480,6 +13429,7 @@ export interface operations {
                         url: string;
                     }[];
                     description?: string;
+                    /** Format: email */
                     email?: string;
                     enableVoice?: boolean;
                     expressiveMode?: boolean;
@@ -12505,6 +13455,7 @@ export interface operations {
                     optimizeStreamingLatency?: number;
                     phoneNumber?: string;
                     primaryColor?: string;
+                    /** Format: uri */
                     privacyUrl?: string;
                     quickReplies?: {
                         label: string;
@@ -12532,6 +13483,7 @@ export interface operations {
                     teaserMessage?: string;
                     /** @description Creativity in percent. */
                     temperature?: number;
+                    /** Format: uri */
                     termsUrl?: string;
                     /**
                      * @description A model from `GET /voices/models`.
@@ -12541,6 +13493,7 @@ export interface operations {
                     /** @description A voice from `GET /voices`. */
                     voiceId?: string;
                     voiceName?: string;
+                    /** Format: uri */
                     webhookUrl?: string;
                     widgetLanguage?: string;
                     /** @enum {string} */
@@ -13438,7 +14391,9 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Format: email */
                     email: string;
+                    /** Format: date-time */
                     end?: string;
                     eventTypeId: string;
                     guests?: string[];
@@ -13447,7 +14402,10 @@ export interface operations {
                     /** @description Name of the person the appointment is for. */
                     name: string;
                     notes?: string;
-                    /** @description Start in ISO 8601, e.g. 2026-11-12T10:00:00+01:00. */
+                    /**
+                     * Format: date-time
+                     * @description Start in ISO 8601, e.g. 2026-11-12T10:00:00+01:00.
+                     */
                     start: string;
                     /** @description IANA time zone, default Europe/Berlin. */
                     timeZone?: string;
@@ -14592,7 +15550,8 @@ export interface operations {
             content: {
                 "application/json": {
                     label?: string;
-                    voiceAgentId?: number | null;
+                    /** @description The voice agent that answers this number, as `agent_12` or 12 from GET /phone-numbers/assignable-agents. null frees the number. */
+                    voiceAgentId?: number | string | null;
                 };
             };
         };
@@ -14613,8 +15572,18 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["InsufficientScope"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
+            /** @description The phone service could not be reached (`provider_unavailable`). Nothing was changed, try again later. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     get_phone_number_verification: {
@@ -14676,6 +15645,7 @@ export interface operations {
                     cityName: string;
                     companyName?: string;
                     companyRegNumber?: string;
+                    /** Format: email */
                     contactEmail?: string;
                     countryId: string;
                     firstName?: string;
@@ -16411,7 +17381,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        /** @description Current prepaid balance, as a number. */
+                        /** @description Current prepaid balance, as a number. Below zero when usage outran the balance; the next top-up settles it. */
                         balance: number;
                         /**
                          * @description Always `EUR`.
@@ -16599,6 +17569,7 @@ export interface operations {
                     companyName?: string;
                     companyPaymentTermsDays?: number;
                     companyPostalCode?: string;
+                    companyTaxExemptionNote?: string;
                     companyTaxNumber?: string;
                     companyVatId?: string;
                 };
@@ -16818,7 +17789,22 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description Optional second address that receives a copy of every invoice mail. */
+                    billingCcEmail?: string | null;
+                    /** @description City of the billing address. */
+                    billingCity?: string | null;
+                    /** @description Country as an ISO 3166-1 alpha-2 code. An English country name is accepted and stored as its code. */
+                    billingCountry?: string | null;
+                    /** @description Where invoices are emailed. May differ from the login email. Without it an invoice cannot be emailed. */
+                    billingEmail?: string | null;
+                    /** @description Postal code of the billing address, checked against the country. */
+                    billingPostalCode?: string | null;
+                    /** @description Street and house number of the billing address. */
+                    billingStreet?: string | null;
                     company?: string;
+                    /** @description Company the invoices are addressed to. Empty clears it. */
+                    companyName?: string | null;
+                    /** Format: email */
                     email: string;
                     firstName?: string;
                     /** @default true */
@@ -16831,6 +17817,8 @@ export interface operations {
                     lastName?: string;
                     /** @default true */
                     sendPasswordEmail?: boolean;
+                    /** @description VAT identification number or tax number of the customer. */
+                    vatId?: string | null;
                 };
             };
         };
@@ -16933,10 +17921,27 @@ export interface operations {
                 "application/json": {
                     /** @enum {string} */
                     accountStatus?: "active" | "suspended" | "trial";
+                    /** @description Optional second address that receives a copy of every invoice mail. */
+                    billingCcEmail?: string | null;
+                    /** @description City of the billing address. */
+                    billingCity?: string | null;
+                    /** @description Country as an ISO 3166-1 alpha-2 code. An English country name is accepted and stored as its code. */
+                    billingCountry?: string | null;
+                    /** @description Where invoices are emailed. May differ from the login email. Without it an invoice cannot be emailed. */
+                    billingEmail?: string | null;
+                    /** @description Postal code of the billing address, checked against the country. */
+                    billingPostalCode?: string | null;
+                    /** @description Street and house number of the billing address. */
+                    billingStreet?: string | null;
                     company?: string;
+                    /** @description Company the invoices are addressed to. Empty clears it. */
+                    companyName?: string | null;
+                    /** Format: email */
                     email?: string;
                     firstName?: string;
                     lastName?: string;
+                    /** @description VAT identification number or tax number of the customer. */
+                    vatId?: string | null;
                 };
             };
         };
@@ -17567,16 +18572,16 @@ export interface operations {
                 "application/json": {
                     enabled: boolean;
                     /** @enum {string} */
-                    eventType: "ticket_created" | "ticket_reply" | "ticket_closed" | "ticket_escalated" | "ticket_deescalated";
+                    eventType: "ticket_created" | "ticket_reply" | "ticket_closed" | "ticket_escalated" | "ticket_deescalated" | "service_booked" | "service_status" | "call_summary" | "call_summary_ad" | "reseller_invoice";
                     htmlBody: string;
-                    /** @enum {string} */
-                    lang: "de" | "en" | "fr";
+                    /** @description Two or three letter base code of a language the reseller offers, for example de, en, fr, es or sr. */
+                    lang: string;
                     subject: string;
                 };
             };
         };
         responses: {
-            /** @description Save a ticket email template */
+            /** @description Save an email template */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -17608,9 +18613,10 @@ export interface operations {
             content: {
                 "application/json": {
                     /** @enum {string} */
-                    eventType: "ticket_created" | "ticket_reply" | "ticket_closed" | "ticket_escalated" | "ticket_deescalated";
-                    /** @enum {string} */
-                    lang: "de" | "en" | "fr";
+                    eventType: "ticket_created" | "ticket_reply" | "ticket_closed" | "ticket_escalated" | "ticket_deescalated" | "service_booked" | "service_status" | "call_summary" | "call_summary_ad" | "reseller_invoice";
+                    /** @description Two or three letter base code of a language the reseller offers, for example de, en, fr, es or sr. */
+                    lang: string;
+                    /** Format: email */
                     toEmail: string;
                 };
             };
@@ -17705,6 +18711,13 @@ export interface operations {
                                  * @description When payment is due.
                                  */
                                 dueDate?: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the invoice was last emailed to the customer. Null while it was never emailed.
+                                 */
+                                emailSentAt?: string | null;
+                                /** @description The addresses it was last emailed to, comma separated. */
+                                emailSentTo?: string | null;
                                 /** @description Invoice identifier. */
                                 id: number;
                                 /** @description Invoice number, of the form `R<resellerId>-<YYYYMM>-<NNNN>`. The counter runs per reseller. */
@@ -17797,6 +18810,13 @@ export interface operations {
                                  * @description When payment is due.
                                  */
                                 dueDate?: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description When the invoice was last emailed to the customer. Null while it was never emailed.
+                                 */
+                                emailSentAt?: string | null;
+                                /** @description The addresses it was last emailed to, comma separated. */
+                                emailSentTo?: string | null;
                                 /** @description Invoice identifier. */
                                 id: number;
                                 /** @description Invoice number, of the form `R<resellerId>-<YYYYMM>-<NNNN>`. The counter runs per reseller. */
@@ -17969,6 +18989,13 @@ export interface operations {
                              * @description When payment is due.
                              */
                             dueDate?: string | null;
+                            /**
+                             * Format: date-time
+                             * @description When the invoice was last emailed to the customer. Null while it was never emailed.
+                             */
+                            emailSentAt?: string | null;
+                            /** @description The addresses it was last emailed to, comma separated. */
+                            emailSentTo?: string | null;
                             /** @description Invoice identifier. */
                             id: number;
                             /** @description Invoice number, of the form `R<resellerId>-<YYYYMM>-<NNNN>`. The counter runs per reseller. */
@@ -18055,6 +19082,93 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    reseller_preview_invoice_email: {
+        parameters: {
+            query?: {
+                /** @description Language of the text, a two or three letter code. Defaults to the language of the customer, then of the reseller. A language without a text of its own falls back to English. */
+                lang?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Identifier of the invoice. A value that is not a positive integer is answered with 400 `invalid_id`. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What the mail would look like. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description The company email of the reseller, offered as a blind copy. */
+                        bccAddress?: string | null;
+                        /** @description The text with its placeholders filled in, as plain text. */
+                        bodyText: string;
+                        /** @description The copy address of the customer, if any. */
+                        cc?: string | null;
+                        /** @description The customer. Null when the account is gone. */
+                        customerId?: number | null;
+                        /** @description Whether the text is the reseller's own template rather than the default. */
+                        customTemplate?: boolean;
+                        /** @description Invoice emails allowed per 24 hours: 1000 over an own mail server, 200 over the platform. */
+                        dailyLimit?: number;
+                        /**
+                         * Format: date-time
+                         * @description When the invoice was last emailed.
+                         */
+                        emailSentAt?: string | null;
+                        /** @description Where it was last emailed to. */
+                        emailSentTo?: string | null;
+                        /** @description The sender address the customer sees. */
+                        fromAddress?: string | null;
+                        /** @description The sender name the customer sees. */
+                        fromName?: string;
+                        /** @description Whether a logo is embedded in the mail. */
+                        hasLogo?: boolean;
+                        /** @description Whether the mail goes out over the reseller's own mail server. */
+                        hasOwnSmtp?: boolean;
+                        /** @description The invoice. */
+                        invoiceId: number;
+                        /** @description Its number. */
+                        invoiceNumber: string;
+                        /** @description The language asked for. */
+                        lang?: string;
+                        /** @description Company details still missing on the reseller. */
+                        missingCompanyFields?: string[];
+                        /** @description File name of the attached PDF. */
+                        pdfFileName?: string;
+                        /** @description Whether a button to the customer portal can be added: the reseller has a portal and the customer may sign in. The send call adds it only when asked to. */
+                        portalLink?: boolean;
+                        /**
+                         * @description Why the mail cannot go out. Null when it can.
+                         * @enum {string|null}
+                         */
+                        problem: "canceled" | "customer_gone" | "no_billing_email" | "company_incomplete" | "no_smtp" | "daily_limit" | null;
+                        /** @description Invoice emails sent in the last 24 hours. */
+                        sentToday?: number;
+                        /** @description Its current status. */
+                        status?: string;
+                        /** @description The subject with its placeholders filled in. */
+                        subject: string;
+                        /** @description The language the text actually comes from. */
+                        templateLang?: string;
+                        /** @description The billing email of the customer. Null while none is stored. */
+                        to?: string | null;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     reseller_mark_invoice_paid: {
         parameters: {
             query?: never;
@@ -18099,13 +19213,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The invoice is now pending. */
+            /** @description The status the invoice has now. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description The status after the call: `sent` for a former draft, otherwise unchanged.
+                         * @enum {string}
+                         */
+                        status: "sent" | "paid" | "failed" | "overdue";
                         /** @description Always true. */
                         success: boolean;
                     };
@@ -18115,8 +19234,83 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["InsufficientScope"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
+        };
+    };
+    reseller_send_invoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identifier of the invoice. A value that is not a positive integer is answered with 400 `invalid_id`. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        /** @description Everything is optional: an empty object sends the template as it is, in the customer's language. */
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Send a blind copy to the company email of the reseller.
+                     * @default false
+                     */
+                    bcc?: boolean;
+                    /** @description Replaces the text of the template for this one mail. Plain text, blank lines start a new paragraph. */
+                    bodyText?: string;
+                    /** @description Language of the mail text. Defaults to the customer's language, then the reseller's. */
+                    lang?: string;
+                    /**
+                     * @description Add a button to the customer portal when the customer can sign in there. Off by default, because the link carries the platform address and the mail otherwise names only the reseller.
+                     * @default false
+                     */
+                    portalLink?: boolean;
+                    /** @description Replaces the subject of the template for this one mail. */
+                    subject?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The mail was accepted by the mail server. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: date-time
+                         * @description When it was sent.
+                         */
+                        emailSentAt: string;
+                        /** @description The addresses it went to, comma separated. */
+                        emailSentTo: string;
+                        /** @description The invoice. */
+                        invoiceId: number;
+                        /** @description Its number. */
+                        invoiceNumber: string;
+                        /** @description Its status now. */
+                        status: string;
+                        /** @description Always true. */
+                        success: boolean;
+                        /**
+                         * @description Whether it went out over the reseller's own mail server or the platform's.
+                         * @enum {string}
+                         */
+                        via: "own" | "platform";
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            502: components["responses"]["UpstreamError"];
         };
     };
     reseller_delete_phone_number: {
@@ -18691,6 +19885,594 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    list_reseller_service_offers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Your prices for our services */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            services: {
+                                /** @description False when your customers do not see it. */
+                                enabled: boolean;
+                                name: string;
+                                nameEn: string;
+                                positionId: number;
+                                /** @description Set when the service has no variants. */
+                                price?: {
+                                    /** @description False while your customers see our price. */
+                                    custom: boolean;
+                                    /** @description What your customers pay, net. */
+                                    customerNet: number;
+                                    marginNet: number;
+                                    /** @description Our price to you, net. */
+                                    purchaseNet: number;
+                                } | null;
+                                slaMaxHours?: number | null;
+                                slaMinHours?: number | null;
+                                variants: {
+                                    /** @description False while your customers see our price. */
+                                    custom: boolean;
+                                    /** @description What your customers pay, net. */
+                                    customerNet: number;
+                                    key: string;
+                                    marginNet: number;
+                                    nameDe?: string | null;
+                                    nameEn?: string | null;
+                                    /** @description Our price to you, net. */
+                                    purchaseNet: number;
+                                }[];
+                            }[];
+                            vatPercent: number;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    set_reseller_service_offer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `positionId` from `list_reseller_service_offers`. */
+                positionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    enabled: boolean;
+                    /** @description Net EUR for a service without variants. */
+                    price?: number | null;
+                    /** @description Variant `key` to net EUR. */
+                    variantPrices?: {
+                        [key: string]: number | null;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Set your price for a service */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            enabled: boolean;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    cancel_reseller_service_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` from `get_reseller_service_order`. */
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    refund: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Cancel a service order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            answers: {
+                                [key: string]: string | null;
+                            };
+                            createdAt?: string | null;
+                            customerId: number;
+                            finishedAt?: string | null;
+                            forwardBlocked?: string | null;
+                            /** @description Our order once forwarded to us. */
+                            forwarded?: {
+                                orderId: number;
+                                priceGross: number;
+                                /** @enum {string} */
+                                status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                                ticketId?: number | null;
+                            } | null;
+                            /** @description What forwarding takes from your balance now. */
+                            forwardQuote?: {
+                                balanceEur: number;
+                                grossEur: number;
+                                netEur: number;
+                                vatEur: number;
+                            } | null;
+                            id: number;
+                            name: string;
+                            nameEn: string;
+                            /** @description Your own service: you do the work, it cannot be forwarded. */
+                            ownService: boolean;
+                            /** @description Your customer paid this from his balance. */
+                            priceGross: number;
+                            priceNet: number;
+                            refundable: boolean;
+                            refundedEur: number;
+                            slaMaxHours?: number | null;
+                            slaMinHours?: number | null;
+                            startedAt?: string | null;
+                            /** @enum {string} */
+                            status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                            ticketId?: number | null;
+                            variantName?: string | null;
+                            variantNameEn?: string | null;
+                            vatEur: number;
+                        } | null;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    forward_reseller_service_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` from `get_reseller_service_order`. */
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Forward a service order to us */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            balanceAfter: number;
+                            forwardedOrderId: number;
+                            grossEur: number;
+                            netEur: number;
+                            orderId: number;
+                            ticketId: number;
+                            vatEur: number;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            402: components["responses"]["PaymentRequired"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    set_reseller_service_order_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` from `get_reseller_service_order`. */
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status: "in_progress" | "waiting_customer" | "done";
+                };
+            };
+        };
+        responses: {
+            /** @description Move a service order on */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            answers: {
+                                [key: string]: string | null;
+                            };
+                            createdAt?: string | null;
+                            customerId: number;
+                            finishedAt?: string | null;
+                            forwardBlocked?: string | null;
+                            /** @description Our order once forwarded to us. */
+                            forwarded?: {
+                                orderId: number;
+                                priceGross: number;
+                                /** @enum {string} */
+                                status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                                ticketId?: number | null;
+                            } | null;
+                            /** @description What forwarding takes from your balance now. */
+                            forwardQuote?: {
+                                balanceEur: number;
+                                grossEur: number;
+                                netEur: number;
+                                vatEur: number;
+                            } | null;
+                            id: number;
+                            name: string;
+                            nameEn: string;
+                            /** @description Your own service: you do the work, it cannot be forwarded. */
+                            ownService: boolean;
+                            /** @description Your customer paid this from his balance. */
+                            priceGross: number;
+                            priceNet: number;
+                            refundable: boolean;
+                            refundedEur: number;
+                            slaMaxHours?: number | null;
+                            slaMinHours?: number | null;
+                            startedAt?: string | null;
+                            /** @enum {string} */
+                            status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                            ticketId?: number | null;
+                            variantName?: string | null;
+                            variantNameEn?: string | null;
+                            vatEur: number;
+                        } | null;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    get_reseller_service_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ticketId */
+                ticketId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The service order behind a ticket */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            answers: {
+                                [key: string]: string | null;
+                            };
+                            createdAt?: string | null;
+                            customerId: number;
+                            finishedAt?: string | null;
+                            forwardBlocked?: string | null;
+                            /** @description Our order once forwarded to us. */
+                            forwarded?: {
+                                orderId: number;
+                                priceGross: number;
+                                /** @enum {string} */
+                                status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                                ticketId?: number | null;
+                            } | null;
+                            /** @description What forwarding takes from your balance now. */
+                            forwardQuote?: {
+                                balanceEur: number;
+                                grossEur: number;
+                                netEur: number;
+                                vatEur: number;
+                            } | null;
+                            id: number;
+                            name: string;
+                            nameEn: string;
+                            /** @description Your own service: you do the work, it cannot be forwarded. */
+                            ownService: boolean;
+                            /** @description Your customer paid this from his balance. */
+                            priceGross: number;
+                            priceNet: number;
+                            refundable: boolean;
+                            refundedEur: number;
+                            slaMaxHours?: number | null;
+                            slaMinHours?: number | null;
+                            startedAt?: string | null;
+                            /** @enum {string} */
+                            status: "open" | "in_progress" | "waiting_customer" | "done" | "cancelled";
+                            ticketId?: number | null;
+                            variantName?: string | null;
+                            variantNameEn?: string | null;
+                            vatEur: number;
+                        } | null;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    list_reseller_own_services: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List your own services */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            description: string;
+                            descriptionEn: string;
+                            fields: {
+                                key: string;
+                                labelDe: string;
+                                labelEn: string;
+                                required: boolean;
+                                /** @enum {string} */
+                                type: "text" | "textarea" | "country" | "datetime";
+                            }[];
+                            id: number;
+                            isVisible: boolean;
+                            name: string;
+                            nameEn: string;
+                            priceNet: number;
+                            slaMaxHours?: number | null;
+                            slaMinHours?: number | null;
+                            variants: {
+                                key: string;
+                                nameDe: string;
+                                nameEn: string;
+                                priceNet: number;
+                            }[];
+                        }[];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    create_reseller_own_service: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Shown when buying; {price} becomes the price. */
+                    description?: string;
+                    descriptionEn?: string;
+                    /** @description What the customer fills in. */
+                    fields?: {
+                        /** @description Keep the `key` from the list when replacing, new ones get a key. */
+                        key?: string;
+                        labelDe: string;
+                        labelEn?: string;
+                        required: boolean;
+                        /** @enum {string} */
+                        type: "text" | "textarea" | "country" | "datetime";
+                    }[];
+                    /** @default true */
+                    isVisible?: boolean;
+                    name: string;
+                    nameEn?: string;
+                    /** @description Net EUR without variants. */
+                    priceNet?: number;
+                    slaMaxHours?: number | null;
+                    slaMinHours?: number | null;
+                    variants?: {
+                        /** @description Keep the `key` from the list when replacing, new ones get a key. */
+                        key?: string;
+                        nameDe: string;
+                        nameEn?: string;
+                        priceNet: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Create one of your own services */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            id: number;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    update_reseller_own_service: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` from `list_reseller_own_services`. */
+                positionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Shown when buying; {price} becomes the price. */
+                    description?: string;
+                    descriptionEn?: string;
+                    /** @description What the customer fills in. */
+                    fields?: {
+                        /** @description Keep the `key` from the list when replacing, new ones get a key. */
+                        key?: string;
+                        labelDe: string;
+                        labelEn?: string;
+                        required: boolean;
+                        /** @enum {string} */
+                        type: "text" | "textarea" | "country" | "datetime";
+                    }[];
+                    /** @default true */
+                    isVisible?: boolean;
+                    name: string;
+                    nameEn?: string;
+                    /** @description Net EUR without variants. */
+                    priceNet?: number;
+                    slaMaxHours?: number | null;
+                    slaMinHours?: number | null;
+                    variants?: {
+                        /** @description Keep the `key` from the list when replacing, new ones get a key. */
+                        key?: string;
+                        nameDe: string;
+                        nameEn?: string;
+                        priceNet: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Replace one of your own services */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            success: boolean;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    delete_reseller_own_service: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` from `list_reseller_own_services`. */
+                positionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Delete one of your own services */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            success: boolean;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     reseller_get_settings: {
         parameters: {
             query?: never;
@@ -18732,6 +20514,7 @@ export interface operations {
                     companyBic?: string;
                     companyCity?: string;
                     companyCountry?: string;
+                    /** Format: email */
                     companyEmail?: string;
                     companyIban?: string;
                     companyInvoiceFooter?: string;
@@ -18739,8 +20522,11 @@ export interface operations {
                     companyPaymentTermsDays?: number;
                     companyPhone?: string;
                     companyPostalCode?: string;
+                    companyTaxExemptionNote?: string;
                     companyTaxNumber?: string;
                     companyVatId?: string;
+                    /** @description Whether `anonymous` starts as true on a new SMTP email template a customer of this reseller creates. Existing templates keep their own setting. */
+                    defaultMailAnonymous?: boolean;
                 };
             };
         };
@@ -18984,6 +20770,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Format: email */
                     toEmail: string;
                 };
             };
@@ -19958,6 +21745,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** Format: uri */
                     avatarUrl?: string;
                     maxConcurrentChats?: number;
                     name?: string;
@@ -20341,7 +22129,10 @@ export interface operations {
                         mimeType: string;
                         /** @description File size in bytes. */
                         size: number;
-                        /** @description The public URL where the attachment is hosted. */
+                        /**
+                         * Format: uri
+                         * @description The public URL where the attachment is hosted.
+                         */
                         url: string;
                     }[];
                     /** @description The content of your reply or update. */
@@ -20541,6 +22332,89 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    get_warning_mail_settings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List your warning mail settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            partner: boolean;
+                            settings: {
+                                /** @enum {string} */
+                                category: "balance" | "trial" | "numbers" | "integrations" | "customer_orders";
+                                /** @enum {string} */
+                                interval: "event" | "daily" | "weekly" | "off";
+                            }[];
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    set_warning_mail: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Reseller keys only. Runs this request as the named customer of the reseller, exactly as if that customer had sent it with a key of their own: ownership checks, limits and usage all apply to the customer, and none of the reseller operations are reachable while it is set. The value is the customer id returned by `POST /resellers/customers` and listed by `GET /resellers/customers`. Errors: 400 `invalid_customer_header` (not a positive integer), 403 `act_as_requires_reseller` (not a reseller key), 404 `customer_not_found` (no customer of this reseller with that id), 403 `customer_suspended`. The `/resellers/*` and `/provisioning/*` operations never accept it. */
+                "X-EchoCall-Customer"?: components["parameters"]["ActAsCustomer"];
+            };
+            path: {
+                /** @description category */
+                category: "balance" | "trial" | "numbers" | "integrations" | "customer_orders";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    interval: "event" | "daily" | "weekly" | "off";
+                };
+            };
+        };
+        responses: {
+            /** @description Set how often a warning mail arrives */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            /** @enum {string} */
+                            category: "balance" | "trial" | "numbers" | "integrations" | "customer_orders";
+                            /** @enum {string} */
+                            interval: "event" | "daily" | "weekly" | "off";
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     list_voices: {
         parameters: {
             query?: never;
@@ -20684,6 +22558,7 @@ export interface operations {
             content: {
                 "application/json": {
                     events: string[];
+                    /** Format: uri */
                     url: string;
                 };
             };
@@ -20800,6 +22675,7 @@ export interface operations {
                 "application/json": {
                     events?: string[];
                     isActive?: boolean;
+                    /** Format: uri */
                     url?: string;
                 };
             };

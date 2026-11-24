@@ -30,7 +30,8 @@
     "accountMenu": "Menu du compte",
     "notifications": "Notifications",
     "noNotifications": "Aucune nouvelle notification",
-    "showAllNotifications": "Tout afficher"
+    "showAllNotifications": "Tout afficher",
+    "services": "Services"
   },
   "languages": {
     "de": "Deutsch",
@@ -159,7 +160,9 @@
     "tabs": {
       "billing": "Facturation",
       "profile": "Profil",
-      "security": "Sécurité"
+      "security": "Sécurité",
+      "warnings": "Avertissements",
+      "services": "Services"
     },
     "profile": {
       "saved": "Profil enregistré."
@@ -182,6 +185,56 @@
       "disableIntro": "Confirmez avec un code actuel de l'application.",
       "disable": "Supprimer",
       "disabled": "Authentification à deux facteurs supprimée."
+    },
+    "warningMails": {
+      "title": "Avertissements par e-mail",
+      "subtitle": "Nous envoyons uniquement les avertissements que vous activez ici, et seulement à la fréquence que vous choisissez.",
+      "loading": "Chargement des paramètres",
+      "loadFailed": "Les paramètres n'ont pas pu être chargés.",
+      "retry": "Réessayer",
+      "savedOn": "Enregistré. Cet avertissement arrive désormais par e-mail.",
+      "savedOff": "Enregistré. Cet avertissement n'arrive plus par e-mail.",
+      "alwaysSent": "Les réponses à vos tickets et les informations sur la sécurité de votre compte arrivent toujours, quels que soient ces paramètres.",
+      "categories": {
+        "balance": {
+          "title": "Solde",
+          "description": "Lorsque votre solde passe sous 5 € et lorsqu'il est presque épuisé."
+        },
+        "balancePortal": {
+          "title": "Solde du portail",
+          "description": "Lorsque le solde du portail passe sous 5 € et lorsqu'il est presque épuisé."
+        },
+        "trial": {
+          "title": "Crédit de départ",
+          "description": "Lorsque la moitié ou presque tout votre crédit de départ est utilisé et lorsque votre période d'essai se termine."
+        },
+        "numbers": {
+          "title": "Numéros de téléphone",
+          "description": "Lorsque le statut de vérification de l'un de vos numéros change, par exemple parce que des documents manquent."
+        },
+        "integrations": {
+          "title": "Intégrations",
+          "description": "Lorsqu'une application connectée n'est plus joignable."
+        },
+        "customerOrders": {
+          "title": "Achats de vos clients",
+          "description": "Lorsqu'un client n'a pas pu acheter un numéro, une offre ou du solde parce qu'il manque quelque chose du côté du portail, ou qu'un renouvellement a échoué."
+        }
+      },
+      "intervals": {
+        "balance": {
+          "off": "Désactivé",
+          "event": "Quand il devient bas",
+          "daily": "Chaque jour tant qu'il est bas",
+          "weekly": "Chaque semaine tant qu'il est bas"
+        },
+        "event": {
+          "off": "Désactivé",
+          "event": "À chaque fois",
+          "daily": "Au plus une fois par jour",
+          "weekly": "Au plus une fois par semaine"
+        }
+      }
     }
   },
   "impersonation": {
@@ -259,6 +312,15 @@
     "preview_unavailable": "L'échantillon de voix n'est pas disponible pour le moment.",
     "service_unavailable": "Le service est momentanément indisponible. Veuillez réessayer dans un instant.",
     "invalid_config": "Certains paramètres ne sont pas valides. Vérifiez-les et saisissez à nouveau un secret enregistré si vous avez modifié ce à quoi il appartient.",
-    "tool_not_permitted": "Cette action n'est pas autorisée par les autorisations du service connecté."
+    "tool_not_permitted": "Cette action n'est pas autorisée par les autorisations du service connecté.",
+    "agent_not_found": "Cet agent est introuvable.",
+    "number_not_found": "Ce numéro est introuvable.",
+    "provider_unavailable": "Le service téléphonique n'est pas disponible pour le moment. Veuillez réessayer dans un instant.",
+    "invoice_email_canceled": "Les factures annulées ne sont pas envoyées.",
+    "invoice_email_customer_gone": "Le client a été supprimé. La facture ne peut plus être envoyée par e-mail.",
+    "invoice_email_no_billing_email": "Aucun e-mail de facturation n'est enregistré pour ce client.",
+    "invoice_email_no_smtp": "Aucun serveur de messagerie n'est configuré pour l'envoi.",
+    "invoice_email_daily_limit": "La limite quotidienne d'e-mails de facture est atteinte. L'envoi reprend demain.",
+    "invoice_email_failed": "Le serveur de messagerie n'a pas accepté l'e-mail. Veuillez réessayer plus tard."
   }
 }

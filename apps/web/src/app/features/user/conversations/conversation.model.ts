@@ -29,6 +29,17 @@ export function conversationDuration(seconds: number | null | undefined): string
   return `${minutes}:${String(whole % 60).padStart(2, '0')}`;
 }
 
+/**
+ * The voice minutes a call counts, as the service bills them (every started minute,
+ * a call that never connected counts 0). Nothing for a chat, or when an older
+ * service leaves the field out.
+ */
+export function billedMinutes(conversation: AnyConversation): number | null {
+  if (isChat(conversation)) return null;
+  const minutes = (conversation as { billedMinutes?: unknown }).billedMinutes;
+  return typeof minutes === 'number' && Number.isFinite(minutes) && minutes >= 0 ? Math.floor(minutes) : null;
+}
+
 /** The status in the reader's language when the portal knows it, otherwise as the service reports it. */
 export function conversationStatusLabel(t: (key: string) => string, conversation: AnyConversation): string {
   const status = conversation.status;

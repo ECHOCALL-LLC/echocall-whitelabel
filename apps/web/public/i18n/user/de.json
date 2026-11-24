@@ -134,7 +134,65 @@
     "deleteMessage": "\"{{name}}\" wird dauerhaft gelöscht.",
     "created": "Agent angelegt.",
     "saved": "Änderungen gespeichert.",
-    "deleted": "Agent gelöscht."
+    "deleted": "Agent gelöscht.",
+    "callSummary": {
+      "title": "Zusammenfassung nach jedem Anruf",
+      "description": "{{name}} schickt nach jedem Anruf eine kurze E-Mail: wer angerufen hat, worum es geht, wie dringend es ist und unter welcher Nummer Sie zurückrufen.",
+      "loading": "Zusammenfassung wird geladen",
+      "loadFailed": "Die Einstellungen zur Zusammenfassung konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "enabled": "Zusammenfassung senden",
+      "enabledHint": "Gilt für Anrufe ab dem Einschalten. Die E-Mail kommt meist innerhalb von 5 Minuten nach dem Anruf.",
+      "email": "E-Mail-Adresse",
+      "emailHint": "Hierhin geht jede Zusammenfassung.",
+      "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+      "anonymous": "Anonym senden",
+      "anonymousHint": "Die E-Mail nennt weder Namen noch Nummer des Anrufers, nur dass beides hinterlassen wurde. Im Portal sehen Sie alles wie gewohnt.",
+      "zeroPii": {
+        "title": "Dieser Agent speichert keine personenbezogenen Daten",
+        "body": "Darum kann er keine Zusammenfassung senden. Um sie zu nutzen, schalten Sie oben unter Datenschutz „Keine personenbezogenen Daten speichern“ aus und speichern den Agenten."
+      },
+      "vip": {
+        "title": "Wichtige Nummern",
+        "hint": "Anrufe von diesen Nummern stehen in der E-Mail als dringend.",
+        "labelPlaceholder": "Wer, z. B. Mama",
+        "numberPlaceholder": "0171 1234567",
+        "labelAria": "Name zur wichtigen Nummer {{n}}",
+        "numberAria": "Wichtige Nummer {{n}}",
+        "numberInvalid": "Das ist keine gültige Telefonnummer.",
+        "remove": "Wichtige Nummer {{n}} entfernen",
+        "add": "Nummer hinzufügen"
+      },
+      "forwarding": {
+        "title": "Handy umleiten",
+        "forNumber": "Mit diesen Codes leitet Ihr Handy Anrufe an {{number}} weiter.",
+        "kind": {
+          "busy": "Wenn besetzt",
+          "noAnswer": "Wenn Sie nicht rangehen",
+          "unreachable": "Wenn nicht erreichbar"
+        },
+        "off": "Aus:",
+        "allAtOnce": "Alle drei auf einmal:",
+        "allLabel": "Alle drei auf einmal",
+        "offLabel": "{{label}}, ausschalten",
+        "howTo": "Code antippen zum Kopieren, in der Telefon-App Ihres Handys einfügen und die Anruftaste drücken. Die Codes gelten in allen deutschen Mobilfunknetzen.",
+        "cost": "Je nach Handytarif kostet die Weiterleitung wie ein Anruf zu dieser Nummer, in vielen Tarifen ist sie enthalten. Im Zweifel hilft Ihr Mobilfunkanbieter.",
+        "copyLabel": "{{label}}: {{code}} kopieren",
+        "copyFailed": "Kopieren hat nicht geklappt. Bitte markieren Sie den Code von Hand.",
+        "noNumber": "Dieser Agent hat noch keine Telefonnummer.",
+        "toNumbers": "Zu den Telefonnummern"
+      },
+      "savedOn": "Zusammenfassung ist eingeschaltet",
+      "savedOff": "Zusammenfassung ist ausgeschaltet",
+      "errors": {
+        "zeroPii": "Dieser Agent speichert keine personenbezogenen Daten und kann darum keine Zusammenfassung senden.",
+        "notReady": "Die Zusammenfassung ist gerade noch nicht verfügbar. Bitte versuchen Sie es später noch einmal.",
+        "invalid": "Bitte prüfen Sie die E-Mail-Adresse und die Eingaben.",
+        "invalidVip": "Die wichtige Nummer {{n}} ist keine gültige Telefonnummer.",
+        "notFound": "Diesen Agenten gibt es nicht mehr.",
+        "provider": "Die Änderung konnte gerade nicht übernommen werden. Bitte versuchen Sie es gleich noch einmal."
+      }
+    }
   },
   "knowledge": {
     "title": "Wissensquellen",
@@ -275,7 +333,8 @@
     },
     "instantTitle": "Sofort verfügbar",
     "instantHint": "Diese Nummern sind sofort einsatzbereit. Der erste Monat wird beim Kauf aus Ihrem Guthaben bezahlt, zuzüglich Mehrwertsteuer.",
-    "searchTitle": "Weitere Nummern suchen"
+    "searchTitle": "Weitere Nummern suchen",
+    "agentNotReady": "Dieser Agent ist noch nicht bereit für Anrufe. Speichern Sie ihn einmal und weisen Sie die Nummer dann erneut zu."
   },
   "models": {
     "tts": {
@@ -323,7 +382,11 @@
     "noTranscript": "Für dieses Gespräch liegt kein Verlauf vor.",
     "close": "Gespräch abschließen",
     "closed": "Gespräch abgeschlossen.",
-    "empty": "Noch keine Gespräche."
+    "empty": "Noch keine Gespräche.",
+    "billed": "Abgerechnet",
+    "billedMinutes": "{{count}} Min.",
+    "billedNone": "Nicht zustande gekommen, keine Kosten",
+    "billedRule": "Jede angefangene Minute zählt"
   },
   "analytics": {
     "title": "Analysen",
@@ -798,6 +861,70 @@
       "subscription": "Abo",
       "refund": "Erstattung",
       "usage": "Verbrauch"
+    }
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "Lassen Sie Arbeiten für Ihr Konto erledigen. Bezahlt wird aus Ihrem Guthaben, zu jedem Auftrag öffnet sich ein Ticket.",
+    "loading": "Services werden geladen",
+    "loadFailed": "Die Services konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "empty": "Gerade sind keine Services verfügbar.",
+    "notEligible": "Für Ihr Konto sind keine Services verfügbar.",
+    "price": "{{amount}} zzgl. MwSt.",
+    "priceFrom": "ab {{amount}} zzgl. MwSt.",
+    "turnaround": {
+      "range": "erledigt meist in {{min}} bis {{max}} Stunden",
+      "upTo": "erledigt meist in bis zu {{max}} Stunden",
+      "about": "erledigt meist in {{min}} Stunden"
+    },
+    "orderNamed": "{{name}} bestellen",
+    "ordered": "Bestellt. In Ticket #{{id}} geht es weiter.",
+    "orderedPlain": "Bestellt. Den Stand sehen Sie unter Ihren Aufträgen.",
+    "order": {
+      "open": "Bestellen",
+      "variant": "Ausführung",
+      "noCountry": "Kein Land",
+      "field": {
+        "required": "Bitte füllen Sie dieses Feld aus.",
+        "invalid": "Diese Angabe passt nicht. Bitte prüfen Sie sie."
+      },
+      "net": "Preis netto",
+      "vat": "MwSt. {{percent}} %",
+      "total": "Gesamt",
+      "pickVariant": "Bitte wählen Sie eine Ausführung.",
+      "balanceShort": "Ihr Guthaben ({{balance}}) reicht dafür nicht. Es fehlen {{missing}}.",
+      "paidFrom": "Der Betrag wird sofort von Ihrem Guthaben abgebucht, aktuell {{balance}}.",
+      "ticketHint": "Danach öffnet sich ein Ticket, in dem die Arbeit mit Ihnen besprochen wird.",
+      "submit": "Für {{amount}} bestellen",
+      "submitPlain": "Bestellen",
+      "errors": {
+        "balance": "Ihr Guthaben reicht nicht. Es fehlen {{missing}}.",
+        "required": "Bitte füllen Sie alle Pflichtfelder aus.",
+        "invalid": "Eine Angabe passt nicht. Bitte prüfen Sie das markierte Feld.",
+        "variant": "Bitte wählen Sie eine Ausführung.",
+        "notAvailable": "Diesen Service gibt es für Ihr Konto gerade nicht.",
+        "tooMany": "Sie haben in der letzten Stunde schon viele Services bestellt. Bitte versuchen Sie es später noch einmal."
+      }
+    },
+    "orders": {
+      "title": "Ihre Aufträge",
+      "service": "Service",
+      "created": "Bestellt am",
+      "status": "Stand",
+      "total": "Betrag",
+      "ticket": "Ticket",
+      "ticketLink": "Ticket #{{id}}",
+      "refunded": "{{amount}} erstattet",
+      "answered": "Ich habe geantwortet",
+      "answeredSaved": "Danke. Der Auftrag geht weiter."
+    },
+    "statuses": {
+      "open": "Offen",
+      "in_progress": "In Arbeit",
+      "waiting_customer": "Wartet auf Ihre Antwort",
+      "done": "Erledigt",
+      "cancelled": "Storniert"
     }
   }
 }

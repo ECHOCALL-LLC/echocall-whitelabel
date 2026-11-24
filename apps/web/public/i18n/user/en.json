@@ -134,7 +134,65 @@
     "deleteMessage": "“{{name}}” will be deleted permanently.",
     "created": "Agent created.",
     "saved": "Changes saved.",
-    "deleted": "Agent deleted."
+    "deleted": "Agent deleted.",
+    "callSummary": {
+      "title": "Summary after every call",
+      "description": "{{name}} sends a short email after every call: who called, what it is about, how urgent it is and the number to call back.",
+      "loading": "Loading the summary",
+      "loadFailed": "The summary settings could not be loaded.",
+      "retry": "Try again",
+      "enabled": "Send summaries",
+      "enabledHint": "Applies to calls from the moment you switch it on. The email usually arrives within 5 minutes after the call.",
+      "email": "Email address",
+      "emailHint": "Every summary goes here.",
+      "emailInvalid": "Please enter a valid email address.",
+      "anonymous": "Send anonymously",
+      "anonymousHint": "The email shows neither the caller's name nor number, only that both were left. The portal shows everything as usual.",
+      "zeroPii": {
+        "title": "This agent stores no personal data",
+        "body": "That is why it cannot send summaries. To use them, switch off “Store no personal data” under Privacy above and save the agent."
+      },
+      "vip": {
+        "title": "Important numbers",
+        "hint": "Calls from these numbers are marked urgent in the email.",
+        "labelPlaceholder": "Who, e.g. Mum",
+        "numberPlaceholder": "+49 171 1234567",
+        "labelAria": "Name for important number {{n}}",
+        "numberAria": "Important number {{n}}",
+        "numberInvalid": "This is not a valid phone number.",
+        "remove": "Remove important number {{n}}",
+        "add": "Add number"
+      },
+      "forwarding": {
+        "title": "Forward your mobile",
+        "forNumber": "With these codes your mobile forwards calls to {{number}}.",
+        "kind": {
+          "busy": "When busy",
+          "noAnswer": "When you do not answer",
+          "unreachable": "When unreachable"
+        },
+        "off": "Off:",
+        "allAtOnce": "All three at once:",
+        "allLabel": "All three at once",
+        "offLabel": "{{label}}, switch off",
+        "howTo": "Tap a code to copy it, paste it into your mobile's phone app and press call. The codes work in every German mobile network.",
+        "cost": "Depending on your mobile plan, forwarding costs the same as a call to this number. Many plans include it. If in doubt, ask your mobile operator.",
+        "copyLabel": "Copy {{label}}: {{code}}",
+        "copyFailed": "Copying did not work. Please select the code by hand.",
+        "noNumber": "This agent has no phone number yet.",
+        "toNumbers": "Go to phone numbers"
+      },
+      "savedOn": "Summaries are on",
+      "savedOff": "Summaries are off",
+      "errors": {
+        "zeroPii": "This agent stores no personal data, so it cannot send summaries.",
+        "notReady": "Summaries are not available yet. Please try again later.",
+        "invalid": "Please check the email address and your entries.",
+        "invalidVip": "Important number {{n}} is not a valid phone number.",
+        "notFound": "This agent no longer exists.",
+        "provider": "The change could not be applied right now. Please try again in a moment."
+      }
+    }
   },
   "knowledge": {
     "title": "Knowledge sources",
@@ -275,7 +333,8 @@
     },
     "instantTitle": "Ready now",
     "instantHint": "These numbers are ready to use at once. The first month is paid from your balance when you buy, plus VAT.",
-    "searchTitle": "Search for more numbers"
+    "searchTitle": "Search for more numbers",
+    "agentNotReady": "This agent is not ready to take calls yet. Save it once, then assign the number again."
   },
   "models": {
     "tts": {
@@ -323,7 +382,11 @@
     "noTranscript": "There is no transcript for this conversation.",
     "close": "Close the conversation",
     "closed": "Conversation closed.",
-    "empty": "No conversations yet."
+    "empty": "No conversations yet.",
+    "billed": "Billed",
+    "billedMinutes": "{{count}} min",
+    "billedNone": "Did not connect, no charge",
+    "billedRule": "Every started minute counts"
   },
   "analytics": {
     "title": "Analytics",
@@ -798,6 +861,70 @@
       "subscription": "Subscription",
       "refund": "Refund",
       "usage": "Usage"
+    }
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "Have work done for your account. It is paid from your balance, and every order opens a ticket.",
+    "loading": "Loading the services",
+    "loadFailed": "The services could not be loaded.",
+    "retry": "Try again",
+    "empty": "No services are available right now.",
+    "notEligible": "No services are available for your account.",
+    "price": "{{amount}} plus VAT",
+    "priceFrom": "from {{amount}} plus VAT",
+    "turnaround": {
+      "range": "usually done in {{min}} to {{max}} hours",
+      "upTo": "usually done within {{max}} hours",
+      "about": "usually done in {{min}} hours"
+    },
+    "orderNamed": "Order {{name}}",
+    "ordered": "Ordered. Ticket #{{id}} is where it continues.",
+    "orderedPlain": "Ordered. You can follow it under your orders.",
+    "order": {
+      "open": "Order",
+      "variant": "Option",
+      "noCountry": "No country",
+      "field": {
+        "required": "Please fill in this field.",
+        "invalid": "This entry does not fit. Please check it."
+      },
+      "net": "Net price",
+      "vat": "VAT {{percent}} %",
+      "total": "Total",
+      "pickVariant": "Please choose an option.",
+      "balanceShort": "Your balance ({{balance}}) is not enough for this. {{missing}} is missing.",
+      "paidFrom": "The amount is taken from your balance at once, currently {{balance}}.",
+      "ticketHint": "A ticket then opens where the work is discussed with you.",
+      "submit": "Order for {{amount}}",
+      "submitPlain": "Order",
+      "errors": {
+        "balance": "Your balance is not enough. {{missing}} is missing.",
+        "required": "Please fill in all required fields.",
+        "invalid": "An entry does not fit. Please check the marked field.",
+        "variant": "Please choose an option.",
+        "notAvailable": "This service is not available for your account right now.",
+        "tooMany": "You have ordered many services in the last hour. Please try again later."
+      }
+    },
+    "orders": {
+      "title": "Your orders",
+      "service": "Service",
+      "created": "Ordered on",
+      "status": "State",
+      "total": "Amount",
+      "ticket": "Ticket",
+      "ticketLink": "Ticket #{{id}}",
+      "refunded": "{{amount}} refunded",
+      "answered": "I have replied",
+      "answeredSaved": "Thank you. The order continues."
+    },
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "waiting_customer": "Waiting for your reply",
+      "done": "Done",
+      "cancelled": "Cancelled"
     }
   }
 }

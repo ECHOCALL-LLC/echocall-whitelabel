@@ -95,6 +95,24 @@ describe('HubSettingsComponent', () => {
     await answerLoad();
   });
 
+  it('shows the tax exemption note and sends it trimmed once it changed', async () => {
+    const fixture = await render({ ...INVOICE_COMPANY, companyTaxExemptionNote: 'Kein Steuerausweis.' });
+    const control = fixture.componentInstance.companyForm.controls.companyTaxExemptionNote;
+    expect(control.value).toBe('Kein Steuerausweis.');
+    expect(fixture.nativeElement.querySelector('[data-testid="hub-tax-exemption"]')).not.toBeNull();
+
+    control.setValue('  Gemäß § 19 UStG wird keine Umsatzsteuer berechnet. ');
+    void fixture.componentInstance.saveCompany();
+    await settle();
+    const request = http.expectOne('/api/admin/hub/resellers/company');
+    expect(request.request.body).toEqual({
+      companyTaxExemptionNote: 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.',
+    });
+    request.flush({ success: true });
+    await settle();
+    await answerLoad();
+  });
+
   it('sends nothing when no company field changed', async () => {
     const fixture = await render();
 

@@ -44,20 +44,36 @@ describe('AccountPage', () => {
     );
   }
 
-  it('offers a linked customer the billing tab', async () => {
+  it('offers a linked customer the billing and services tabs', async () => {
     const fixture = await render(CUSTOMER);
 
     expect(tabLabels(fixture)).toEqual([
       TEXTS.account.tabs.profile,
       TEXTS.account.tabs.security,
+      TEXTS.account.tabs.warnings,
       TEXTS.account.tabs.billing,
+      TEXTS.account.tabs.services,
     ]);
+    expect(fixture.componentInstance.warningMails()).toBe('customer');
   });
 
   it('keeps billing away from an account without a customer', async () => {
     const fixture = await render(OPERATOR);
 
     expect(fixture.componentInstance.showBilling()).toBe(false);
+    // The operator still gets the warning mails of the account the portal is connected with.
+    expect(fixture.componentInstance.warningMails()).toBe('operator');
+    expect(tabLabels(fixture)).toEqual([
+      TEXTS.account.tabs.profile,
+      TEXTS.account.tabs.security,
+      TEXTS.account.tabs.warnings,
+    ]);
+  });
+
+  it('shows no warning mails to a team member without a customer', async () => {
+    const fixture = await render({ ...CUSTOMER, echocallCustomerId: null });
+
+    expect(fixture.componentInstance.warningMails()).toBeNull();
     expect(tabLabels(fixture)).toEqual([TEXTS.account.tabs.profile, TEXTS.account.tabs.security]);
   });
 

@@ -1,4 +1,4 @@
-import { Component, inject, type OnInit, signal } from '@angular/core';
+import { Component, computed, inject, type OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -33,6 +33,11 @@ import {
   type BalanceDialogData,
   type BalanceDialogResult,
 } from './balance-dialog.component';
+import {
+  CustomerBillingDialogComponent,
+  type CustomerBilling,
+  type CustomerBillingDialogData,
+} from './customer-billing-dialog.component';
 import {
   CustomerDialogComponent,
   type CustomerDialogData,
@@ -213,6 +218,52 @@ const KNOWN_USAGE_TYPES = new Set(['voice_minute', 'chat_session']);
               }
             </mat-card-content>
           </mat-card>
+
+          <mat-card appearance="outlined" class="wide" data-testid="billing-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>receipt_long</mat-icon>
+              <mat-card-title>{{ t('admin.customer.billing.title') }}</mat-card-title>
+              <mat-card-subtitle>{{ t('admin.customer.billing.hint') }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              @if (billing(); as b) {
+                @if (!b.billingEmail) {
+                  <p class="notice" role="status" data-testid="billing-no-email">
+                    <mat-icon aria-hidden="true">info</mat-icon>
+                    {{ t('admin.customer.billing.noEmail') }}
+                  </p>
+                }
+                <dl class="facts">
+                  <div>
+                    <dt>{{ t('admin.customer.billing.email') }}</dt>
+                    <dd data-testid="billing-email-value">{{ b.billingEmail || t('admin.customer.billing.none') }}</dd>
+                  </div>
+                  @if (b.billingCcEmail) {
+                    <div>
+                      <dt>{{ t('admin.customer.billing.ccEmail') }}</dt>
+                      <dd>{{ b.billingCcEmail }}</dd>
+                    </div>
+                  }
+                  <div>
+                    <dt>{{ t('admin.customer.billing.address') }}</dt>
+                    <dd class="address">{{ address(b) || t('admin.customer.billing.none') }}</dd>
+                  </div>
+                  @if (b.vatId) {
+                    <div>
+                      <dt>{{ t('admin.customer.billing.vatId') }}</dt>
+                      <dd>{{ b.vatId }}</dd>
+                    </div>
+                  }
+                </dl>
+              }
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-stroked-button type="button" (click)="editBilling()" data-testid="edit-billing">
+                <mat-icon>edit</mat-icon>
+                {{ t('admin.customer.billing.edit') }}
+              </button>
+            </mat-card-actions>
+          </mat-card>
         </div>
 
         <h2 class="section-title">{{ t('admin.customer.subscriptions.title') }}</h2>
@@ -369,6 +420,19 @@ const KNOWN_USAGE_TYPES = new Set(['voice_minute', 'chat_session']);
         grid-template-columns: minmax(0, 1fr);
       }
     }
+    .wide {
+      grid-column: 1 / -1;
+    }
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 0 0 12px;
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .address {
+      white-space: pre-line;
+    }
     .amount {
       font: var(--mat-sys-headline-medium);
       font-variant-numeric: tabular-nums;
@@ -445,6 +509,22 @@ export class AdminCustomerDetailPage implements OnInit {
   readonly missing = signal(false);
   /** What the service said about the last wallet movement it refused. */
   readonly balanceError = signal<string | null>(null);
+
+  /** The details the customer's invoices carry, as the service has them. */
+  readonly billing = computed<CustomerBilling | null>(() => {
+    const user = this.customer()?.user;
+    if (!user) return null;
+    return {
+      companyName: user.companyName ?? null,
+      billingStreet: user.billingStreet ?? null,
+      billingPostalCode: user.billingPostalCode ?? null,
+      billingCity: user.billingCity ?? null,
+      billingCountry: user.billingCountry ?? null,
+      vatId: user.vatId ?? null,
+      billingEmail: user.billingEmail ?? null,
+      billingCcEmail: user.billingCcEmail ?? null,
+    };
+  });
 
   ngOnInit(): void {
     this.id.set(Number(this.route.snapshot.paramMap.get('id')));
@@ -632,6 +712,42 @@ export class AdminCustomerDetailPage implements OnInit {
       createdAt: customer.user?.createdAt ?? null,
       login: this.login(),
     };
+  }
+
+  /** The billing address as it is printed: company, street, postal code with city, country. */
+  address(billing: CustomerBilling): string {
+    const place = [billing.billingPostalCode, billing.billingCity].filter(Boolean).join(' ');
+    return [billing.companyName, billing.billingStreet, place, this.countryName(billing.billingCountry)]
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  /** A stored country code by its name in the reader's language; anything else as it was stored. */
+  private countryName(code: string | null): string {
+    if (!code) return '';
+    try {
+      return new Intl.DisplayNames([this.language.current()], { type: 'region' }).of(code) ?? code;
+    } catch {
+      return code;
+    }
+  }
+
+  /** Changes where the customer's invoices go and what they carry. */
+  editBilling(): void {
+    const billing = this.billing();
+    if (!billing) return;
+    const data: CustomerBillingDialogData = { customerId: this.id(), billing };
+    this.dialog
+      .open<CustomerBillingDialogComponent, CustomerBillingDialogData, true>(CustomerBillingDialogComponent, {
+        data,
+        panelClass: 'dialog-wide',
+      })
+      .afterClosed()
+      .subscribe((saved) => {
+        if (!saved) return;
+        this.notify.success('admin.customer.billing.saved');
+        void this.load();
+      });
   }
 
   /** Changes who the customer is, in the service and in their portal login at once. */

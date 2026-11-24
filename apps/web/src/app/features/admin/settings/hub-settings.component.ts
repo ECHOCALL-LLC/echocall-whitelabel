@@ -29,6 +29,7 @@ const COMPANY_FIELDS = [
   'companyIban',
   'companyBic',
   'companyInvoiceFooter',
+  'companyTaxExemptionNote',
 ] as const;
 
 type CompanyField = (typeof COMPANY_FIELDS)[number];
@@ -174,6 +175,21 @@ type CompanyField = (typeof COMPANY_FIELDS)[number];
           <mat-label>{{ t('admin.settings.hub.invoiceFooter') }}</mat-label>
           <input matInput formControlName="companyInvoiceFooter" />
           @if (companyForm.controls.companyInvoiceFooter | fieldError; as e) {
+            <mat-error>{{ t(e.key, e.params) }}</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>{{ t('admin.settings.hub.taxExemptionNote') }}</mat-label>
+          <textarea
+            matInput
+            formControlName="companyTaxExemptionNote"
+            rows="2"
+            maxlength="500"
+            [placeholder]="t('admin.settings.hub.taxExemptionPlaceholder')"
+            data-testid="hub-tax-exemption"
+          ></textarea>
+          <mat-hint>{{ t('admin.settings.hub.taxExemptionHint') }}</mat-hint>
+          @if (companyForm.controls.companyTaxExemptionNote | fieldError; as e) {
             <mat-error>{{ t(e.key, e.params) }}</mat-error>
           }
         </mat-form-field>
@@ -346,6 +362,7 @@ export class HubSettingsComponent implements OnInit {
     companyIban: '',
     companyBic: '',
     companyInvoiceFooter: '',
+    companyTaxExemptionNote: '',
   };
 
   /** The payment term as stored, kept apart because it is a number. */
@@ -368,6 +385,7 @@ export class HubSettingsComponent implements OnInit {
     companyBic: ['', Validators.maxLength(11)],
     companyPaymentTermsDays: [14, [Validators.min(0), Validators.max(365)]],
     companyInvoiceFooter: ['', Validators.maxLength(1000)],
+    companyTaxExemptionNote: ['', Validators.maxLength(500)],
   });
 
   readonly logoForm = this.fb.group({
@@ -405,6 +423,7 @@ export class HubSettingsComponent implements OnInit {
         companyIban: company.companyIban ?? '',
         companyBic: company.companyBic ?? '',
         companyInvoiceFooter: company.companyInvoiceFooter ?? '',
+        companyTaxExemptionNote: company.companyTaxExemptionNote ?? '',
       };
       this.storedPaymentTerms = company.companyPaymentTermsDays ?? 14;
       this.missing.set(company.missingCompanyFields ?? []);

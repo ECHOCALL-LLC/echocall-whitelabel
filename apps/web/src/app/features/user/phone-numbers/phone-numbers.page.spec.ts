@@ -2,8 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
-import { provideTestI18n, USER_TEXTS } from '../../../testing/i18n';
+import { provideTestI18n, TEXTS, USER_TEXTS } from '../../../testing/i18n';
 import { PhoneNumbersPage } from './phone-numbers.page';
 
 const NUMBER = {
@@ -22,15 +23,18 @@ const AGENT = { id: 'agent_5', name: 'Empfang', language: 'en', status: 'active'
 describe('PhoneNumbersPage', () => {
   let http: HttpTestingController;
   let dialogResult: unknown;
+  let snacks: string[];
 
   beforeEach(async () => {
     dialogResult = undefined;
+    snacks = [];
     await TestBed.configureTestingModule({
       imports: [PhoneNumbersPage, provideTestI18n()],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(dialogResult) }) } },
+        { provide: MatSnackBar, useValue: { open: (message: string) => snacks.push(message) } },
       ],
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
@@ -87,6 +91,40 @@ describe('PhoneNumbersPage', () => {
     http.expectOne((req) => req.url === '/api/hub/phone-numbers').flush({ data: [NUMBER] });
     http.expectOne('/api/hub/agents').flush({ data: [AGENT] });
     await pending;
+  });
+
+  it('names an agent that is not ready and shows the number as it still is', async () => {
+    const fixture = await render();
+
+    const pending = fixture.componentInstance.assign(fixture.componentInstance.numbers()[0], 5);
+    http
+      .expectOne('/api/hub/phone-numbers/12')
+      .flush(
+        { error: { code: 'agent_not_ready', message: 'not ready' } },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne((req) => req.url === '/api/hub/phone-numbers').flush({ data: [NUMBER] });
+    http.expectOne('/api/hub/agents').flush({ data: [AGENT] });
+    await pending;
+
+    expect(snacks).toEqual([USER_TEXTS.numbers.agentNotReady]);
+    expect(fixture.componentInstance.numbers()[0].voiceAgentId).toBeNull();
+  });
+
+  it('names an agent that no longer exists', async () => {
+    const fixture = await render();
+
+    const pending = fixture.componentInstance.assign(fixture.componentInstance.numbers()[0], 5);
+    http
+      .expectOne('/api/hub/phone-numbers/12')
+      .flush({ error: { code: 'agent_not_found', message: 'gone' } }, { status: 404, statusText: 'Not Found' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    http.expectOne((req) => req.url === '/api/hub/phone-numbers').flush({ data: [NUMBER] });
+    http.expectOne('/api/hub/agents').flush({ data: [AGENT] });
+    await pending;
+
+    expect(snacks).toEqual([TEXTS.errors.agent_not_found]);
   });
 
   it('does not call the service when the label is unchanged', async () => {

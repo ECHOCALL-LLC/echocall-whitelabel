@@ -36,4 +36,40 @@ export const updateCustomerSchema = z
   });
 export type UpdateCustomerDto = z.infer<typeof updateCustomerSchema>;
 
+/** One line of the billing address. Line breaks would split the line on the invoice, so they are flattened. */
+const billingLine = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .transform((value) => value.replace(/[\r\n\t]+/g, ' ').trim());
+
+/** An address invoices are mailed to; empty clears it. */
+const billingAddress = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(320)
+  .pipe(z.union([z.literal(''), z.email()]));
+
+/**
+ * The details the customer's invoices carry and are mailed to. Each field is
+ * optional, an empty string clears it, and the hub checks country, postal code
+ * and VAT ID against each other before it keeps anything.
+ */
+export const updateBillingSchema = z
+  .object({
+    companyName: billingLine(255).optional(),
+    billingStreet: billingLine(255).optional(),
+    billingPostalCode: billingLine(20).optional(),
+    billingCity: billingLine(100).optional(),
+    billingCountry: billingLine(60).optional(),
+    vatId: billingLine(50).optional(),
+    billingEmail: billingAddress.optional(),
+    billingCcEmail: billingAddress.optional(),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), {
+    message: 'Nothing to update',
+  });
+export type UpdateBillingDto = z.infer<typeof updateBillingSchema>;
+
 export const customerIdSchema = z.coerce.number().int().positive();

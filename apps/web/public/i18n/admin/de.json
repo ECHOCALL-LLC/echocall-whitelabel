@@ -182,6 +182,34 @@
         "admin_adjustment": "Korrektur",
         "bonus": "Gutschrift"
       }
+    },
+    "billing": {
+      "title": "Rechnungsdaten",
+      "hint": "Wohin die Rechnungen des Kunden gehen und was auf ihnen steht.",
+      "noEmail": "Ohne Rechnungs-E-Mail lassen sich Rechnungen nicht per E-Mail senden.",
+      "none": "Nicht hinterlegt",
+      "edit": "Bearbeiten",
+      "saved": "Rechnungsdaten gespeichert.",
+      "address": "Rechnungsanschrift",
+      "email": "Rechnungs-E-Mail",
+      "emailHint": "Rechnungen gehen nur an diese Adresse.",
+      "ccEmail": "Kopie an (optional)",
+      "companyName": "Firma",
+      "street": "Straße und Hausnummer",
+      "postalCode": "PLZ",
+      "city": "Ort",
+      "country": "Land",
+      "noCountry": "Kein Land",
+      "vatId": "USt-IdNr.",
+      "dialogTitle": "Rechnungsdaten bearbeiten",
+      "dialogIntro": "Diese Angaben stehen auf den Rechnungen des Kunden. Ein geleertes Feld wird entfernt.",
+      "errors": {
+        "invalid_country": "Dieses Land ist nicht bekannt.",
+        "invalid_postal_code": "Die PLZ passt nicht zum Land.",
+        "invalid_vat_id": "Die USt-IdNr. hat kein gültiges Format.",
+        "invalid_billing_email": "Diese Rechnungs-E-Mail ist ungültig.",
+        "invalid_billing_cc_email": "Die Adresse für die Kopie ist ungültig."
+      }
     }
   },
   "plans": {
@@ -444,7 +472,41 @@
       "gross": "Brutto",
       "submit": "Rechnung anlegen"
     },
-    "downloadPdf": "Als PDF herunterladen"
+    "downloadPdf": "Als PDF herunterladen",
+    "mail": {
+      "open": "Per E-Mail senden",
+      "send": "Senden",
+      "resend": "Erneut senden",
+      "title": "Rechnung {{number}} per E-Mail senden",
+      "loadError": "Die Vorschau konnte nicht geladen werden.",
+      "problem": {
+        "canceled": "Stornierte Rechnungen werden nicht versendet.",
+        "customer_gone": "Der Kunde wurde gelöscht. Die Rechnung kann nicht mehr per E-Mail versendet werden.",
+        "no_billing_email": "Für diesen Kunden ist keine Rechnungs-E-Mail hinterlegt.",
+        "company_incomplete": "Ihre Firmendaten sind unvollständig. Ergänzen Sie unter Einstellungen: {{fields}}.",
+        "no_smtp": "Es ist kein Mailserver für den Versand eingerichtet.",
+        "daily_limit": "Heute wurden bereits {{limit}} Rechnungen per E-Mail versendet. Morgen geht es weiter."
+      },
+      "editCustomer": "Rechnungsdaten des Kunden öffnen",
+      "editCompany": "Einstellungen öffnen",
+      "to": "An",
+      "cc": "Kopie",
+      "from": "Absender",
+      "attachment": "Anhang",
+      "noAddress": "Keine Rechnungs-E-Mail hinterlegt",
+      "lastSent": "Zuletzt gesendet",
+      "sentAt": "{{date}} an {{to}}",
+      "language": "Sprache",
+      "fallbackLang": "Für diese Sprache gibt es keine Vorlage. Es wird der englische Text verwendet.",
+      "subject": "Betreff",
+      "body": "Text",
+      "templateHint": "Vorschlag aus Ihrer Rechnungsvorlage. Logo, Firmenangaben und die PDF kommen automatisch dazu.",
+      "bcc": "Blindkopie an {{address}} senden",
+      "dailyUsage": "Heute gesendet: {{sent}} von {{limit}}",
+      "status": "E-Mail",
+      "notSent": "Noch nicht per E-Mail gesendet",
+      "sent": "Rechnung an {{to}} gesendet."
+    }
   },
   "numbers": {
     "title": "Rufnummern",
@@ -699,7 +761,10 @@
       "bic": "BIC",
       "paymentTerms": "Zahlungsziel (Tage)",
       "invoiceFooter": "Fußzeile der Rechnung",
-      "incomplete": "Solange diese Angaben fehlen, lässt sich keine Rechnung erstellen: {{fields}}."
+      "incomplete": "Solange diese Angaben fehlen, lässt sich keine Rechnung erstellen: {{fields}}.",
+      "taxExemptionNote": "Hinweis zur Steuerbefreiung (optional)",
+      "taxExemptionPlaceholder": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
+      "taxExemptionHint": "Steht auf jeder Rechnung unter den Beträgen, zum Beispiel für Kleinunternehmer."
     }
   },
   "audit": {
@@ -788,7 +853,8 @@
       "users_invited": "Zugang eingeladen",
       "users_sign_in_link_sent": "Anmeldelink gesendet",
       "users_two_factor_cleared": "Zwei-Faktor zurückgesetzt",
-      "users_updated": "Zugang geändert"
+      "users_updated": "Zugang geändert",
+      "customers_billing_updated": "Rechnungsdaten geändert"
     },
     "fields": {
       "changed": "Geändert",
@@ -807,7 +873,15 @@
       "role": "Rolle",
       "secure": "Verschlüsselt",
       "user": "Postfachbenutzer",
-      "userId": "Zugang"
+      "userId": "Zugang",
+      "companyName": "Firma",
+      "billingStreet": "Straße",
+      "billingPostalCode": "PLZ",
+      "billingCity": "Ort",
+      "billingCountry": "Land",
+      "vatId": "USt-IdNr.",
+      "billingEmail": "Rechnungs-E-Mail",
+      "billingCcEmail": "Kopie an"
     },
     "yes": "Ja",
     "no": "Nein",
@@ -815,6 +889,146 @@
       "customer": "Kunde",
       "settings": "Einstellungen",
       "user": "Zugang"
+    }
+  },
+  "serviceOrders": {
+    "title": "Service-Auftrag",
+    "buyerLabel": "Auftraggeber",
+    "buyer": "Kunde #{{id}}",
+    "priceLabel": "Preis",
+    "paid": "{{gross}} vom Guthaben, davon {{net}} netto",
+    "free": "Kostenlos beauftragt",
+    "etaLabel": "Bearbeitungszeit",
+    "eta": {
+      "range": "meist {{min}} bis {{max}} Stunden",
+      "upTo": "meist bis zu {{max}} Stunden",
+      "about": "meist {{min}} Stunden"
+    },
+    "refundedLabel": "Gutschrift",
+    "refunded": "{{amount}} dem Kunden gutgeschrieben",
+    "status": {
+      "open": "Eingegangen",
+      "in_progress": "In Bearbeitung",
+      "waiting_customer": "Rückfrage an Kunden",
+      "done": "Abgeschlossen",
+      "cancelled": "Storniert"
+    },
+    "start": "Bearbeitung starten",
+    "ask": "Rückfrage an Kunden",
+    "resume": "Weiter bearbeiten",
+    "finish": "Abschließen",
+    "cancel": "Stornieren",
+    "askHint": "Schreiben Sie die Rückfrage unten als Antwort ins Ticket. Der Kunde bekommt eine Mail und bestätigt, sobald er geantwortet hat.",
+    "cancelTitle": "Auftrag stornieren?",
+    "cancelDesc": "Der Auftrag endet und das Ticket wird geschlossen. Das lässt sich nicht rückgängig machen.",
+    "refund": "{{amount}} dem Guthaben des Kunden gutschreiben",
+    "refundNote": "Eine Stornorechnung entsteht dabei nicht.",
+    "keep": "Nicht stornieren",
+    "confirmCancel": "Auftrag stornieren",
+    "saved": "Status gespeichert: {{status}}",
+    "cancelled": "Auftrag storniert",
+    "cancelledRefund": "Auftrag storniert, {{amount}} gutgeschrieben",
+    "forwardTitle": "Von der Plattform erledigen lassen",
+    "forwardHint": "Das Team der Plattform übernimmt die Arbeit. Ihr Guthaben wird mit {{gross}} ({{net}} netto) belastet. Ihr Kunde spricht weiter nur mit Ihnen.",
+    "forwardShort": "Ihr Guthaben reicht nicht: {{balance}} verfügbar, {{gross}} nötig. Laden Sie zuerst Guthaben auf.",
+    "forward": "Weitergeben",
+    "forwardConfirmTitle": "An die Plattform weitergeben?",
+    "forwardConfirmDesc": "Ihr Guthaben wird jetzt mit {{gross}} ({{net}} netto) belastet, und beim Team der Plattform entsteht ein Ticket. Den Stand sehen Sie hier im Ticket.",
+    "forwardConfirm": "Für {{amount}} weitergeben",
+    "notNow": "Nicht jetzt",
+    "forwardDone": "Weitergegeben als Ticket #{{ticket}}, {{amount}} vom Guthaben abgebucht",
+    "forwardErrors": {
+      "INSUFFICIENT_BALANCE": "Ihr Guthaben reicht nicht. Laden Sie Guthaben auf und versuchen Sie es erneut.",
+      "ALREADY_FORWARDED": "Dieser Auftrag wurde bereits weitergegeben.",
+      "NOT_AVAILABLE": "Die Plattform bietet diesen Service gerade nicht an, er lässt sich nicht weitergeben."
+    },
+    "forwardedTitle": "An die Plattform weitergegeben",
+    "forwardedState": "Ticket #{{ticket}} bei der Plattform, Stand: {{status}}",
+    "ownHint": "Das ist Ihr eigener Service. Sie erledigen ihn selbst, eine Weitergabe an die Plattform ist nicht möglich."
+  },
+  "services": {
+    "title": "Services",
+    "intro": "Was Ihre Kunden in ihrem Konto unter Services beauftragen können. Jeder Auftrag kommt als Ticket bei Ihnen an, dort erledigen Sie ihn.",
+    "loadError": "Die Services konnten nicht geladen werden.",
+    "offers": {
+      "title": "Services der Plattform",
+      "intro": "Alle Preise netto. Ihre Kunden zahlen zusätzlich {{vat}} % MwSt. von ihrem Guthaben. Ohne eigenen Preis zahlen sie Ihren Einkaufspreis.",
+      "empty": "Die Plattform bietet gerade keine Services an.",
+      "enabled": "Ihren Kunden anbieten",
+      "offHint": "Ihre Kunden sehen diesen Service nicht.",
+      "purchase": "Einkauf",
+      "price": "Ihr Preis netto",
+      "margin": "Marge",
+      "minimum": "Mindestens {{price}}, Ihr Einkaufspreis",
+      "saved": "{{name}} gespeichert",
+      "errors": {
+        "PRICE_BELOW_COST": "Ein Preis liegt unter Ihrem Einkaufspreis.",
+        "PRICE_INVALID": "Geben Sie einen Preis in Euro ein, zum Beispiel 79,00.",
+        "NOT_FOUND": "Diesen Service gibt es nicht mehr. Die Liste wurde neu geladen."
+      }
+    },
+    "own": {
+      "title": "Eigene Services",
+      "intro": "Services, die Sie selbst anbieten und erledigen. Sie legen Preis, Varianten und die Angaben fest, die der Kunde beim Auftrag macht.",
+      "create": "Service anlegen",
+      "created": "Service angelegt",
+      "saved": "Service gespeichert",
+      "empty": "Sie haben noch keine eigenen Services.",
+      "hidden": "Ausgeblendet",
+      "priceNetValue": "{{price}} netto",
+      "priceFrom": "ab {{price}} netto",
+      "fieldCount": "{{count}} Angaben vom Kunden",
+      "editLabel": "{{name}} bearbeiten",
+      "deleteLabel": "{{name}} löschen",
+      "deleteTitle": "Service löschen?",
+      "deleteMessage": "„{{name}}“ verschwindet für Ihre Kunden. Bestehende Aufträge bleiben mit ihrem Ticket erhalten. Das lässt sich nicht rückgängig machen.",
+      "delete": "Löschen",
+      "deleted": "{{name}} gelöscht",
+      "createTitle": "Eigenen Service anlegen",
+      "editTitle": "Service bearbeiten",
+      "nameDe": "Name (Deutsch)",
+      "nameEn": "Name (Englisch)",
+      "descriptionDe": "Beschreibung (Deutsch)",
+      "descriptionEn": "Beschreibung (Englisch)",
+      "descriptionHint": "Ihre Kunden lesen das vor dem Auftrag. {price} wird durch den Preis ersetzt.",
+      "priceSection": "Preis",
+      "priceNet": "Preis netto",
+      "variantNameDe": "Variante (Deutsch)",
+      "variantNameEn": "Variante (Englisch)",
+      "addVariant": "Variante hinzufügen",
+      "removeVariant": "Variante entfernen",
+      "variantHint": "Mit Varianten hat jede ihren eigenen Preis, und der Kunde wählt eine davon aus.",
+      "fieldsSection": "Angaben vom Kunden",
+      "fieldLabelDe": "Frage (Deutsch)",
+      "fieldLabelEn": "Frage (Englisch)",
+      "fieldType": "Art",
+      "fieldTypes": {
+        "text": "Kurzer Text",
+        "textarea": "Langer Text",
+        "country": "Land",
+        "datetime": "Datum und Uhrzeit"
+      },
+      "fieldRequired": "Pflichtangabe",
+      "addField": "Angabe hinzufügen",
+      "removeField": "Angabe entfernen",
+      "fieldsHint": "Die Antworten stehen im Ticket des Auftrags.",
+      "slaSection": "Bearbeitungszeit",
+      "slaMin": "Mindestens (Stunden)",
+      "slaMax": "Höchstens (Stunden)",
+      "hoursInvalid": "Ganze Stunden von 1 bis {{max}}",
+      "visible": "Für Kunden sichtbar",
+      "visibleHint": "Ausgeblendete Services bleiben gespeichert, Ihre Kunden können sie aber nicht beauftragen.",
+      "errors": {
+        "NAME_REQUIRED": "Geben Sie dem Service einen Namen.",
+        "TOO_MANY_FIELDS": "Höchstens 12 Angaben pro Service.",
+        "TOO_MANY_VARIANTS": "Höchstens 12 Varianten pro Service.",
+        "FIELD_LABEL_REQUIRED": "Jede Angabe braucht eine Frage.",
+        "VARIANT_NAME_REQUIRED": "Jede Variante braucht einen Namen.",
+        "PRICE_INVALID": "Geben Sie einen Preis in Euro bis 100.000 ein, zum Beispiel 79,00.",
+        "SLA_INVALID": "Die kürzeste Bearbeitungszeit darf nicht länger sein als die längste.",
+        "POSITION_LIMIT": "Sie haben die Höchstzahl eigener Services erreicht. Löschen Sie zuerst einen.",
+        "NOT_FOUND": "Diesen Service gibt es nicht mehr."
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, type OnInit, signal } from '@angular/core';
+import { Component, computed, inject, type OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,7 @@ import type { Conversation, LiveConversation } from '../../../core/hub/hub.model
 import { NotifyService } from '../../../core/notify/notify.service';
 import {
   type AnyConversation,
+  billedMinutes,
   conversationDuration,
   conversationStatusLabel,
   conversationTitle,
@@ -77,16 +78,24 @@ import { providePaginatorIntl } from '../../../shared/paginator-intl';
               {{ duration(c.duration) }}
             </td>
           </ng-container>
+          <ng-container matColumnDef="billed">
+            <th mat-header-cell *matHeaderCellDef>{{ t('user.conversations.billed') }}</th>
+            <td mat-cell *matCellDef="let c" [attr.data-label]="t('user.conversations.billed')" data-testid="conversation-billed">
+              @if (billed(c); as minutes) {
+                {{ t('user.conversations.billedMinutes', { count: minutes.count }) }}
+              }
+            </td>
+          </ng-container>
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>{{ t('fields.status') }}</th>
             <td mat-cell *matCellDef="let c" [attr.data-label]="t('fields.status')">
               <span class="status" [class]="'status status-' + c.status">{{ statusLabel(t, c) }}</span>
             </td>
           </ng-container>
-          <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+          <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns()"></tr>
           <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell empty" [attr.colspan]="columns.length">
+            <td class="mat-cell empty" [attr.colspan]="columns().length">
               {{ t('user.conversations.empty') }}
             </td>
           </tr>
@@ -116,7 +125,12 @@ export class ConversationsPage implements OnInit {
   readonly page = signal(1);
   readonly perPage = signal(25);
   readonly total = signal(0);
-  readonly columns = ['partner', 'started', 'duration', 'status'];
+  // Only a call counts voice minutes, so the column belongs to the call list.
+  readonly columns = computed(() =>
+    this.type() === 'voice'
+      ? ['partner', 'started', 'duration', 'billed', 'status']
+      : ['partner', 'started', 'duration', 'status'],
+  );
 
   ngOnInit(): void {
     const type = this.route.snapshot.queryParamMap.get('type');
@@ -134,6 +148,12 @@ export class ConversationsPage implements OnInit {
 
   duration(seconds: number | null | undefined): string {
     return conversationDuration(seconds);
+  }
+
+  /** Wrapped so a call that never connected (0 minutes) still shows its row value. */
+  billed(conversation: AnyConversation): { count: number } | null {
+    const count = billedMinutes(conversation);
+    return count === null ? null : { count };
   }
 
   setType(type: 'voice' | 'chat'): void {

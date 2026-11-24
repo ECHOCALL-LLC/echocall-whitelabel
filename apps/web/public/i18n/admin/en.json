@@ -182,6 +182,34 @@
         "admin_adjustment": "Adjustment",
         "bonus": "Bonus"
       }
+    },
+    "billing": {
+      "title": "Billing details",
+      "hint": "Where the customer's invoices go and what they say.",
+      "noEmail": "Without a billing email, invoices cannot be sent by email.",
+      "none": "Not on file",
+      "edit": "Edit",
+      "saved": "Billing details saved.",
+      "address": "Billing address",
+      "email": "Billing email",
+      "emailHint": "Invoices go to this address only.",
+      "ccEmail": "Copy to (optional)",
+      "companyName": "Company",
+      "street": "Street and number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "country": "Country",
+      "noCountry": "No country",
+      "vatId": "VAT ID",
+      "dialogTitle": "Edit billing details",
+      "dialogIntro": "These details appear on the customer's invoices. An emptied field is removed.",
+      "errors": {
+        "invalid_country": "This country is not known.",
+        "invalid_postal_code": "The postal code does not match the country.",
+        "invalid_vat_id": "The VAT ID is not in a valid format.",
+        "invalid_billing_email": "This billing email is not valid.",
+        "invalid_billing_cc_email": "The copy address is not valid."
+      }
     }
   },
   "plans": {
@@ -444,7 +472,41 @@
       "gross": "Gross",
       "submit": "Create the invoice"
     },
-    "downloadPdf": "Download as PDF"
+    "downloadPdf": "Download as PDF",
+    "mail": {
+      "open": "Send by email",
+      "send": "Send",
+      "resend": "Send again",
+      "title": "Email invoice {{number}}",
+      "loadError": "The preview could not be loaded.",
+      "problem": {
+        "canceled": "Canceled invoices are not sent.",
+        "customer_gone": "The customer was deleted. The invoice can no longer be emailed.",
+        "no_billing_email": "No billing email is on file for this customer.",
+        "company_incomplete": "Your company details are incomplete. Add under Settings: {{fields}}.",
+        "no_smtp": "No mail server is set up for sending.",
+        "daily_limit": "{{limit}} invoices have already been emailed today. Sending resumes tomorrow."
+      },
+      "editCustomer": "Open the customer's billing details",
+      "editCompany": "Open settings",
+      "to": "To",
+      "cc": "Cc",
+      "from": "From",
+      "attachment": "Attachment",
+      "noAddress": "No billing email on file",
+      "lastSent": "Last sent",
+      "sentAt": "{{date}} to {{to}}",
+      "language": "Language",
+      "fallbackLang": "There is no template in this language. The English text is used.",
+      "subject": "Subject",
+      "body": "Message",
+      "templateHint": "Suggested by your invoice template. Logo, company details and the PDF are added automatically.",
+      "bcc": "Send a blind copy to {{address}}",
+      "dailyUsage": "Sent today: {{sent}} of {{limit}}",
+      "status": "Email",
+      "notSent": "Not emailed yet",
+      "sent": "Invoice sent to {{to}}."
+    }
   },
   "numbers": {
     "title": "Phone numbers",
@@ -699,7 +761,10 @@
       "bic": "BIC",
       "paymentTerms": "Payment term (days)",
       "invoiceFooter": "Invoice footer",
-      "incomplete": "No invoice can be issued while these details are missing: {{fields}}."
+      "incomplete": "No invoice can be issued while these details are missing: {{fields}}.",
+      "taxExemptionNote": "Tax exemption note (optional)",
+      "taxExemptionPlaceholder": "No VAT charged under the small business scheme.",
+      "taxExemptionHint": "Appears on every invoice below the amounts, for example for small businesses."
     }
   },
   "audit": {
@@ -788,7 +853,8 @@
       "users_invited": "Login invited",
       "users_sign_in_link_sent": "Sign-in link sent",
       "users_two_factor_cleared": "Two-factor reset",
-      "users_updated": "Login changed"
+      "users_updated": "Login changed",
+      "customers_billing_updated": "Billing details changed"
     },
     "fields": {
       "changed": "Changed",
@@ -807,7 +873,15 @@
       "role": "Role",
       "secure": "Encrypted",
       "user": "Mailbox login",
-      "userId": "Login"
+      "userId": "Login",
+      "companyName": "Company",
+      "billingStreet": "Street",
+      "billingPostalCode": "Postal code",
+      "billingCity": "City",
+      "billingCountry": "Country",
+      "vatId": "VAT ID",
+      "billingEmail": "Billing email",
+      "billingCcEmail": "Copy to"
     },
     "yes": "Yes",
     "no": "No",
@@ -815,6 +889,146 @@
       "customer": "Customer",
       "settings": "Settings",
       "user": "Login"
+    }
+  },
+  "serviceOrders": {
+    "title": "Service order",
+    "buyerLabel": "Ordered by",
+    "buyer": "Customer #{{id}}",
+    "priceLabel": "Price",
+    "paid": "{{gross}} from the balance, {{net}} net",
+    "free": "Ordered for free",
+    "etaLabel": "Turnaround",
+    "eta": {
+      "range": "usually {{min}} to {{max}} hours",
+      "upTo": "usually within {{max}} hours",
+      "about": "usually {{min}} hours"
+    },
+    "refundedLabel": "Credit",
+    "refunded": "{{amount}} credited to the customer",
+    "status": {
+      "open": "Received",
+      "in_progress": "In progress",
+      "waiting_customer": "Question to the customer",
+      "done": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "start": "Start work",
+    "ask": "Ask the customer",
+    "resume": "Continue work",
+    "finish": "Complete",
+    "cancel": "Cancel order",
+    "askHint": "Write your question below as a reply in the ticket. The customer gets an email and confirms once they have answered.",
+    "cancelTitle": "Cancel this order?",
+    "cancelDesc": "The order ends and the ticket is closed. This cannot be undone.",
+    "refund": "Credit {{amount}} to the customer's balance",
+    "refundNote": "No cancellation invoice is created.",
+    "keep": "Keep order",
+    "confirmCancel": "Cancel order",
+    "saved": "Status saved: {{status}}",
+    "cancelled": "Order cancelled",
+    "cancelledRefund": "Order cancelled, {{amount}} credited",
+    "forwardTitle": "Have the platform do it",
+    "forwardHint": "The platform's team takes over the work. Your balance is charged {{gross}} ({{net}} net). Your customer keeps talking only to you.",
+    "forwardShort": "Your balance is not enough: {{balance}} available, {{gross}} needed. Top up your balance first.",
+    "forward": "Forward",
+    "forwardConfirmTitle": "Forward to the platform?",
+    "forwardConfirmDesc": "Your balance is charged {{gross}} ({{net}} net) now, and a ticket is opened with the platform's team. You can follow the progress here in the ticket.",
+    "forwardConfirm": "Forward for {{amount}}",
+    "notNow": "Not now",
+    "forwardDone": "Forwarded as ticket #{{ticket}}, {{amount}} charged to your balance",
+    "forwardErrors": {
+      "INSUFFICIENT_BALANCE": "Your balance is not enough. Top up your balance and try again.",
+      "ALREADY_FORWARDED": "This order has already been forwarded.",
+      "NOT_AVAILABLE": "The platform does not offer this service right now, so it cannot be forwarded."
+    },
+    "forwardedTitle": "Forwarded to the platform",
+    "forwardedState": "Platform ticket #{{ticket}}, status: {{status}}",
+    "ownHint": "This is your own service. You do the work yourself, it cannot be forwarded to the platform."
+  },
+  "services": {
+    "title": "Services",
+    "intro": "What your customers can order in their account under Services. Every order reaches you as a ticket, where you do the work.",
+    "loadError": "The services could not be loaded.",
+    "offers": {
+      "title": "Platform services",
+      "intro": "All prices are net. Your customers also pay {{vat}} % VAT from their balance. Without a price of your own they pay your purchase price.",
+      "empty": "The platform offers no services right now.",
+      "enabled": "Offer to your customers",
+      "offHint": "Your customers do not see this service.",
+      "purchase": "Purchase",
+      "price": "Your net price",
+      "margin": "Margin",
+      "minimum": "At least {{price}}, your purchase price",
+      "saved": "{{name}} saved",
+      "errors": {
+        "PRICE_BELOW_COST": "A price is below your purchase price.",
+        "PRICE_INVALID": "Enter a price in euros, for example 79.00.",
+        "NOT_FOUND": "This service no longer exists. The list was reloaded."
+      }
+    },
+    "own": {
+      "title": "Your own services",
+      "intro": "Services you offer and do yourself. You set the price, the variants and what the customer tells you when ordering.",
+      "create": "Add service",
+      "created": "Service added",
+      "saved": "Service saved",
+      "empty": "You have no services of your own yet.",
+      "hidden": "Hidden",
+      "priceNetValue": "{{price}} net",
+      "priceFrom": "from {{price}} net",
+      "fieldCount": "{{count}} details from the customer",
+      "editLabel": "Edit {{name}}",
+      "deleteLabel": "Delete {{name}}",
+      "deleteTitle": "Delete this service?",
+      "deleteMessage": "\"{{name}}\" disappears for your customers. Existing orders keep their ticket. This cannot be undone.",
+      "delete": "Delete",
+      "deleted": "{{name}} deleted",
+      "createTitle": "Add your own service",
+      "editTitle": "Edit service",
+      "nameDe": "Name (German)",
+      "nameEn": "Name (English)",
+      "descriptionDe": "Description (German)",
+      "descriptionEn": "Description (English)",
+      "descriptionHint": "Your customers read this before ordering. {price} is replaced with the price.",
+      "priceSection": "Price",
+      "priceNet": "Net price",
+      "variantNameDe": "Variant (German)",
+      "variantNameEn": "Variant (English)",
+      "addVariant": "Add variant",
+      "removeVariant": "Remove variant",
+      "variantHint": "With variants each one has its own price, and the customer picks one.",
+      "fieldsSection": "Details from the customer",
+      "fieldLabelDe": "Question (German)",
+      "fieldLabelEn": "Question (English)",
+      "fieldType": "Kind",
+      "fieldTypes": {
+        "text": "Short text",
+        "textarea": "Long text",
+        "country": "Country",
+        "datetime": "Date and time"
+      },
+      "fieldRequired": "Required",
+      "addField": "Add detail",
+      "removeField": "Remove detail",
+      "fieldsHint": "The answers appear in the order's ticket.",
+      "slaSection": "Turnaround",
+      "slaMin": "At least (hours)",
+      "slaMax": "At most (hours)",
+      "hoursInvalid": "Whole hours from 1 to {{max}}",
+      "visible": "Visible to customers",
+      "visibleHint": "Hidden services stay saved, but your customers cannot order them.",
+      "errors": {
+        "NAME_REQUIRED": "Give the service a name.",
+        "TOO_MANY_FIELDS": "At most 12 details per service.",
+        "TOO_MANY_VARIANTS": "At most 12 variants per service.",
+        "FIELD_LABEL_REQUIRED": "Every detail needs a question.",
+        "VARIANT_NAME_REQUIRED": "Every variant needs a name.",
+        "PRICE_INVALID": "Enter a price in euros up to 100,000, for example 79.00.",
+        "SLA_INVALID": "The shortest turnaround cannot be longer than the longest.",
+        "POSITION_LIMIT": "You have reached the maximum number of your own services. Delete one first.",
+        "NOT_FOUND": "This service no longer exists."
+      }
     }
   }
 }

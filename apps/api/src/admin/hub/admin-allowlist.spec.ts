@@ -30,10 +30,40 @@ describe('matchOperatorCall', () => {
     expect(matchOperatorCall('POST', '/resellers/phone-numbers/7/sale')).toBe(false);
   });
 
+  it('accepts mailing an invoice, but only its preview and the send itself', () => {
+    expect(matchOperatorCall('GET', '/resellers/invoices/7/email-preview')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/invoices/7/send')).toBe(true);
+    expect(matchOperatorCall('GET', '/resellers/invoices/7/send')).toBe(false);
+    expect(matchOperatorCall('POST', '/resellers/invoices/7/email-preview')).toBe(false);
+    expect(matchOperatorCall('GET', '/resellers/invoices/7/pdf')).toBe(false);
+  });
+
+  it('accepts the services the operator sells and the orders on its tickets', () => {
+    expect(matchOperatorCall('GET', '/resellers/services/offers')).toBe(true);
+    expect(matchOperatorCall('PUT', '/resellers/services/offers/12')).toBe(true);
+    expect(matchOperatorCall('DELETE', '/resellers/services/offers/12')).toBe(false);
+    expect(matchOperatorCall('POST', '/resellers/services/own')).toBe(true);
+    expect(matchOperatorCall('PUT', '/resellers/services/own/12')).toBe(true);
+    expect(matchOperatorCall('DELETE', '/resellers/services/own/12')).toBe(true);
+    expect(matchOperatorCall('GET', '/resellers/services/orders/by-ticket/812')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/services/orders/5/status')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/services/orders/5/cancel')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/services/orders/5/forward')).toBe(true);
+    expect(matchOperatorCall('GET', '/resellers/services/orders')).toBe(false);
+    expect(matchOperatorCall('DELETE', '/resellers/services/orders/5')).toBe(false);
+  });
+
   it('accepts the language table the agent inventory is named from', () => {
     expect(matchOperatorCall('GET', '/languages/agent')).toBe(true);
     expect(matchOperatorCall('POST', '/languages/agent')).toBe(false);
     expect(matchOperatorCall('GET', '/languages')).toBe(false);
+  });
+
+  it('accepts the warning mails of the connected account', () => {
+    expect(matchOperatorCall('GET', '/users/me/warning-mails')).toBe(true);
+    expect(matchOperatorCall('PUT', '/users/me/warning-mails/balance')).toBe(true);
+    expect(matchOperatorCall('DELETE', '/users/me/warning-mails/balance')).toBe(false);
+    expect(matchOperatorCall('GET', '/users/me/billing-address')).toBe(false);
   });
 
   it('keeps payment flows and payment secrets out of the browser', () => {
