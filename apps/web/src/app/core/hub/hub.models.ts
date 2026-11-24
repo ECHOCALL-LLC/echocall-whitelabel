@@ -171,7 +171,9 @@ type PutBody<P extends keyof paths> = paths[P] extends {
   : never;
 
 /** A customer's service order behind a ticket, with what handing it on would cost. */
-export type ResellerServiceOrder = NonNullable<GetBody<'/resellers/services/orders/by-ticket/{ticketId}'>['data']>;
+export type ResellerServiceOrder = NonNullable<
+  GetBody<'/resellers/services/orders/by-ticket/{ticketId}'>['data']
+>;
 export type ServiceOrderStep = PostBody<'/resellers/services/orders/{orderId}/status'>['status'];
 export type ServiceForwardResult = PostResult<'/resellers/services/orders/{orderId}/forward'>['data'];
 /** The platform's services with the operator's purchase and customer prices. */
@@ -181,3 +183,10 @@ export type UpdateServiceOfferInput = PutBody<'/resellers/services/offers/{posit
 /** A service the operator offers and does themselves. */
 export type ResellerOwnService = ListItem<GetBody<'/resellers/services/own'>>;
 export type OwnServiceInput = PostBody<'/resellers/services/own'>;
+
+/** The operator's own mail server as the service keeps it, never with its password. */
+export type ResellerSmtp = NonNullable<GetBody<'/resellers/smtp'>['data']>;
+/** Which server sends the operator's invoices and ticket mails right now. */
+export type ResellerSmtpEffective = GetBody<'/resellers/smtp/effective'>['data'];
+export type ResellerSmtpInput = PutBody<'/resellers/smtp'>;
+export type ResellerSmtpTestResult = PostResult<'/resellers/smtp/test-email'>['data'];

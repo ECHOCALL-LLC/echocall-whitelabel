@@ -91,6 +91,12 @@ describe('AdminTicketDetailPage', () => {
   afterEach(() => {
     // The service order panel asks once per ticket; these tickets hold none.
     for (const request of http.match(ORDER_URL)) request.flush({ data: null });
+    // It also reads where credit is bought, for an order the balance does not cover.
+    for (const request of http.match('/api/admin/overview/links'))
+      request.flush({
+        portalLogin: 'https://portal.example/login',
+        topUp: 'https://service.example/reseller/credits',
+      });
     http.verify();
   });
 

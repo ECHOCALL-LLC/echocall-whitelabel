@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
+import { provideRouter, Router } from '@angular/router';
 import { BrandingService } from '../../../core/branding/branding.service';
 import { byTestId } from '../../../testing/dom';
 import { ADMIN_TEXTS, provideTestI18n, TEXTS } from '../../../testing/i18n';
@@ -31,6 +32,7 @@ describe('AdminSettingsPage', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
       ],
     }).compileComponents();
@@ -126,5 +128,31 @@ describe('AdminSettingsPage', () => {
     expect(byTestId(fixture, 'registration-mail-required').textContent).toContain(
       ADMIN_TEXTS.settings.registration.mailRequired,
     );
+  });
+
+  it('opens the tab a notice elsewhere points at, with the service settings loaded', async () => {
+    await TestBed.inject(Router).navigateByUrl('/?tab=service');
+    const fixture = await render();
+
+    expect(fixture.componentInstance.tab()).toBe(3);
+    http.expectOne('/api/admin/hub/resellers/company').flush({ companyName: 'Muster Telekom' });
+    http.expectOne('/api/admin/hub/resellers/settings').flush({ defaultMailAnonymous: false });
+    http.expectOne('/api/admin/hub/resellers/smtp').flush({ data: null });
+    http.expectOne('/api/admin/hub/resellers/smtp/effective').flush({
+      data: { source: 'platform', host: null, fromEmail: 'noreply@service.example', fromName: null },
+    });
+    await settle();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('#mail-server')?.textContent).toContain(
+      ADMIN_TEXTS.settings.mailServer.title,
+    );
+  });
+
+  it('ignores a tab name it does not know', async () => {
+    await TestBed.inject(Router).navigateByUrl('/?tab=constructor');
+    const fixture = await render();
+
+    expect(fixture.componentInstance.tab()).toBe(0);
   });
 });

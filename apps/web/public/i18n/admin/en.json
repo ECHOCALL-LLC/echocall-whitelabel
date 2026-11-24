@@ -26,7 +26,9 @@
     "balance": {
       "title": "Portal balance",
       "voiceMinutes": "Voice minutes",
-      "chatMessages": "Chat messages"
+      "chatMessages": "Chat messages",
+      "topUp": "Top up balance",
+      "topUpNewTab": "Top up balance, opens in a new tab"
     },
     "subscriptions": {
       "hint": "cancelled ones included",
@@ -505,7 +507,10 @@
       "dailyUsage": "Sent today: {{sent}} of {{limit}}",
       "status": "Email",
       "notSent": "Not emailed yet",
-      "sent": "Invoice sent to {{to}}."
+      "sent": "Invoice sent to {{to}}.",
+      "setUpMailServer": "Set up mail server",
+      "portalLink": "Add a link to the customer portal",
+      "portalLinkHint": "The email then ends with:"
     }
   },
   "numbers": {
@@ -729,7 +734,7 @@
     },
     "hub": {
       "tab": "Service",
-      "intro": "Company data, portal logo and payment keys of your provider account. These are kept by the service, not by the portal.",
+      "intro": "Company data, portal logo, payment keys and mail sending of your provider account. These are kept by the service, not by the portal.",
       "company": "Company data",
       "companyHint": "These details appear on the invoices you issue to your customers.",
       "companyName": "Trading name",
@@ -764,7 +769,54 @@
       "incomplete": "No invoice can be issued while these details are missing: {{fields}}.",
       "taxExemptionNote": "Tax exemption note (optional)",
       "taxExemptionPlaceholder": "No VAT charged under the small business scheme.",
-      "taxExemptionHint": "Appears on every invoice below the amounts, for example for small businesses."
+      "taxExemptionHint": "Appears on every invoice below the amounts, for example for small businesses.",
+      "mailDefaults": {
+        "title": "Email templates of your customers",
+        "hint": "When a customer creates an email template, “Send anonymously” is already on. Name, phone number, email address and postal address are then left out of the email. Applies to new templates, existing ones keep their setting. Customers can change this for each template.",
+        "anonymous": "Send new templates anonymously",
+        "savedOn": "New templates of your customers now start with “Send anonymously” on.",
+        "savedOff": "New templates of your customers now start with “Send anonymously” off."
+      }
+    },
+    "mailServer": {
+      "title": "Mail server for invoices and tickets",
+      "hint": "Your invoices and ticket emails reach your customers through this server, with your address as the sender. The credentials are kept encrypted by the service. Invitations and sign-in links of the portal still go through the server on the Email tab.",
+      "source": {
+        "reseller": "Your emails go through your own server {{host}}, sender {{from}}.",
+        "platform": "Your emails go through the server of the service, sender {{from}}. With your own server, your address is the sender.",
+        "none": "No email can reach your customers right now. Set up a mail server here."
+      },
+      "lastTest": {
+        "success": "Last test on {{date}}: successful.",
+        "failed": "Last test on {{date}}: failed."
+      },
+      "host": "Server",
+      "port": "Port",
+      "secure": "Encrypted from the start (SSL/TLS, usually port 465)",
+      "username": "User name",
+      "password": "Password",
+      "passwordKeep": "Leave empty to keep the stored password.",
+      "fromEmail": "Sender address",
+      "fromName": "Sender name",
+      "active": "Use this server for sending",
+      "sendTest": "Send a test email to me",
+      "testHint": "The test email goes to {{email}} through the saved server.",
+      "saveFirst": "Save your changes before you send a test email.",
+      "saved": "The mail server has been saved.",
+      "testSent": "The test email is on its way to {{email}}.",
+      "result": {
+        "auth": "The user name or password was refused.",
+        "host_not_found": "The server was not found. Check the spelling.",
+        "host_blocked": "This server is not allowed. Use a mail server that is reachable publicly.",
+        "refused": "The server refused the connection. Check server and port.",
+        "timeout": "The server did not answer in time. Check server and port.",
+        "tls": "The encryption does not match the port. Switch “Encrypted from the start” or check the port.",
+        "certificate": "The certificate of the server is invalid or has expired.",
+        "sender_rejected": "The server refused the sender address.",
+        "recipient_rejected": "The server refused the recipient address.",
+        "not_configured": "No mail server of your own is active. Save one and switch it on.",
+        "unknown": "The test email could not be sent. Check the details."
+      }
     }
   },
   "audit": {

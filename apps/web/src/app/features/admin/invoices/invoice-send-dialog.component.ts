@@ -13,6 +13,7 @@ import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { readApiError } from '../../../core/errors/api-error';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
+import { OperatorLinksService } from '../../../core/hub/operator-links.service';
 import type {
   ResellerInvoiceMailPreview,
   SendInvoiceInput,
@@ -44,6 +45,23 @@ const COMPANY_FIELD_LABELS: Record<string, string> = {
   companyVatId: 'admin.settings.hub.vatId',
 };
 
+/**
+ * The words in front of the portal address at the end of the mail, in the
+ * mail's language rather than the operator's. Other languages get the English.
+ */
+const PORTAL_LINK_LABELS: Readonly<Record<string, string>> = {
+  de: 'Zum Kundenportal',
+  en: 'Open customer portal',
+  fr: 'Accéder à l’espace client',
+};
+
+/** The line that points the customer at this portal's sign-in page. */
+export function portalLinkLine(lang: string | null | undefined, url: string): string {
+  const label =
+    lang && Object.hasOwn(PORTAL_LINK_LABELS, lang) ? PORTAL_LINK_LABELS[lang] : PORTAL_LINK_LABELS['en'];
+  return `${label}: ${url}`;
+}
+
 /** Refusals after which the preview is read again, so the reason shows in the dialog. */
 const RELOAD_ON = new Set([409, 429]);
 
@@ -52,8 +70,9 @@ const RELOAD_ON = new Set([409, 429]);
  * customer. The recipients come from the customer and cannot be typed here, so
  * a mail can only reach the address the operator stored. Subject and text
  * start from the operator's template in the chosen language and can be changed
- * for this one mail. The link into the service's own portal is never offered:
- * customers of this portal sign in here, not there.
+ * for this one mail. The service's own portal link is never used, because
+ * customers of this portal sign in here; instead the operator can add a line
+ * with this portal's sign-in address to the end of the text.
  */
 @Component({
   selector: 'app-invoice-send-dialog',
@@ -107,8 +126,26 @@ const RELOAD_ON = new Set([409, 429]);
                     </a>
                   }
                   @if (p.problem === 'company_incomplete') {
-                    <a mat-stroked-button routerLink="/admin/settings" mat-dialog-close data-testid="mail-fix-company">
+                    <a
+                      mat-stroked-button
+                      routerLink="/admin/settings"
+                      [queryParams]="{ tab: 'service' }"
+                      mat-dialog-close
+                      data-testid="mail-fix-company"
+                    >
                       {{ t('admin.invoices.mail.editCompany') }}
+                    </a>
+                  }
+                  @if (p.problem === 'no_smtp') {
+                    <a
+                      mat-stroked-button
+                      routerLink="/admin/settings"
+                      [queryParams]="{ tab: 'service' }"
+                      fragment="mail-server"
+                      mat-dialog-close
+                      data-testid="mail-fix-smtp"
+                    >
+                      {{ t('admin.invoices.mail.setUpMailServer') }}
                     </a>
                   }
                 </div>
@@ -138,14 +175,23 @@ const RELOAD_ON = new Set([409, 429]);
                 <div>
                   <dt>{{ t('admin.invoices.mail.lastSent') }}</dt>
                   <dd data-testid="mail-last-sent">
-                    {{ t('admin.invoices.mail.sentAt', { date: (p.emailSentAt | localDate), to: p.emailSentTo ?? '' }) }}
+                    {{
+                      t('admin.invoices.mail.sentAt', {
+                        date: (p.emailSentAt | localDate),
+                        to: p.emailSentTo ?? '',
+                      })
+                    }}
                   </dd>
                 </div>
               }
             </dl>
 
             <div class="row">
-              <mat-form-field appearance="outline">
+              <!-- A hint here is a whole sentence; it takes real space so it never covers the next field. -->
+              <mat-form-field
+                appearance="outline"
+                [subscriptSizing]="p.templateLang !== p.lang ? 'dynamic' : 'fixed'"
+              >
                 <mat-label>{{ t('admin.invoices.mail.language') }}</mat-label>
                 <mat-select
                   [value]="p.lang"
@@ -163,13 +209,18 @@ const RELOAD_ON = new Set([409, 429]);
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>{{ t('admin.invoices.mail.subject') }}</mat-label>
-                <input matInput formControlName="subject" [maxlength]="subjectMax" data-testid="mail-subject" />
+                <input
+                  matInput
+                  formControlName="subject"
+                  [maxlength]="subjectMax"
+                  data-testid="mail-subject"
+                />
                 @if (form.controls.subject | fieldError; as e) {
                   <mat-error>{{ t(e.key, e.params) }}</mat-error>
                 }
               </mat-form-field>
             </div>
-            <mat-form-field appearance="outline" class="full">
+            <mat-form-field appearance="outline" class="full" subscriptSizing="dynamic">
               <mat-label>{{ t('admin.invoices.mail.body') }}</mat-label>
               <textarea
                 matInput
@@ -184,6 +235,21 @@ const RELOAD_ON = new Set([409, 429]);
               }
             </mat-form-field>
 
+            @if (portalLogin(); as url) {
+              <div class="portal-link">
+                <mat-checkbox
+                  formControlName="portalLink"
+                  aria-describedby="mail-portal-line"
+                  data-testid="mail-portal-link"
+                >
+                  {{ t('admin.invoices.mail.portalLink') }}
+                </mat-checkbox>
+                <p class="hint" id="mail-portal-line" data-testid="mail-portal-line">
+                  {{ t('admin.invoices.mail.portalLinkHint') }}
+                  <span class="line">{{ portalLine(p.lang, url) }}</span>
+                </p>
+              </div>
+            }
             @if (p.bccAddress) {
               <mat-checkbox formControlName="bcc" data-testid="mail-bcc">
                 {{ t('admin.invoices.mail.bcc', { address: p.bccAddress }) }}
@@ -209,7 +275,6 @@ const RELOAD_ON = new Set([409, 429]);
       display: flex;
       flex-direction: column;
       gap: 12px;
-      max-width: 640px;
     }
     .facts {
       margin: 0;
@@ -240,6 +305,13 @@ const RELOAD_ON = new Set([409, 429]);
       font: var(--mat-sys-body-small);
       color: var(--mat-sys-on-surface-variant);
     }
+    .portal-link .hint {
+      padding-left: 40px;
+    }
+    .line {
+      overflow-wrap: anywhere;
+      color: var(--mat-sys-on-surface);
+    }
   `,
 })
 export class InvoiceSendDialogComponent implements OnInit {
@@ -248,6 +320,11 @@ export class InvoiceSendDialogComponent implements OnInit {
   private readonly hub = inject(AdminHubService);
   private readonly notify = inject(NotifyService);
   private readonly language = inject(LanguageService);
+  private readonly links = inject(OperatorLinksService);
+
+  /** This portal's sign-in page, empty until known; without it the option is not shown. */
+  readonly portalLogin = computed(() => this.links.links()?.portalLogin ?? null);
+  readonly portalLine = portalLinkLine;
 
   readonly subjectMax = SUBJECT_MAX;
   readonly bodyMax = BODY_MAX;
@@ -260,6 +337,7 @@ export class InvoiceSendDialogComponent implements OnInit {
     subject: ['', [Validators.required, Validators.maxLength(SUBJECT_MAX)]],
     bodyText: ['', [Validators.required, Validators.maxLength(BODY_MAX)]],
     bcc: [false],
+    portalLink: [false],
   });
 
   /** Nothing goes out while the preview is missing or names a reason the mail cannot be sent. */
@@ -287,6 +365,7 @@ export class InvoiceSendDialogComponent implements OnInit {
 
   ngOnInit(): void {
     void this.load();
+    void this.links.load();
   }
 
   /** Reads what the mail would look like; a language switch loads that language's text. */
@@ -346,12 +425,27 @@ export class InvoiceSendDialogComponent implements OnInit {
       }
       return;
     }
+    let text = value.bodyText.trim();
+    const url = this.portalLogin();
+    if (value.portalLink && url && !text.includes(url)) {
+      // A blank line makes it a paragraph of its own in the mail.
+      const withLink = `${text}\n\n${portalLinkLine(preview.lang, url)}`;
+      if (withLink.length > BODY_MAX) {
+        // The line has to fit as well, so the room left for the text is what counts.
+        this.form.controls.bodyText.setErrors({
+          maxlength: { requiredLength: BODY_MAX - (withLink.length - text.length) },
+        });
+        this.form.controls.bodyText.markAsTouched();
+        return;
+      }
+      text = withLink;
+    }
     const body: SendInvoiceInput = {
       lang: preview.lang,
       subject: value.subject.trim(),
-      bodyText: value.bodyText.trim(),
+      bodyText: text,
       bcc: value.bcc && !!preview.bccAddress,
-      // The service's own portal is not where these customers sign in.
+      // The service's own portal is not where these customers sign in; the line above is.
       portalLink: false,
     };
     this.sending.set(true);

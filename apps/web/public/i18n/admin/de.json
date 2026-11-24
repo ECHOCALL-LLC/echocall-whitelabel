@@ -26,7 +26,9 @@
     "balance": {
       "title": "Guthaben des Portals",
       "voiceMinutes": "Sprachminuten",
-      "chatMessages": "Chat-Nachrichten"
+      "chatMessages": "Chat-Nachrichten",
+      "topUp": "Guthaben aufladen",
+      "topUpNewTab": "Guthaben aufladen, öffnet sich in einem neuen Tab"
     },
     "subscriptions": {
       "hint": "auch gekündigte",
@@ -505,7 +507,10 @@
       "dailyUsage": "Heute gesendet: {{sent}} von {{limit}}",
       "status": "E-Mail",
       "notSent": "Noch nicht per E-Mail gesendet",
-      "sent": "Rechnung an {{to}} gesendet."
+      "sent": "Rechnung an {{to}} gesendet.",
+      "setUpMailServer": "Mailserver einrichten",
+      "portalLink": "Link zum Kundenportal anhängen",
+      "portalLinkHint": "Am Ende der Mail steht dann:"
     }
   },
   "numbers": {
@@ -729,7 +734,7 @@
     },
     "hub": {
       "tab": "Dienst",
-      "intro": "Firmendaten, Portal-Logo und Zahlungsschlüssel Ihres Anbieterkontos. Diese Angaben liegen beim Dienst, nicht im Portal.",
+      "intro": "Firmendaten, Portal-Logo, Zahlungsschlüssel und Mailversand Ihres Anbieterkontos. Diese Angaben liegen beim Dienst, nicht im Portal.",
       "company": "Firmendaten",
       "companyHint": "Diese Angaben erscheinen auf den Rechnungen, die Sie Ihren Kunden stellen.",
       "companyName": "Handelsname",
@@ -764,7 +769,54 @@
       "incomplete": "Solange diese Angaben fehlen, lässt sich keine Rechnung erstellen: {{fields}}.",
       "taxExemptionNote": "Hinweis zur Steuerbefreiung (optional)",
       "taxExemptionPlaceholder": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.",
-      "taxExemptionHint": "Steht auf jeder Rechnung unter den Beträgen, zum Beispiel für Kleinunternehmer."
+      "taxExemptionHint": "Steht auf jeder Rechnung unter den Beträgen, zum Beispiel für Kleinunternehmer.",
+      "mailDefaults": {
+        "title": "Mailvorlagen Ihrer Kunden",
+        "hint": "Legt ein Kunde eine Mailvorlage an, ist „Anonym senden“ bereits eingeschaltet. Name, Telefonnummer, E-Mail-Adresse und Anschrift stehen dann nicht in der Mail. Gilt für neue Vorlagen, bestehende behalten ihre Einstellung. Ihre Kunden können das je Vorlage ändern.",
+        "anonymous": "Neue Vorlagen anonym senden",
+        "savedOn": "Neue Vorlagen Ihrer Kunden starten jetzt mit „Anonym senden“.",
+        "savedOff": "Neue Vorlagen Ihrer Kunden starten jetzt ohne „Anonym senden“."
+      }
+    },
+    "mailServer": {
+      "title": "Mailserver für Rechnungen und Tickets",
+      "hint": "Über diesen Server gehen Ihre Rechnungen und Ticket-Mails an Ihre Kunden, mit Ihrer Adresse als Absender. Die Zugangsdaten liegen verschlüsselt beim Dienst. Einladungen und Anmeldelinks des Portals laufen weiter über den Server im Reiter E-Mail.",
+      "source": {
+        "reseller": "Ihre Mails gehen über Ihren eigenen Server {{host}}, Absender {{from}}.",
+        "platform": "Ihre Mails gehen über den Server des Dienstes, Absender {{from}}. Mit einem eigenen Server steht Ihre Adresse als Absender.",
+        "none": "Zurzeit kann keine Mail an Ihre Kunden gehen. Richten Sie hier einen Mailserver ein."
+      },
+      "lastTest": {
+        "success": "Letzter Test am {{date}}: erfolgreich.",
+        "failed": "Letzter Test am {{date}}: fehlgeschlagen."
+      },
+      "host": "Server",
+      "port": "Port",
+      "secure": "Von Anfang an verschlüsselt (SSL/TLS, meist Port 465)",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "passwordKeep": "Leer lassen, um das gespeicherte Passwort zu behalten.",
+      "fromEmail": "Absenderadresse",
+      "fromName": "Absendername",
+      "active": "Diesen Server für den Versand verwenden",
+      "sendTest": "Testmail an mich senden",
+      "testHint": "Die Testmail geht über den gespeicherten Server an {{email}}.",
+      "saveFirst": "Speichern Sie Ihre Änderungen, bevor Sie eine Testmail senden.",
+      "saved": "Der Mailserver ist gespeichert.",
+      "testSent": "Die Testmail ist unterwegs an {{email}}.",
+      "result": {
+        "auth": "Benutzername oder Passwort wurden abgelehnt.",
+        "host_not_found": "Der Server wurde nicht gefunden. Prüfen Sie die Schreibweise.",
+        "host_blocked": "Dieser Server ist nicht erlaubt. Verwenden Sie einen öffentlich erreichbaren Mailserver.",
+        "refused": "Der Server hat die Verbindung abgelehnt. Prüfen Sie Server und Port.",
+        "timeout": "Der Server hat nicht rechtzeitig geantwortet. Prüfen Sie Server und Port.",
+        "tls": "Die Verschlüsselung passt nicht zum Port. Schalten Sie „Von Anfang an verschlüsselt“ um oder prüfen Sie den Port.",
+        "certificate": "Das Zertifikat des Servers ist ungültig oder abgelaufen.",
+        "sender_rejected": "Der Server hat die Absenderadresse abgelehnt.",
+        "recipient_rejected": "Der Server hat die Empfängeradresse abgelehnt.",
+        "not_configured": "Es ist kein eigener Mailserver aktiv. Speichern Sie einen und schalten Sie ihn ein.",
+        "unknown": "Die Testmail konnte nicht gesendet werden. Prüfen Sie die Angaben."
+      }
     }
   },
   "audit": {

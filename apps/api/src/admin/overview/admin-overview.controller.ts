@@ -1,8 +1,10 @@
 import { Controller, Get, HttpCode, Inject, Post } from '@nestjs/common';
 import { Roles } from '../../auth/decorators.js';
+import { APP_CONFIG, type AppConfig } from '../../config/env.js';
 import { DB } from '../../db/db.service.js';
 import type { Db } from '../../db/dialect.js';
 import { type HubStatus, HubStatusService } from '../../echocall/hub-status.service.js';
+import { type OperatorLinks, operatorLinks } from './operator-links.js';
 
 export interface UserCounts {
   total: number;
@@ -24,7 +26,14 @@ export class AdminOverviewController {
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly hubStatus: HubStatusService,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
+
+  /** The portal's sign-in page and the service's top-up page, for links on the operator screens. */
+  @Get('links')
+  links(): OperatorLinks {
+    return operatorLinks(this.config);
+  }
 
   @Get()
   async overview(): Promise<AdminOverview> {

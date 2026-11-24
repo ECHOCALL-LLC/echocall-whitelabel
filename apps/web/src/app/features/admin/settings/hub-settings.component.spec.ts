@@ -243,4 +243,50 @@ describe('HubSettingsComponent', () => {
     await settle();
     await answerLoad();
   });
+
+  function mailToggle(fixture: { nativeElement: HTMLElement }): HTMLButtonElement {
+    return fixture.nativeElement.querySelector(
+      '[data-testid="hub-mail-anonymous"] button',
+    ) as HTMLButtonElement;
+  }
+
+  it('shows the start value for anonymous mails and saves the switch on its own', async () => {
+    const fixture = await render(COMPANY, { ...SETTINGS, defaultMailAnonymous: false });
+
+    expect(mailToggle(fixture).getAttribute('aria-checked')).toBe('false');
+    expect(fixture.nativeElement.textContent).toContain(ADMIN_TEXTS.settings.hub.mailDefaults.anonymous);
+
+    // A half-edited company form is neither sent nor reset by the switch.
+    fixture.componentInstance.companyForm.controls.companyName.setValue('Unsaved Name');
+    mailToggle(fixture).click();
+    await settle();
+    const request = http.expectOne('/api/admin/hub/resellers/settings/company');
+
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ defaultMailAnonymous: true });
+
+    request.flush({ success: true });
+    await settle();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.settings()?.defaultMailAnonymous).toBe(true);
+    expect(mailToggle(fixture).getAttribute('aria-checked')).toBe('true');
+    expect(fixture.componentInstance.companyForm.controls.companyName.value).toBe('Unsaved Name');
+  });
+
+  it('puts the switch back when the service refuses it', async () => {
+    const fixture = await render(COMPANY, { ...SETTINGS, defaultMailAnonymous: true });
+
+    expect(mailToggle(fixture).getAttribute('aria-checked')).toBe('true');
+    mailToggle(fixture).click();
+    await settle();
+    http
+      .expectOne('/api/admin/hub/resellers/settings/company')
+      .flush({ error: { code: 'forbidden', message: 'no' } }, { status: 403, statusText: 'Forbidden' });
+    await settle();
+    fixture.detectChanges();
+
+    expect(mailToggle(fixture).getAttribute('aria-checked')).toBe('true');
+    expect(fixture.componentInstance.settings()?.defaultMailAnonymous).toBe(true);
+  });
 });

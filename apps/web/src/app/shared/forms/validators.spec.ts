@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { FormControl } from '@angular/forms';
-import { allowanceValidator, integerValidator } from './validators';
+import { allowanceValidator, integerValidator, portValidator } from './validators';
 
 const check = (validator: typeof integerValidator, value: string) => validator(new FormControl(value));
 
@@ -32,5 +32,23 @@ describe('allowanceValidator', () => {
     expect(check(allowanceValidator, '-1')).toEqual({ integer: true });
     expect(check(allowanceValidator, '2.5')).toEqual({ integer: true });
     expect(check(allowanceValidator, 'viele')).toEqual({ integer: true });
+  });
+});
+
+describe('portValidator', () => {
+  it('accepts the ports a mail server listens on and an empty field', () => {
+    expect(portValidator(new FormControl(587))).toBeNull();
+    expect(portValidator(new FormControl('465'))).toBeNull();
+    expect(portValidator(new FormControl(1))).toBeNull();
+    expect(portValidator(new FormControl(65535))).toBeNull();
+    expect(portValidator(new FormControl(''))).toBeNull();
+    expect(portValidator(new FormControl(null))).toBeNull();
+  });
+
+  it('refuses zero, a fraction, a port past the range and anything that is not a number', () => {
+    expect(portValidator(new FormControl(0))).toEqual({ port: true });
+    expect(portValidator(new FormControl(25.5))).toEqual({ port: true });
+    expect(portValidator(new FormControl(65536))).toEqual({ port: true });
+    expect(portValidator(new FormControl('smtp'))).toEqual({ port: true });
   });
 });

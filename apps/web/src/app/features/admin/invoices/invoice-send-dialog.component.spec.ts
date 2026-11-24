@@ -1,14 +1,23 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting, type TestRequest } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+  type TestRequest,
+} from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 import { ADMIN_TEXTS, provideTestI18n, TEXTS } from '../../../testing/i18n';
-import { InvoiceSendDialogComponent } from './invoice-send-dialog.component';
+import { InvoiceSendDialogComponent, portalLinkLine } from './invoice-send-dialog.component';
 
 const PREVIEW_URL = '/api/admin/hub/resellers/invoices/21/email-preview';
 const SEND_URL = '/api/admin/hub/resellers/invoices/21/send';
+const LINKS_URL = '/api/admin/overview/links';
+const LINKS = {
+  portalLogin: 'https://portal.example/login',
+  topUp: 'https://service.example/reseller/credits',
+};
 
 const PREVIEW = {
   invoiceId: 21,
@@ -49,7 +58,7 @@ describe('InvoiceSendDialogComponent', () => {
       (req) => req.url === PREVIEW_URL && (lang ? req.params.get('lang') === lang : !req.params.has('lang')),
     );
 
-  async function render(preview: object = PREVIEW) {
+  async function setup() {
     snacks = [];
     closed = [];
     await TestBed.configureTestingModule({
@@ -67,7 +76,16 @@ describe('InvoiceSendDialogComponent', () => {
     const fixture = TestBed.createComponent(InvoiceSendDialogComponent);
     fixture.detectChanges();
     await fixture.whenStable();
+    return fixture;
+  }
+
+  /** Opens the dialog with the preview and, unless told otherwise, the portal address. */
+  async function render(preview: object = PREVIEW, links: object | null = LINKS) {
+    const fixture = await setup();
     previewRequest().flush(preview);
+    if (links) http.expectOne(LINKS_URL).flush(links);
+    else
+      http.expectOne(LINKS_URL).flush({ error: { code: 'internal' } }, { status: 500, statusText: 'Error' });
     await settle();
     fixture.detectChanges();
     return fixture;
@@ -116,7 +134,9 @@ describe('InvoiceSendDialogComponent', () => {
   it('blocks sending and leads to the customer when no billing email is on file', async () => {
     const fixture = await render({ ...PREVIEW, to: null, cc: null, problem: 'no_billing_email' });
     const problem = fixture.nativeElement.querySelector('[data-testid="mail-problem"]') as HTMLElement;
-    const link = fixture.nativeElement.querySelector('[data-testid="mail-fix-customer"]') as HTMLAnchorElement;
+    const link = fixture.nativeElement.querySelector(
+      '[data-testid="mail-fix-customer"]',
+    ) as HTMLAnchorElement;
     const send = fixture.nativeElement.querySelector('[data-testid="mail-send"]') as HTMLButtonElement;
 
     expect(problem.textContent).toContain(ADMIN_TEXTS.invoices.mail.problem.no_billing_email);
@@ -141,7 +161,7 @@ describe('InvoiceSendDialogComponent', () => {
     expect(problem.textContent).toContain(ADMIN_TEXTS.settings.hub.companyName);
     expect(problem.textContent).toContain(ADMIN_TEXTS.settings.hub.vatId);
     expect(fixture.nativeElement.querySelector('[data-testid="mail-fix-company"]').getAttribute('href')).toBe(
-      '/admin/settings',
+      '/admin/settings?tab=service',
     );
   });
 
@@ -190,23 +210,8 @@ describe('InvoiceSendDialogComponent', () => {
   });
 
   it('offers to load the preview again when it could not be read', async () => {
-    snacks = [];
-    closed = [];
-    await TestBed.configureTestingModule({
-      imports: [InvoiceSendDialogComponent, provideTestI18n()],
-      providers: [
-        provideRouter([]),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: MAT_DIALOG_DATA, useValue: { invoiceId: 21, invoiceNumber: 'R7-202609-0001' } },
-        { provide: MatDialogRef, useValue: { close: (value: unknown) => closed.push(value) } },
-        { provide: MatSnackBar, useValue: { open: (message: string) => snacks.push(message) } },
-      ],
-    }).compileComponents();
-    http = TestBed.inject(HttpTestingController);
-    const fixture = TestBed.createComponent(InvoiceSendDialogComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
+    const fixture = await setup();
+    http.expectOne(LINKS_URL).flush(LINKS);
     previewRequest().flush({ error: { code: 'upstream_error' } }, { status: 502, statusText: 'Bad Gateway' });
     await settle();
     fixture.detectChanges();
@@ -219,5 +224,77 @@ describe('InvoiceSendDialogComponent', () => {
     previewRequest().flush(PREVIEW);
     await settle();
     expect(fixture.componentInstance.blocked()).toBe(false);
+  });
+
+  it('leads straight to the mail server settings when no mail server is set up', async () => {
+    const fixture = await render({ ...PREVIEW, hasOwnSmtp: false, problem: 'no_smtp' });
+    const link = fixture.nativeElement.querySelector('[data-testid="mail-fix-smtp"]') as HTMLAnchorElement;
+
+    expect(link.textContent).toContain(ADMIN_TEXTS.invoices.mail.setUpMailServer);
+    expect(link.getAttribute('href')).toBe('/admin/settings?tab=service#mail-server');
+    expect(fixture.componentInstance.blocked()).toBe(true);
+  });
+
+  it('adds the portal sign-in as its own paragraph in the language of the mail when asked', async () => {
+    const fixture = await render();
+    const dialog = fixture.componentInstance;
+    const line = fixture.nativeElement.querySelector('[data-testid="mail-portal-line"]') as HTMLElement;
+
+    expect(fixture.nativeElement.querySelector('[data-testid="mail-portal-link"]')).not.toBeNull();
+    expect(line.textContent).toContain('Zum Kundenportal: https://portal.example/login');
+
+    dialog.form.patchValue({ portalLink: true });
+    const done = dialog.submit();
+    const send = http.expectOne(SEND_URL);
+    expect(send.request.body).toEqual({
+      lang: 'de',
+      subject: PREVIEW.subject,
+      bodyText: `${PREVIEW.bodyText}\n\nZum Kundenportal: https://portal.example/login`,
+      bcc: false,
+      // The service's own portal button stays off: it would lead into the service, not this portal.
+      portalLink: false,
+    });
+    send.flush({ success: true });
+    await done;
+  });
+
+  it('does not add the portal line a second time when the text already holds it', async () => {
+    const body = 'Guten Tag,\nIhr Portal: https://portal.example/login';
+    const fixture = await render({ ...PREVIEW, bodyText: body });
+    const dialog = fixture.componentInstance;
+
+    dialog.form.patchValue({ portalLink: true });
+    const done = dialog.submit();
+    const send = http.expectOne(SEND_URL);
+    expect(send.request.body.bodyText).toBe(body);
+    send.flush({ success: true });
+    await done;
+  });
+
+  it('refuses a text that would grow past the limit with the portal line', async () => {
+    const fixture = await render();
+    const dialog = fixture.componentInstance;
+
+    dialog.form.patchValue({ bodyText: 'x'.repeat(dialog.bodyMax - 5), portalLink: true });
+    await dialog.submit();
+
+    http.expectNone(SEND_URL);
+    expect(dialog.form.controls.bodyText.hasError('maxlength')).toBe(true);
+  });
+
+  it('leaves the portal option out when the portal address is unknown', async () => {
+    const fixture = await render(PREVIEW, null);
+
+    expect(fixture.nativeElement.querySelector('[data-testid="mail-portal-link"]')).toBeNull();
+    expect(fixture.componentInstance.portalLogin()).toBeNull();
+  });
+
+  it('words the portal line in the mail language and falls back to English', () => {
+    const url = 'https://portal.example/login';
+    expect(portalLinkLine('fr', url)).toBe(`Accéder à l’espace client: ${url}`);
+    expect(portalLinkLine('en', url)).toBe(`Open customer portal: ${url}`);
+    expect(portalLinkLine('es', url)).toBe(`Open customer portal: ${url}`);
+    expect(portalLinkLine('constructor', url)).toBe(`Open customer portal: ${url}`);
+    expect(portalLinkLine(undefined, url)).toBe(`Open customer portal: ${url}`);
   });
 });

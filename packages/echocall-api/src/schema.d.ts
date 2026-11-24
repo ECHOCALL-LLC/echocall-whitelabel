@@ -3378,7 +3378,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            /** @description The customer profile to create. Only `email` is required. The address fields are stored on the billing profile, and `country` is resolved to a two-letter code, staying empty when the text cannot be resolved. `language` sets the interface language of the new account and `planId` must reference a plan owned by the calling reseller. */
+            /** @description The customer profile to create. Only `email` is required. The address fields are stored on the billing profile, and `country` is resolved to a two-letter code, staying empty when the text cannot be resolved. `phone` is stored in international form (for example `+493022605843`, also from `+49.3022605843` or a national number read in `country`) and stays empty when it is not a valid number; the account is created either way. `state` is accepted for older billing modules but not stored, because the billing profile and the invoices have no region field. `language` sets the interface language of the new account and `planId` must reference a plan owned by the calling reseller. */
             requestBody: {
                 content: {
                     "application/json": {
@@ -5305,6 +5305,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             data: {
+                                /**
+                                 * @description Only when success is false: why the test failed. auth: user name or password refused. host_not_found: the server name does not resolve. host_blocked: the server is not publicly reachable (internal addresses are not allowed). refused: the port refused the connection. timeout: no answer. tls: the encryption does not match the port. certificate: the certificate is invalid or expired. sender_rejected or recipient_rejected: the server refused that address. not_configured: no active mail server is saved. no_template: no template for this event and language. unknown: any other reason.
+                                 * @enum {string}
+                                 */
+                                code?: "auth" | "host_not_found" | "host_blocked" | "refused" | "timeout" | "tls" | "certificate" | "sender_rejected" | "recipient_rejected" | "not_configured" | "no_template" | "unknown";
+                                /** @description A fixed English sentence for the result. */
                                 message?: string | null;
                                 success: boolean;
                             };
@@ -5335,7 +5341,7 @@ export interface paths {
         put?: never;
         /**
          * Send a test email
-         * @description Sends a short test email through your saved mail server.
+         * @description Sends a short test email through your saved mail server and stores the outcome as its last test (`lastTestedAt`, `testStatus`). Without an active saved server the answer is success false with code not_configured.
          *
          *     MCP tool: `send_reseller_test_email` (writes).
          */
@@ -13424,6 +13430,7 @@ export interface operations {
                     customBrandingUrl?: string;
                     /** @description Extra CSS for the widget. Cleaned the same way as in the dashboard. */
                     customCss?: string;
+                    /** @description Social and contact links shown in the widget. A link must start with http, https, mailto or tel (or be relative), anything else such as javascript: or data: is refused with 400. */
                     customLinks?: {
                         type: string;
                         url: string;
@@ -13475,7 +13482,7 @@ export interface operations {
                         tag: string;
                     }[];
                     supportedLanguages?: string[];
-                    /** @description Support hub of the widget, as the dashboard editor stores it. */
+                    /** @description Support hub of the widget, as the dashboard editor stores it. Texts left empty, or left at the built-in English samples, appear in the language of the visitor. Links in home.items (url) and feed.items (url, ctaUrl) must start with http, https, mailto or tel (or be relative or an anchor #), anything else such as javascript: or data: is refused with 400. */
                     supportHubConfig?: {
                         [key: string]: unknown;
                     };
@@ -18630,6 +18637,12 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
+                            /**
+                             * @description Only when success is false: why the test failed. auth: user name or password refused. host_not_found: the server name does not resolve. host_blocked: the server is not publicly reachable (internal addresses are not allowed). refused: the port refused the connection. timeout: no answer. tls: the encryption does not match the port. certificate: the certificate is invalid or expired. sender_rejected or recipient_rejected: the server refused that address. not_configured: no active mail server is saved. no_template: no template for this event and language. unknown: any other reason.
+                             * @enum {string}
+                             */
+                            code?: "auth" | "host_not_found" | "host_blocked" | "refused" | "timeout" | "tls" | "certificate" | "sender_rejected" | "recipient_rejected" | "not_configured" | "no_template" | "unknown";
+                            /** @description A fixed English sentence for the result. */
                             message?: string | null;
                             success: boolean;
                         };
@@ -20784,6 +20797,12 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: {
+                            /**
+                             * @description Only when success is false: why the test failed. auth: user name or password refused. host_not_found: the server name does not resolve. host_blocked: the server is not publicly reachable (internal addresses are not allowed). refused: the port refused the connection. timeout: no answer. tls: the encryption does not match the port. certificate: the certificate is invalid or expired. sender_rejected or recipient_rejected: the server refused that address. not_configured: no active mail server is saved. no_template: no template for this event and language. unknown: any other reason.
+                             * @enum {string}
+                             */
+                            code?: "auth" | "host_not_found" | "host_blocked" | "refused" | "timeout" | "tls" | "certificate" | "sender_rejected" | "recipient_rejected" | "not_configured" | "no_template" | "unknown";
+                            /** @description A fixed English sentence for the result. */
                             message?: string | null;
                             success: boolean;
                         };

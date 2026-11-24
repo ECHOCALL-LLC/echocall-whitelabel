@@ -87,7 +87,8 @@
     "phoneNumber": "Saisissez le numéro en notation internationale, par exemple +4930123456",
     "invalid": "Saisie invalide",
     "server": "{{message}}",
-    "positiveAmount": "Veuillez saisir un montant supérieur à 0"
+    "positiveAmount": "Veuillez saisir un montant supérieur à 0",
+    "port": "Veuillez saisir un port entre 1 et 65535"
   },
   "paginator": {
     "itemsPerPage": "Éléments par page",

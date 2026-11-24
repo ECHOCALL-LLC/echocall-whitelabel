@@ -109,6 +109,14 @@ export interface AdminOverview {
   users: UserCounts;
 }
 
+/** GET /api/admin/overview/links: addresses the operator screens link to. */
+export interface OperatorLinks {
+  /** The portal's own sign-in page, for mails to customers of this portal. */
+  portalLogin: string;
+  /** The page of the service where the operator buys credit; payments never pass through the portal. */
+  topUp: string;
+}
+
 export interface AdminUser {
   id: number;
   email: string;

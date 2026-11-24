@@ -1,5 +1,5 @@
 import { Component, computed, inject, type OnInit, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -10,6 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
+import { ActivatedRoute } from '@angular/router';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/api/api.service';
@@ -29,9 +30,18 @@ import { NotifyService } from '../../../core/notify/notify.service';
 import { ConfirmDialogComponent, type ConfirmDialogData } from '../../../shared/confirm-dialog.component';
 import { FieldErrorPipe } from '../../../shared/forms/field-error.pipe';
 import { applyServerErrors } from '../../../shared/forms/server-errors';
-import { hexColorValidator, urlValidator } from '../../../shared/forms/validators';
+import { hexColorValidator, portValidator, urlValidator } from '../../../shared/forms/validators';
 import { LOGO_TYPES, LogoFileError, prepareLogo } from '../../../shared/images/logo-file';
 import { HubSettingsComponent } from './hub-settings.component';
+import { ServiceMailServerComponent } from './service-mail-server.component';
+
+/** The tabs a link can open by name, for example /admin/settings?tab=service. */
+const TABS: ReadonlyMap<string, number> = new Map([
+  ['branding', 0],
+  ['mail', 1],
+  ['registration', 2],
+  ['service', 3],
+]);
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 /** Read and written by the sign-up tab. */
@@ -52,6 +62,7 @@ const ROUTE = '/admin/settings/registration';
     TranslocoDirective,
     FieldErrorPipe,
     HubSettingsComponent,
+    ServiceMailServerComponent,
   ],
   providers: [provideTranslocoScope('admin')],
   template: `
@@ -336,6 +347,7 @@ const ROUTE = '/admin/settings/registration';
           <div class="tab-body">
             @if (hubOpened()) {
               <app-hub-settings />
+              <app-service-mail-server />
             }
           </div>
         </mat-tab>
@@ -483,6 +495,16 @@ export class AdminSettingsPage implements OnInit {
   readonly hubOpened = signal(false);
   readonly tab = signal(0);
 
+  constructor() {
+    // A notice elsewhere can point at one tab, for example the mail server of the service.
+    inject(ActivatedRoute)
+      .queryParamMap.pipe(takeUntilDestroyed())
+      .subscribe((params) => {
+        const index = TABS.get(params.get('tab') ?? '');
+        if (index !== undefined) this.onTab(index);
+      });
+  }
+
   readonly brandingForm = this.fb.group({
     productName: [this.branding.branding().productName, [Validators.required, Validators.maxLength(60)]],
     logoDataUrl: this.fb.control<string | null>(this.branding.branding().logoDataUrl),
@@ -518,7 +540,7 @@ export class AdminSettingsPage implements OnInit {
   readonly testing = signal(false);
   readonly smtpForm = this.fb.group({
     host: ['', [Validators.required, Validators.maxLength(253)]],
-    port: [587, [Validators.required, Validators.min(1), Validators.max(65535)]],
+    port: [587, [Validators.required, portValidator]],
     secure: [false],
     user: ['', Validators.maxLength(200)],
     pass: ['', Validators.maxLength(500)],

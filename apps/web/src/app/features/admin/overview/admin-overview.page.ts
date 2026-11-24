@@ -1,4 +1,4 @@
-import { Component, inject, type OnInit, signal, type WritableSignal } from '@angular/core';
+import { Component, computed, inject, type OnInit, signal, type WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -9,6 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/api/api.service';
 import { formatMoney } from '../../../core/format/money';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
+import { OperatorLinksService } from '../../../core/hub/operator-links.service';
 import type { ResellerCredits, ResellerStats, ResellerTicketRow } from '../../../core/hub/hub.models';
 import { LanguageService } from '../../../core/i18n/language.service';
 import type { AdminOverview, HubStatus } from '../../../core/models';
@@ -176,6 +177,22 @@ interface OpenTickets {
             } @else {
               <p class="panel-foot">{{ t('admin.overview.unavailable') }}</p>
             }
+            @if (topUp(); as url) {
+              <!-- Credit is bought at the service, so the payment never passes through this portal. -->
+              <div class="panel-actions">
+                <a
+                  mat-button
+                  [href]="url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  [attr.aria-label]="t('admin.overview.balance.topUpNewTab')"
+                  data-testid="balance-top-up"
+                >
+                  {{ t('admin.overview.balance.topUp') }}
+                  <mat-icon iconPositionEnd aria-hidden="true">open_in_new</mat-icon>
+                </a>
+              </div>
+            }
           </section>
 
           <section class="panel" data-testid="tile-users">
@@ -291,7 +308,11 @@ export class AdminOverviewPage implements OnInit {
   private readonly api = inject(ApiService);
   private readonly hub = inject(AdminHubService);
   private readonly language = inject(LanguageService);
+  private readonly links = inject(OperatorLinksService);
   readonly notify = inject(NotifyService);
+
+  /** Where the operator buys credit at the service; the link waits until it is known. */
+  readonly topUp = computed(() => this.links.links()?.topUp ?? null);
 
   readonly overview = signal<AdminOverview | null>(null);
   readonly loading = signal(false);
@@ -313,6 +334,7 @@ export class AdminOverviewPage implements OnInit {
 
   ngOnInit(): void {
     void this.load();
+    void this.links.load();
   }
 
   number(value: number): string {

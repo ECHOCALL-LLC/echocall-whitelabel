@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { type MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
@@ -53,6 +54,7 @@ type CompanyField = (typeof COMPANY_FIELDS)[number];
     MatIconModule,
     MatInputModule,
     MatProgressBarModule,
+    MatSlideToggleModule,
     TranslocoDirective,
     FieldErrorPipe,
   ],
@@ -273,6 +275,18 @@ type CompanyField = (typeof COMPANY_FIELDS)[number];
           {{ t('actions.save') }}
         </button>
       </form>
+
+      <h2 class="section-title">{{ t('admin.settings.hub.mailDefaults.title') }}</h2>
+      <p class="hint" id="hub-mail-anonymous-hint">{{ t('admin.settings.hub.mailDefaults.hint') }}</p>
+      <mat-slide-toggle
+        [checked]="settings()?.defaultMailAnonymous ?? false"
+        [disabled]="!settings() || savingMailDefault()"
+        (change)="saveMailDefault($event)"
+        aria-describedby="hub-mail-anonymous-hint"
+        data-testid="hub-mail-anonymous"
+      >
+        {{ t('admin.settings.hub.mailDefaults.anonymous') }}
+      </mat-slide-toggle>
     </ng-container>
   `,
   styles: `
@@ -347,6 +361,7 @@ export class HubSettingsComponent implements OnInit {
   readonly settings = signal<ResellerSettings | null>(null);
   readonly loading = signal(false);
   readonly saving = signal(false);
+  readonly savingMailDefault = signal(false);
 
   /** The profile as the service last reported it, so a save can send only what changed. */
   private stored: Record<CompanyField, string> = {
@@ -514,6 +529,31 @@ export class HubSettingsComponent implements OnInit {
       return;
     }
     await this.send('/resellers/settings/payment-keys', body);
+  }
+
+  /**
+   * Saved on its own, at once, so a half-edited company form above is neither
+   * sent nor reset. When the service refuses, the switch goes back to what it holds.
+   */
+  async saveMailDefault(event: MatSlideToggleChange): Promise<void> {
+    const current = this.settings();
+    if (!current) return;
+    const on = event.checked;
+    this.savingMailDefault.set(true);
+    try {
+      await firstValueFrom(
+        this.hub.patch<unknown>('/resellers/settings/company', { defaultMailAnonymous: on }),
+      );
+      this.settings.set({ ...current, defaultMailAnonymous: on });
+      this.notify.success(
+        on ? 'admin.settings.hub.mailDefaults.savedOn' : 'admin.settings.hub.mailDefaults.savedOff',
+      );
+    } catch (err) {
+      event.source.checked = !on;
+      this.notify.apiError(err);
+    } finally {
+      this.savingMailDefault.set(false);
+    }
   }
 
   private async send(path: string, body: object): Promise<void> {

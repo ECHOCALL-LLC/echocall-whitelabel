@@ -12,6 +12,7 @@ import { ServiceOrderCancelDialogComponent } from './service-order-cancel-dialog
 
 const ORDER_URL = '/api/admin/hub/resellers/services/orders/by-ticket/31';
 const BASE = '/api/admin/hub/resellers/services/orders/88';
+const TOP_UP = 'https://service.example/reseller/credits';
 
 const ORDER = {
   id: 88,
@@ -74,9 +75,13 @@ describe('AdminServiceOrderPanel', () => {
     fixture.componentInstance.changed.subscribe(() => changes++);
     fixture.detectChanges();
     await fixture.whenStable();
+    http
+      .expectOne('/api/admin/overview/links')
+      .flush({ portalLogin: 'https://portal.example/login', topUp: TOP_UP });
     const request = http.expectOne(ORDER_URL);
     if (status === 200) request.flush({ data: order });
-    else request.flush({ error: { code: 'not_found', message: 'Not found' } }, { status, statusText: 'Error' });
+    else
+      request.flush({ error: { code: 'not_found', message: 'Not found' } }, { status, statusText: 'Error' });
     await settle();
     fixture.detectChanges();
     return fixture;
@@ -176,14 +181,24 @@ describe('AdminServiceOrderPanel', () => {
 
     byTestId(fixture, 'service-forward-open')?.click();
     expect((opened[0].data as { params: { gross: string } }).params.gross).toBe(eur(47.6));
-    http
-      .expectOne(`${BASE}/forward`)
-      .flush({
-        data: { orderId: 88, forwardedOrderId: 900, ticketId: 4711, netEur: 40, vatEur: 7.6, grossEur: 47.6, balanceAfter: 72.4 },
-      });
+    http.expectOne(`${BASE}/forward`).flush({
+      data: {
+        orderId: 88,
+        forwardedOrderId: 900,
+        ticketId: 4711,
+        netEur: 40,
+        vatEur: 7.6,
+        grossEur: 47.6,
+        balanceAfter: 72.4,
+      },
+    });
     await settle();
     http.expectOne(ORDER_URL).flush({
-      data: { ...ORDER, forwardQuote: null, forwarded: { orderId: 900, ticketId: 4711, status: 'open', priceGross: 47.6 } },
+      data: {
+        ...ORDER,
+        forwardQuote: null,
+        forwarded: { orderId: 900, ticketId: 4711, status: 'open', priceGross: 47.6 },
+      },
     });
     await settle();
     fixture.detectChanges();
@@ -210,6 +225,19 @@ describe('AdminServiceOrderPanel', () => {
     expect(button.disabled).toBe(true);
     fixture.componentInstance.forward(fixture.componentInstance.order()!);
     expect(opened).toEqual([]);
+
+    // Credit is bought at the service, so the way there opens beside the ticket.
+    const topUp = byTestId(fixture, 'service-forward-top-up') as HTMLAnchorElement;
+    expect(topUp.getAttribute('href')).toBe(TOP_UP);
+    expect(topUp.getAttribute('target')).toBe('_blank');
+    expect(topUp.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(topUp.getAttribute('aria-label')).toBe(ADMIN_TEXTS.overview.balance.topUpNewTab);
+  });
+
+  it('offers no top-up link while the balance covers the forwarding', async () => {
+    const fixture = await render();
+
+    expect(byTestId(fixture, 'service-forward-top-up')).toBeNull();
   });
 
   it('names a refusal of the forwarding in its own words', async () => {
@@ -217,12 +245,16 @@ describe('AdminServiceOrderPanel', () => {
     dialogResult = true;
 
     byTestId(fixture, 'service-forward-open')?.click();
-    http
-      .expectOne(`${BASE}/forward`)
-      .flush(
-        { error: { code: 'payment_required', message: 'Refused', details: { reason: 'INSUFFICIENT_BALANCE' } } },
-        { status: 402, statusText: 'Payment Required' },
-      );
+    http.expectOne(`${BASE}/forward`).flush(
+      {
+        error: {
+          code: 'payment_required',
+          message: 'Refused',
+          details: { reason: 'INSUFFICIENT_BALANCE' },
+        },
+      },
+      { status: 402, statusText: 'Payment Required' },
+    );
     await settle();
     http.expectOne(ORDER_URL).flush({ data: ORDER });
     await settle();

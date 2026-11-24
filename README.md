@@ -47,14 +47,16 @@ filled with invented example customers (`npm run screenshots` regenerates them).
 - You (the operator) sign in to the **admin panel** and run the business there: customers
   (create an EchoCall account and its portal login in one step, top up and withdraw
   balance, read transactions and usage), plans and pricing, subscriptions, add-ons,
-  invoices and their PDF, phone numbers (your markup on them, and your own numbers
-  offered at a monthly price), support tickets, revenue and cost analytics, the agents
-  your customers built, your own company data and payment keys, plus portal branding,
-  mail settings and the audit log.
+  invoices, their PDF and the invoice mail to the customer, services (your price on each
+  service of the platform, services of your own, and every order worked from its ticket),
+  phone numbers (your markup on them, and your own numbers offered at a monthly price),
+  support tickets, revenue and cost analytics, the agents your customers built, your own
+  company data, payment keys and the mail server your invoices and ticket mails go
+  through, plus portal branding, mail settings and the audit log.
 - Your customers sign in to the **customer portal**: voice agents and chatbots, phone
   numbers (ready ones bought at once from the balance), conversations with transcripts,
-  analytics, knowledge base, integrations, campaigns and support requests, next to usage,
-  balance, plan and invoices.
+  analytics, knowledge base, integrations, campaigns, services and support requests, next
+  to usage, balance, plan and invoices.
 - You can **open the portal as one of your customers** to see what they see. The session
   carries the customer's role while it lasts, so the administration stays out of reach, and
   both the start and the end are written to your audit log.

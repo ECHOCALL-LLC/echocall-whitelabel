@@ -52,6 +52,17 @@ describe('AdminOverviewController', () => {
     });
   });
 
+  it('names the portal sign-in and the service top-up page, for administrators only', async () => {
+    expect((await api().get('/api/admin/overview/links')).status).toBe(401);
+    expect((await api().get('/api/admin/overview/links').set('Cookie', user.cookie)).status).toBe(403);
+    const res = await api().get('/api/admin/overview/links').set('Cookie', admin.cookie);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      portalLogin: 'http://localhost:3000/login',
+      topUp: 'https://hub.echocall.de/reseller/credits',
+    });
+  });
+
   it('re-checks the key on demand and reports the outcome', async () => {
     t.hub.on('GET /users/me', {
       status: 403,

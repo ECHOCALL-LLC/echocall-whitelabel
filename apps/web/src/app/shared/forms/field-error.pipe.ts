@@ -15,6 +15,7 @@ const SIMPLE: Record<string, string> = {
   positiveInteger: 'validation.positiveInteger',
   phoneNumber: 'validation.phoneNumber',
   min: 'validation.positiveAmount',
+  port: 'validation.port',
 };
 
 /** First error of a control as a translation key; impure because control state is not a signal. */

@@ -8,7 +8,12 @@ import { firstValueFrom } from 'rxjs';
 import { readApiError } from '../../../core/errors/api-error';
 import { formatMoney } from '../../../core/format/money';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
-import type { ResellerServiceOrder, ServiceForwardResult, ServiceOrderStep } from '../../../core/hub/hub.models';
+import { OperatorLinksService } from '../../../core/hub/operator-links.service';
+import type {
+  ResellerServiceOrder,
+  ServiceForwardResult,
+  ServiceOrderStep,
+} from '../../../core/hub/hub.models';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { NotifyService } from '../../../core/notify/notify.service';
 import { ConfirmDialogComponent, type ConfirmDialogData } from '../../../shared/confirm-dialog.component';
@@ -85,7 +90,9 @@ interface StepButton {
             @if (o.refundedEur > 0) {
               <div>
                 <dt>{{ t('admin.serviceOrders.refundedLabel') }}</dt>
-                <dd data-testid="service-refunded">{{ t('admin.serviceOrders.refunded', { amount: money(o.refundedEur) }) }}</dd>
+                <dd data-testid="service-refunded">
+                  {{ t('admin.serviceOrders.refunded', { amount: money(o.refundedEur) }) }}
+                </dd>
               </div>
             }
           </dl>
@@ -149,7 +156,12 @@ interface StepButton {
               <div class="box-body">
                 <p class="box-title">{{ t('admin.serviceOrders.forwardTitle') }}</p>
                 <p class="box-text">
-                  {{ t('admin.serviceOrders.forwardHint', { gross: money(o.forwardQuote.grossEur), net: money(o.forwardQuote.netEur) }) }}
+                  {{
+                    t('admin.serviceOrders.forwardHint', {
+                      gross: money(o.forwardQuote.grossEur),
+                      net: money(o.forwardQuote.netEur),
+                    })
+                  }}
                 </p>
                 @if (short()) {
                   <p class="box-text warn" data-testid="service-forward-short">
@@ -161,6 +173,21 @@ interface StepButton {
                       })
                     }}
                   </p>
+                  @if (topUp(); as url) {
+                    <!-- Credit is bought at the service; the payment never passes through this portal. -->
+                    <a
+                      mat-stroked-button
+                      class="top-up"
+                      [href]="url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      [attr.aria-label]="t('admin.overview.balance.topUpNewTab')"
+                      data-testid="service-forward-top-up"
+                    >
+                      {{ t('admin.overview.balance.topUp') }}
+                      <mat-icon iconPositionEnd aria-hidden="true">open_in_new</mat-icon>
+                    </a>
+                  }
                 }
               </div>
               <button
@@ -175,7 +202,9 @@ interface StepButton {
               </button>
             </div>
           } @else if (!final() && o.forwardBlocked === 'NOT_AVAILABLE' && !o.ownService) {
-            <p class="hint" data-testid="service-forward-blocked">{{ t('admin.serviceOrders.forwardErrors.NOT_AVAILABLE') }}</p>
+            <p class="hint" data-testid="service-forward-blocked">
+              {{ t('admin.serviceOrders.forwardErrors.NOT_AVAILABLE') }}
+            </p>
           }
 
           @if (o.ownService && !final()) {
@@ -288,6 +317,10 @@ interface StepButton {
       align-items: flex-start;
       color: var(--mat-sys-error);
     }
+    .top-up {
+      align-self: flex-start;
+      margin-top: 4px;
+    }
     .warn mat-icon {
       font-size: 18px;
       width: 18px;
@@ -308,6 +341,10 @@ export class AdminServiceOrderPanel implements OnInit {
   private readonly notify = inject(NotifyService);
   private readonly transloco = inject(TranslocoService);
   private readonly language = inject(LanguageService);
+  private readonly links = inject(OperatorLinksService);
+
+  /** Where the operator buys credit at the service, offered when the balance is short. */
+  readonly topUp = computed(() => this.links.links()?.topUp ?? null);
 
   /** The ticket whose order is shown. */
   readonly ticketId = input.required<string>();
@@ -349,6 +386,7 @@ export class AdminServiceOrderPanel implements OnInit {
 
   ngOnInit(): void {
     void this.load();
+    void this.links.load();
   }
 
   name(order: ResellerServiceOrder): string {
@@ -374,7 +412,9 @@ export class AdminServiceOrderPanel implements OnInit {
   async load(): Promise<void> {
     try {
       const body = await firstValueFrom(
-        this.hub.get<{ data: ResellerServiceOrder | null }>(`/resellers/services/orders/by-ticket/${this.ticketId()}`),
+        this.hub.get<{ data: ResellerServiceOrder | null }>(
+          `/resellers/services/orders/by-ticket/${this.ticketId()}`,
+        ),
       );
       this.order.set(body?.data ?? null);
     } catch (err) {
@@ -389,7 +429,9 @@ export class AdminServiceOrderPanel implements OnInit {
     this.busy.set(true);
     try {
       const body = await firstValueFrom(
-        this.hub.post<{ data: ResellerServiceOrder }>(`/resellers/services/orders/${order.id}/status`, { status }),
+        this.hub.post<{ data: ResellerServiceOrder }>(`/resellers/services/orders/${order.id}/status`, {
+          status,
+        }),
       );
       this.order.set(body.data);
       this.notify.success('admin.serviceOrders.saved', {
@@ -446,11 +488,15 @@ export class AdminServiceOrderPanel implements OnInit {
     this.busy.set(true);
     try {
       const body = await firstValueFrom(
-        this.hub.post<{ data: ResellerServiceOrder }>(`/resellers/services/orders/${orderId}/cancel`, { refund }),
+        this.hub.post<{ data: ResellerServiceOrder }>(`/resellers/services/orders/${orderId}/cancel`, {
+          refund,
+        }),
       );
       this.order.set(body.data);
       if (body.data.refundedEur > 0) {
-        this.notify.success('admin.serviceOrders.cancelledRefund', { amount: this.money(body.data.refundedEur) });
+        this.notify.success('admin.serviceOrders.cancelledRefund', {
+          amount: this.money(body.data.refundedEur),
+        });
       } else {
         this.notify.success('admin.serviceOrders.cancelled');
       }

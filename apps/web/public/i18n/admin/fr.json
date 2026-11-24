@@ -26,7 +26,9 @@
     "balance": {
       "title": "Solde du portail",
       "voiceMinutes": "Minutes vocales",
-      "chatMessages": "Messages de chat"
+      "chatMessages": "Messages de chat",
+      "topUp": "Recharger le solde",
+      "topUpNewTab": "Recharger le solde, s’ouvre dans un nouvel onglet"
     },
     "subscriptions": {
       "hint": "y compris les résiliés",
@@ -505,7 +507,10 @@
       "dailyUsage": "Envoyés aujourd'hui : {{sent}} sur {{limit}}",
       "status": "E-mail",
       "notSent": "Pas encore envoyée par e-mail",
-      "sent": "Facture envoyée à {{to}}."
+      "sent": "Facture envoyée à {{to}}.",
+      "setUpMailServer": "Configurer le serveur de messagerie",
+      "portalLink": "Ajouter un lien vers l’espace client",
+      "portalLinkHint": "L’e-mail se termine alors par :"
     }
   },
   "numbers": {
@@ -729,7 +734,7 @@
     },
     "hub": {
       "tab": "Service",
-      "intro": "Données de votre société, logo du portail et clés de paiement de votre compte fournisseur. Ces informations sont conservées par le service, pas par le portail.",
+      "intro": "Données de l’entreprise, logo du portail, clés de paiement et envoi des e-mails de votre compte fournisseur. Ces informations sont conservées par le service, pas par le portail.",
       "company": "Données de la société",
       "companyHint": "Ces informations figurent sur les factures que vous adressez à vos clients.",
       "companyName": "Nom commercial",
@@ -764,7 +769,54 @@
       "incomplete": "Aucune facture ne peut être émise tant que ces mentions manquent : {{fields}}.",
       "taxExemptionNote": "Mention d'exonération de TVA (facultatif)",
       "taxExemptionPlaceholder": "TVA non applicable, art. 293 B du CGI",
-      "taxExemptionHint": "Figure sur chaque facture sous les montants, par exemple pour les micro-entreprises."
+      "taxExemptionHint": "Figure sur chaque facture sous les montants, par exemple pour les micro-entreprises.",
+      "mailDefaults": {
+        "title": "Modèles d’e-mail de vos clients",
+        "hint": "Lorsqu’un client crée un modèle d’e-mail, « Envoyer anonymement » est déjà activé. Le nom, le numéro de téléphone, l’adresse e-mail et l’adresse postale n’apparaissent alors pas dans l’e-mail. S’applique aux nouveaux modèles, les modèles existants conservent leur réglage. Vos clients peuvent modifier ce réglage pour chaque modèle.",
+        "anonymous": "Envoyer les nouveaux modèles anonymement",
+        "savedOn": "Les nouveaux modèles de vos clients démarrent désormais avec « Envoyer anonymement » activé.",
+        "savedOff": "Les nouveaux modèles de vos clients démarrent désormais avec « Envoyer anonymement » désactivé."
+      }
+    },
+    "mailServer": {
+      "title": "Serveur de messagerie pour les factures et les tickets",
+      "hint": "Vos factures et les e-mails de tickets parviennent à vos clients par ce serveur, avec votre adresse comme expéditeur. Les identifiants sont conservés chiffrés par le service. Les invitations et les liens de connexion du portail passent toujours par le serveur de l’onglet E-mail.",
+      "source": {
+        "reseller": "Vos e-mails passent par votre propre serveur {{host}}, expéditeur {{from}}.",
+        "platform": "Vos e-mails passent par le serveur du service, expéditeur {{from}}. Avec votre propre serveur, votre adresse est l’expéditeur.",
+        "none": "Aucun e-mail ne peut parvenir à vos clients pour le moment. Configurez un serveur de messagerie ici."
+      },
+      "lastTest": {
+        "success": "Dernier test le {{date}} : réussi.",
+        "failed": "Dernier test le {{date}} : échoué."
+      },
+      "host": "Serveur",
+      "port": "Port",
+      "secure": "Chiffré dès le départ (SSL/TLS, généralement port 465)",
+      "username": "Nom d’utilisateur",
+      "password": "Mot de passe",
+      "passwordKeep": "Laissez vide pour conserver le mot de passe enregistré.",
+      "fromEmail": "Adresse de l’expéditeur",
+      "fromName": "Nom de l’expéditeur",
+      "active": "Utiliser ce serveur pour l’envoi",
+      "sendTest": "M’envoyer un e-mail de test",
+      "testHint": "L’e-mail de test part vers {{email}} par le serveur enregistré.",
+      "saveFirst": "Enregistrez vos modifications avant d’envoyer un e-mail de test.",
+      "saved": "Le serveur de messagerie a été enregistré.",
+      "testSent": "L’e-mail de test est en route vers {{email}}.",
+      "result": {
+        "auth": "Le nom d’utilisateur ou le mot de passe a été refusé.",
+        "host_not_found": "Le serveur est introuvable. Vérifiez l’orthographe.",
+        "host_blocked": "Ce serveur n’est pas autorisé. Utilisez un serveur de messagerie accessible publiquement.",
+        "refused": "Le serveur a refusé la connexion. Vérifiez le serveur et le port.",
+        "timeout": "Le serveur n’a pas répondu à temps. Vérifiez le serveur et le port.",
+        "tls": "Le chiffrement ne correspond pas au port. Modifiez « Chiffré dès le départ » ou vérifiez le port.",
+        "certificate": "Le certificat du serveur est invalide ou a expiré.",
+        "sender_rejected": "Le serveur a refusé l’adresse de l’expéditeur.",
+        "recipient_rejected": "Le serveur a refusé l’adresse du destinataire.",
+        "not_configured": "Aucun serveur de messagerie propre n’est actif. Enregistrez-en un et activez-le.",
+        "unknown": "L’e-mail de test n’a pas pu être envoyé. Vérifiez les informations."
+      }
     }
   },
   "audit": {

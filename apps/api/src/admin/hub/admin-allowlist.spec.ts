@@ -66,6 +66,16 @@ describe('matchOperatorCall', () => {
     expect(matchOperatorCall('GET', '/users/me/billing-address')).toBe(false);
   });
 
+  it('accepts the operator’s mail server, but not the test that needs the password again', () => {
+    expect(matchOperatorCall('GET', '/resellers/smtp')).toBe(true);
+    expect(matchOperatorCall('PUT', '/resellers/smtp')).toBe(true);
+    expect(matchOperatorCall('GET', '/resellers/smtp/effective')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/smtp/test-email')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/smtp/test')).toBe(false);
+    expect(matchOperatorCall('DELETE', '/resellers/smtp')).toBe(false);
+    expect(matchOperatorCall('GET', '/resellers/smtp/templates')).toBe(false);
+  });
+
   it('keeps payment flows and payment secrets out of the browser', () => {
     expect(matchOperatorCall('POST', '/resellers/credits/purchase')).toBe(false);
     expect(matchOperatorCall('POST', '/resellers/credits/deduct')).toBe(false);

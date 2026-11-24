@@ -25549,7 +25549,7 @@
         "description": "Creates a customer account under the calling reseller and returns the login URL an external billing system needs to hand to the end customer. When `planId` is given, the plan must belong to the calling reseller, otherwise the call answers 404; a matching plan is written onto the user and a primary one-month auto-renewing subscription is opened, which is what unlocks access for the new account. No password is created: the customer signs in at `portalUrl` with a one-time code sent to their email address. `sendWelcomeEmail` is still accepted but has no effect. An email that already exists anywhere on the platform answers 409 `conflict`, and the endpoint is limited to 10 calls per minute per API key, answering 429 `rate_limit_exceeded` beyond that. The whole provisioning router is reserved for API keys issued to a reseller: a key without a reseller behind it is rejected with 403 `forbidden` before the handler runs. No additional scope is checked on this route.\n\nNot available over MCP: it returns login credentials for the new account.",
         "requestBody": {
           "required": true,
-          "description": "The customer profile to create. Only `email` is required. The address fields are stored on the billing profile, and `country` is resolved to a two-letter code, staying empty when the text cannot be resolved. `language` sets the interface language of the new account and `planId` must reference a plan owned by the calling reseller.",
+          "description": "The customer profile to create. Only `email` is required. The address fields are stored on the billing profile, and `country` is resolved to a two-letter code, staying empty when the text cannot be resolved. `phone` is stored in international form (for example `+493022605843`, also from `+49.3022605843` or a national number read in `country`) and stays empty when it is not a valid number; the account is created either way. `state` is accepted for older billing modules but not stored, because the billing profile and the invoices have no region field. `language` sets the interface language of the new account and `planId` must reference a plan owned by the calling reseller.",
           "content": {
             "application/json": {
               "schema": {
@@ -28398,7 +28398,8 @@
                         "type",
                         "url"
                       ]
-                    }
+                    },
+                    "description": "Social and contact links shown in the widget. A link must start with http, https, mailto or tel (or be relative), anything else such as javascript: or data: is refused with 400."
                   },
                   "saveConversations": {
                     "type": "boolean"
@@ -28435,7 +28436,7 @@
                   "supportHubConfig": {
                     "type": "object",
                     "additionalProperties": {},
-                    "description": "Support hub of the widget, as the dashboard editor stores it."
+                    "description": "Support hub of the widget, as the dashboard editor stores it. Texts left empty, or left at the built-in English samples, appear in the language of the visitor. Links in home.items (url) and feed.items (url, ctaUrl) must start with http, https, mailto or tel (or be relative or an anchor #), anything else such as javascript: or data: is refused with 400."
                   },
                   "status": {
                     "type": "string",
@@ -39998,7 +39999,26 @@
                           "type": [
                             "string",
                             "null"
-                          ]
+                          ],
+                          "description": "A fixed English sentence for the result."
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "auth",
+                            "host_not_found",
+                            "host_blocked",
+                            "refused",
+                            "timeout",
+                            "tls",
+                            "certificate",
+                            "sender_rejected",
+                            "recipient_rejected",
+                            "not_configured",
+                            "no_template",
+                            "unknown"
+                          ],
+                          "description": "Only when success is false: why the test failed. auth: user name or password refused. host_not_found: the server name does not resolve. host_blocked: the server is not publicly reachable (internal addresses are not allowed). refused: the port refused the connection. timeout: no answer. tls: the encryption does not match the port. certificate: the certificate is invalid or expired. sender_rejected or recipient_rejected: the server refused that address. not_configured: no active mail server is saved. no_template: no template for this event and language. unknown: any other reason."
                         }
                       },
                       "required": [
@@ -40044,7 +40064,7 @@
           "Reseller"
         ],
         "summary": "Send a test email",
-        "description": "Sends a short test email through your saved mail server.\n\nMCP tool: `send_reseller_test_email` (writes).",
+        "description": "Sends a short test email through your saved mail server and stores the outcome as its last test (`lastTestedAt`, `testStatus`). Without an active saved server the answer is success false with code not_configured.\n\nMCP tool: `send_reseller_test_email` (writes).",
         "requestBody": {
           "required": true,
           "content": {
@@ -40086,7 +40106,26 @@
                           "type": [
                             "string",
                             "null"
-                          ]
+                          ],
+                          "description": "A fixed English sentence for the result."
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "auth",
+                            "host_not_found",
+                            "host_blocked",
+                            "refused",
+                            "timeout",
+                            "tls",
+                            "certificate",
+                            "sender_rejected",
+                            "recipient_rejected",
+                            "not_configured",
+                            "no_template",
+                            "unknown"
+                          ],
+                          "description": "Only when success is false: why the test failed. auth: user name or password refused. host_not_found: the server name does not resolve. host_blocked: the server is not publicly reachable (internal addresses are not allowed). refused: the port refused the connection. timeout: no answer. tls: the encryption does not match the port. certificate: the certificate is invalid or expired. sender_rejected or recipient_rejected: the server refused that address. not_configured: no active mail server is saved. no_template: no template for this event and language. unknown: any other reason."
                         }
                       },
                       "required": [
@@ -40448,7 +40487,26 @@
                           "type": [
                             "string",
                             "null"
-                          ]
+                          ],
+                          "description": "A fixed English sentence for the result."
+                        },
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "auth",
+                            "host_not_found",
+                            "host_blocked",
+                            "refused",
+                            "timeout",
+                            "tls",
+                            "certificate",
+                            "sender_rejected",
+                            "recipient_rejected",
+                            "not_configured",
+                            "no_template",
+                            "unknown"
+                          ],
+                          "description": "Only when success is false: why the test failed. auth: user name or password refused. host_not_found: the server name does not resolve. host_blocked: the server is not publicly reachable (internal addresses are not allowed). refused: the port refused the connection. timeout: no answer. tls: the encryption does not match the port. certificate: the certificate is invalid or expired. sender_rejected or recipient_rejected: the server refused that address. not_configured: no active mail server is saved. no_template: no template for this event and language. unknown: any other reason."
                         }
                       },
                       "required": [

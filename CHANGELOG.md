@@ -7,6 +7,29 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Services. The operator sets a price of their own on every service of the platform or
+  switches it off, creates services of their own with variants, questions and a
+  turnaround, and works each order from its ticket: start, ask back, finish, cancel with a
+  refund, or hand it to the platform after a confirmation that names the amount. Customers
+  order services from their account and answer the questions there.
+- Invoices go to the customer by email from the invoice page, with a preview of the mail
+  first. The mail can end with a link to the portal's sign-in page; the dialog shows that
+  line in the language of the mail before it goes out.
+- The billing details of a customer, a tax exemption note included, are edited in a dialog
+  on the customer page.
+- Users choose their warning mails, agents show and set the call summary, conversations
+  show the billed minutes, and a failed number purchase names its reason.
+- The service tab of the settings sets up the mail server for invoices and ticket mails:
+  which server mails go through right now, the result of the last test, a test mail to the
+  signed in admin, and a stored password that stays as it is unless a new one is typed.
+- The same tab sets whether new mail templates of the customers start anonymous.
+- When no mail server is set up, the invoice mail dialog links straight to that section.
+- The overview, and an order the balance does not cover, link to the page of the service
+  where the operator buys credit.
+- These need API version 1.25.0 at the service.
+
 ### Fixed
 
 - A test call or voice sample that could not start showed only the generic error. The
@@ -16,8 +39,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- The typed client was regenerated from API version 1.22.0 (no operation added or removed).
-  The number inventory now documents whose number it is and whether customers can buy it,
+- The typed client was regenerated from API version 1.25.0. From 1.22.0 on, the number
+  inventory documents whose number it is and whether customers can buy it,
   closing a ticket takes `ticket_12` as well as the bare number, and the test call says
   that its time limit shrinks when fewer voice minutes are left.
 

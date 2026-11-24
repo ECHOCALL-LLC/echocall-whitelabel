@@ -97,6 +97,13 @@ const RULES: readonly (readonly [string, string])[] = [
 
   ['GET', '/resellers/settings'],
   ['PATCH', '/resellers/settings/company'],
+  // The mail server the service sends this operator's invoices and ticket mails
+  // through. The hub never hands the stored password back; a save without one
+  // keeps it. The connection test without saving is left out: it needs the
+  // password typed again, and a test mail through the saved server says more.
+  ['GET|PUT', '/resellers/smtp'],
+  ['GET', '/resellers/smtp/effective'],
+  ['POST', '/resellers/smtp/test-email'],
   ['PATCH', '/resellers/settings/payment-keys'],
   ['GET|PATCH', '/resellers/settings/logo'],
   ['GET|PATCH', '/resellers/company'],

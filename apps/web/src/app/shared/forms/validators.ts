@@ -43,3 +43,11 @@ export const allowanceValidator: ValidatorFn = (control) => {
   if (value === '' || value === null || value === undefined) return null;
   return /^\d+$/.test(String(value)) ? null : { integer: true };
 };
+
+/** A whole number a mail server can listen on, 1 to 65535. Empty counts as missing, which `required` reports. */
+export const portValidator: ValidatorFn = (control) => {
+  const value = control.value;
+  if (value === '' || value === null || value === undefined) return null;
+  const port = Number(value);
+  return Number.isInteger(port) && port >= 1 && port <= 65535 ? null : { port: true };
+};

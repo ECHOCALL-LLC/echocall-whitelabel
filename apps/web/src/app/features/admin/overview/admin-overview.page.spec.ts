@@ -20,6 +20,10 @@ const STATS = {
 const BALANCE = { balance: 250.75, currency: 'EUR', formatted: '250,75 €' };
 const CREDITS = { voiceMinutesAvailable: 950, chatMessagesAvailable: 540 };
 const SUB_COUNT = { count: 9 };
+const LINKS = {
+  portalLogin: 'https://portal.example/login',
+  topUp: 'https://service.example/reseller/credits',
+};
 
 const TICKETS = [
   { id: 1, userId: 501, subject: 'Rechnung', status: 'open' },
@@ -33,6 +37,8 @@ interface Parts {
   tickets?: unknown[];
   ticketTotal?: number;
   subCount?: number;
+  /** False when the portal cannot tell where credit is bought. */
+  links?: boolean;
 }
 
 /** Lets the component's own promises run before the next expectation. */
@@ -55,6 +61,10 @@ describe('AdminOverviewPage', () => {
     const fixture = TestBed.createComponent(AdminOverviewPage);
     await fixture.whenStable();
     http.expectOne('/api/admin/overview').flush(OVERVIEW);
+    const links = http.expectOne('/api/admin/overview/links');
+    if (parts.links === false)
+      links.flush({ error: { code: 'internal' } }, { status: 500, statusText: 'Error' });
+    else links.flush(LINKS);
     // The operator tiles are only asked for once the local overview has answered.
     await settle();
     const stats = http.expectOne('/api/admin/hub/resellers/stats');
@@ -168,5 +178,22 @@ describe('AdminOverviewPage', () => {
     expect(strip).toContain(ADMIN_TEXTS.overview.hub.connected);
     expect(strip).toContain('operator@example.com');
     expect(fixture.nativeElement.querySelector('[data-testid="hub-card"].strip-bad')).toBeNull();
+  });
+
+  it('leads to the service to buy credit, in a new tab', async () => {
+    const fixture = await render();
+    const link = fixture.nativeElement.querySelector('[data-testid="balance-top-up"]') as HTMLAnchorElement;
+
+    expect(link.getAttribute('href')).toBe(LINKS.topUp);
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(link.getAttribute('aria-label')).toBe(ADMIN_TEXTS.overview.balance.topUpNewTab);
+  });
+
+  it('leaves the top-up link out when the portal cannot tell where credit is bought', async () => {
+    const fixture = await render({ links: false });
+
+    expect(fixture.nativeElement.querySelector('[data-testid="balance-top-up"]')).toBeNull();
+    expect(text(fixture, 'tile-balance')).toContain('€250.75');
   });
 });
