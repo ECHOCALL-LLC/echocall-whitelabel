@@ -235,17 +235,22 @@ export class AdminServicesPage implements OnInit {
   /** One price, or the cheapest variant with "from" when the variants differ. */
   price(t: (key: string, params?: Record<string, unknown>) => string, service: ResellerOwnService): string {
     const locale = this.language.current();
-    if (service.variants.length === 0) return t('admin.services.own.priceNetValue', { price: formatMoney(service.priceNet, locale) });
+    if (service.variants.length === 0)
+      return t('admin.services.own.priceNetValue', { price: formatMoney(service.priceNet, locale) });
     const prices = service.variants.map((variant) => variant.priceNet);
     const lowest = Math.min(...prices);
-    const key = prices.some((p) => p !== lowest) ? 'admin.services.own.priceFrom' : 'admin.services.own.priceNetValue';
+    const key = prices.some((p) => p !== lowest)
+      ? 'admin.services.own.priceFrom'
+      : 'admin.services.own.priceNetValue';
     return t(key, { price: formatMoney(lowest, locale) });
   }
 
   async loadOffers(): Promise<void> {
     this.loadingOffers.set(true);
     try {
-      const body = await firstValueFrom(this.hub.get<{ data: ResellerServiceOffers }>('/resellers/services/offers'));
+      const body = await firstValueFrom(
+        this.hub.get<{ data: ResellerServiceOffers }>('/resellers/services/offers'),
+      );
       this.offers.set(body?.data ?? { vatPercent: 0, services: [] });
     } catch (err) {
       this.offers.set(null);

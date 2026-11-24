@@ -48,7 +48,9 @@ describe('WarningMailsPanel', () => {
     const fixture = TestBed.createComponent(WarningMailsPanel);
     fixture.componentRef.setInput('operator', operator);
     fixture.detectChanges();
-    http.expectOne(operator ? '/api/admin/hub/users/me/warning-mails' : '/api/hub/users/me/warning-mails').flush(body);
+    http
+      .expectOne(operator ? '/api/admin/hub/users/me/warning-mails' : '/api/hub/users/me/warning-mails')
+      .flush(body);
     await new Promise((resolve) => setTimeout(resolve, 0));
     await fixture.whenStable();
     return fixture;
@@ -93,7 +95,10 @@ describe('WarningMailsPanel', () => {
     const pending = fixture.componentInstance.change('integrations', 'off');
     http
       .expectOne('/api/hub/users/me/warning-mails/integrations')
-      .flush({ error: { code: 'impersonation_read_only', message: 'read only' } }, { status: 403, statusText: 'Forbidden' });
+      .flush(
+        { error: { code: 'impersonation_read_only', message: 'read only' } },
+        { status: 403, statusText: 'Forbidden' },
+      );
     await pending;
 
     expect(fixture.componentInstance.settings()[1].interval).toBe('daily');

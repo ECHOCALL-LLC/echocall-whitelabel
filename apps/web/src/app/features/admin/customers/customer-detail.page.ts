@@ -236,7 +236,9 @@ const KNOWN_USAGE_TYPES = new Set(['voice_minute', 'chat_session']);
                 <dl class="facts">
                   <div>
                     <dt>{{ t('admin.customer.billing.email') }}</dt>
-                    <dd data-testid="billing-email-value">{{ b.billingEmail || t('admin.customer.billing.none') }}</dd>
+                    <dd data-testid="billing-email-value">
+                      {{ b.billingEmail || t('admin.customer.billing.none') }}
+                    </dd>
                   </div>
                   @if (b.billingCcEmail) {
                     <div>

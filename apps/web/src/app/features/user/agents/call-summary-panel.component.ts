@@ -158,11 +158,15 @@ type VipGroup = FormGroup<{ label: FormControl<string>; number: FormControl<stri
               >
                 {{ t('user.agents.callSummary.anonymous') }}
               </mat-slide-toggle>
-              <p class="hint" id="call-summary-anonymous-hint">{{ t('user.agents.callSummary.anonymousHint') }}</p>
+              <p class="hint" id="call-summary-anonymous-hint">
+                {{ t('user.agents.callSummary.anonymousHint') }}
+              </p>
             </div>
 
             <section class="group" aria-labelledby="call-summary-vip-title">
-              <h3 class="group-title" id="call-summary-vip-title">{{ t('user.agents.callSummary.vip.title') }}</h3>
+              <h3 class="group-title" id="call-summary-vip-title">
+                {{ t('user.agents.callSummary.vip.title') }}
+              </h3>
               <p class="hint">{{ t('user.agents.callSummary.vip.hint') }}</p>
               <div formArrayName="vipNumbers" class="vips">
                 @for (row of vipNumbers.controls; track row; let i = $index) {
@@ -186,7 +190,10 @@ type VipGroup = FormGroup<{ label: FormControl<string>; number: FormControl<stri
                         [placeholder]="t('user.agents.callSummary.vip.numberPlaceholder')"
                         [attr.aria-label]="t('user.agents.callSummary.vip.numberAria', { n: i + 1 })"
                       />
-                      @if (row.controls.number.invalid && (row.controls.number.touched || row.controls.number.errors?.['server'])) {
+                      @if (
+                        row.controls.number.invalid &&
+                        (row.controls.number.touched || row.controls.number.errors?.['server'])
+                      ) {
                         <mat-error>{{ t('user.agents.callSummary.vip.numberInvalid') }}</mat-error>
                       }
                     </mat-form-field>
@@ -203,7 +210,12 @@ type VipGroup = FormGroup<{ label: FormControl<string>; number: FormControl<stri
               </div>
               @if (vipNumbers.length < maxVipNumbers) {
                 <div>
-                  <button mat-stroked-button type="button" (click)="addVip()" data-testid="call-summary-vip-add">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="addVip()"
+                    data-testid="call-summary-vip-add"
+                  >
                     <mat-icon>add</mat-icon>
                     {{ t('user.agents.callSummary.vip.add') }}
                   </button>
@@ -224,10 +236,18 @@ type VipGroup = FormGroup<{ label: FormControl<string>; number: FormControl<stri
           </div>
         </form>
 
-        <section class="group forwarding" aria-labelledby="call-summary-forwarding-title" data-testid="call-summary-forwarding">
-          <h3 class="group-title" id="call-summary-forwarding-title">{{ t('user.agents.callSummary.forwarding.title') }}</h3>
+        <section
+          class="group forwarding"
+          aria-labelledby="call-summary-forwarding-title"
+          data-testid="call-summary-forwarding"
+        >
+          <h3 class="group-title" id="call-summary-forwarding-title">
+            {{ t('user.agents.callSummary.forwarding.title') }}
+          </h3>
           @for (phone of phoneNumbers(); track phone.number) {
-            <p class="hint">{{ t('user.agents.callSummary.forwarding.forNumber', { number: phone.number }) }}</p>
+            <p class="hint">
+              {{ t('user.agents.callSummary.forwarding.forNumber', { number: phone.number }) }}
+            </p>
             <ul class="codes">
               @for (kind of singleKinds; track kind) {
                 @if (code(phone.forwardingCodes, kind); as c) {
@@ -235,11 +255,22 @@ type VipGroup = FormGroup<{ label: FormControl<string>; number: FormControl<stri
                     <span class="code-label">{{ t('user.agents.callSummary.forwarding.kind.' + kind) }}</span>
                     <span class="code-pair">
                       <ng-container
-                        *ngTemplateOutlet="copyButton; context: { code: c.on, label: t('user.agents.callSummary.forwarding.kind.' + kind) }"
+                        *ngTemplateOutlet="
+                          copyButton;
+                          context: { code: c.on, label: t('user.agents.callSummary.forwarding.kind.' + kind) }
+                        "
                       />
                       <span class="off">{{ t('user.agents.callSummary.forwarding.off') }}</span>
                       <ng-container
-                        *ngTemplateOutlet="copyButton; context: { code: c.off, label: t('user.agents.callSummary.forwarding.offLabel', { label: t('user.agents.callSummary.forwarding.kind.' + kind) }) }"
+                        *ngTemplateOutlet="
+                          copyButton;
+                          context: {
+                            code: c.off,
+                            label: t('user.agents.callSummary.forwarding.offLabel', {
+                              label: t('user.agents.callSummary.forwarding.kind.' + kind),
+                            }),
+                          }
+                        "
                       />
                     </span>
                   </li>
@@ -250,20 +281,35 @@ type VipGroup = FormGroup<{ label: FormControl<string>; number: FormControl<stri
                   <span class="code-label">{{ t('user.agents.callSummary.forwarding.allAtOnce') }}</span>
                   <span class="code-pair">
                     <ng-container
-                      *ngTemplateOutlet="copyButton; context: { code: all.on, label: t('user.agents.callSummary.forwarding.allLabel') }"
+                      *ngTemplateOutlet="
+                        copyButton;
+                        context: { code: all.on, label: t('user.agents.callSummary.forwarding.allLabel') }
+                      "
                     />
                     <span class="off">{{ t('user.agents.callSummary.forwarding.off') }}</span>
                     <ng-container
-                      *ngTemplateOutlet="copyButton; context: { code: all.off, label: t('user.agents.callSummary.forwarding.offLabel', { label: t('user.agents.callSummary.forwarding.allLabel') }) }"
+                      *ngTemplateOutlet="
+                        copyButton;
+                        context: {
+                          code: all.off,
+                          label: t('user.agents.callSummary.forwarding.offLabel', {
+                            label: t('user.agents.callSummary.forwarding.allLabel'),
+                          }),
+                        }
+                      "
                     />
                   </span>
                 </li>
               }
             </ul>
           } @empty {
-            <p class="hint" data-testid="call-summary-no-number">{{ t('user.agents.callSummary.forwarding.noNumber') }}</p>
+            <p class="hint" data-testid="call-summary-no-number">
+              {{ t('user.agents.callSummary.forwarding.noNumber') }}
+            </p>
             <div>
-              <a mat-stroked-button routerLink="/app/numbers">{{ t('user.agents.callSummary.forwarding.toNumbers') }}</a>
+              <a mat-stroked-button routerLink="/app/numbers">{{
+                t('user.agents.callSummary.forwarding.toNumbers')
+              }}</a>
             </div>
           }
           @if (phoneNumbers().length > 0) {
@@ -278,7 +324,9 @@ type VipGroup = FormGroup<{ label: FormControl<string>; number: FormControl<stri
             type="button"
             class="code"
             (click)="copy(code)"
-            [attr.aria-label]="t('user.agents.callSummary.forwarding.copyLabel', { label: label, code: code })"
+            [attr.aria-label]="
+              t('user.agents.callSummary.forwarding.copyLabel', { label: label, code: code })
+            "
             [attr.data-testid]="'forwarding-code-' + code"
           >
             <mat-icon>{{ copied() === code ? 'check' : 'content_copy' }}</mat-icon>

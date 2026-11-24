@@ -97,7 +97,9 @@ describe('ServicesPanel', () => {
     expect(text).toContain('Setup');
     expect(text).toContain('We set it up.');
     expect(text).toContain(USER_TEXTS.services.priceFrom.replace('{{amount}}', formatMoney(50, 'en')));
-    expect(text).toContain(USER_TEXTS.services.turnaround.range.replace('{{min}}', '24').replace('{{max}}', '48'));
+    expect(text).toContain(
+      USER_TEXTS.services.turnaround.range.replace('{{min}}', '24').replace('{{max}}', '48'),
+    );
     expect(text).toContain(USER_TEXTS.services.statuses.waiting_customer);
     expect(text).toContain('Large');
     expect(fixture.nativeElement.querySelector('a[href="/app/tickets/812"]')).not.toBeNull();

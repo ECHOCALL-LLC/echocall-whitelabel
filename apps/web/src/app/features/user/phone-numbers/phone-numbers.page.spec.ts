@@ -118,7 +118,10 @@ describe('PhoneNumbersPage', () => {
     const pending = fixture.componentInstance.assign(fixture.componentInstance.numbers()[0], 5);
     http
       .expectOne('/api/hub/phone-numbers/12')
-      .flush({ error: { code: 'agent_not_found', message: 'gone' } }, { status: 404, statusText: 'Not Found' });
+      .flush(
+        { error: { code: 'agent_not_found', message: 'gone' } },
+        { status: 404, statusText: 'Not Found' },
+      );
     await new Promise((resolve) => setTimeout(resolve, 0));
     http.expectOne((req) => req.url === '/api/hub/phone-numbers').flush({ data: [NUMBER] });
     http.expectOne('/api/hub/agents').flush({ data: [AGENT] });

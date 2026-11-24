@@ -96,7 +96,9 @@ describe('ServiceOrderDialogComponent', () => {
 
     expect(fixture.componentInstance.missing()).toBe(39.5);
     expect(fixture.nativeElement.querySelector('[data-testid="service-balance-short"]')).not.toBeNull();
-    const submit = fixture.nativeElement.querySelector('[data-testid="service-order-submit"]') as HTMLButtonElement;
+    const submit = fixture.nativeElement.querySelector(
+      '[data-testid="service-order-submit"]',
+    ) as HTMLButtonElement;
     expect(submit.disabled).toBe(true);
   });
 
@@ -134,12 +136,16 @@ describe('ServiceOrderDialogComponent', () => {
     dialog.answer('country', 'DE');
 
     const pending = dialog.order();
-    http
-      .expectOne('/api/hub/billing/services/orders')
-      .flush(
-        { error: { code: 'validation_error', message: 'bad', details: { reason: 'ANSWER_INVALID', field: 'country' } } },
-        { status: 400, statusText: 'Bad Request' },
-      );
+    http.expectOne('/api/hub/billing/services/orders').flush(
+      {
+        error: {
+          code: 'validation_error',
+          message: 'bad',
+          details: { reason: 'ANSWER_INVALID', field: 'country' },
+        },
+      },
+      { status: 400, statusText: 'Bad Request' },
+    );
     await pending;
 
     expect(dialog.fieldErrors()).toEqual({ country: 'invalid' });
@@ -158,7 +164,13 @@ describe('ServiceOrderDialogComponent', () => {
     const request = http.expectOne('/api/hub/billing/services/orders');
     expect(request.request.body).toEqual({ positionId: 7, answers: {} });
     request.flush(
-      { error: { code: 'precondition_failed', message: 'x', details: { reason: 'BILLING_PROFILE_INCOMPLETE' } } },
+      {
+        error: {
+          code: 'precondition_failed',
+          message: 'x',
+          details: { reason: 'BILLING_PROFILE_INCOMPLETE' },
+        },
+      },
       { status: 412, statusText: 'Precondition Failed' },
     );
     await pending;

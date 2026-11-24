@@ -52,7 +52,11 @@ export interface ServiceOrder {
 }
 
 /** The service texts come in German and English; French readers get the English ones. */
-export function pickText(language: string, de: string | null | undefined, en: string | null | undefined): string {
+export function pickText(
+  language: string,
+  de: string | null | undefined,
+  en: string | null | undefined,
+): string {
   const german = (de ?? '').trim();
   const english = (en ?? '').trim();
   return language === 'de' ? german || english : english || german;

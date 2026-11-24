@@ -28,7 +28,11 @@ export interface ServiceOrderCancelResult {
       <mat-dialog-content>
         <p class="lead">{{ t('admin.serviceOrders.cancelDesc') }}</p>
         @if (data.refundAmount; as amount) {
-          <mat-checkbox [checked]="refund()" (change)="refund.set($event.checked)" data-testid="service-refund">
+          <mat-checkbox
+            [checked]="refund()"
+            (change)="refund.set($event.checked)"
+            data-testid="service-refund"
+          >
             {{ t('admin.serviceOrders.refund', { amount }) }}
           </mat-checkbox>
           <p class="note">{{ t('admin.serviceOrders.refundNote') }}</p>
@@ -36,7 +40,13 @@ export interface ServiceOrderCancelResult {
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button mat-dialog-close cdkFocusInitial>{{ t('admin.serviceOrders.keep') }}</button>
-        <button mat-flat-button class="destructive" type="button" (click)="confirm()" data-testid="service-cancel-confirm">
+        <button
+          mat-flat-button
+          class="destructive"
+          type="button"
+          (click)="confirm()"
+          data-testid="service-cancel-confirm"
+        >
           {{ t('admin.serviceOrders.confirmCancel') }}
         </button>
       </mat-dialog-actions>

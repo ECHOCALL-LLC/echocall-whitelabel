@@ -143,7 +143,9 @@ function localInputValue(date: Date): string {
                 }
               }
               @if (fieldErrors()[field.key]; as error) {
-                <mat-hint class="field-error" role="alert">{{ t('user.services.order.field.' + error) }}</mat-hint>
+                <mat-hint class="field-error" role="alert">{{
+                  t('user.services.order.field.' + error)
+                }}</mat-hint>
               }
             </mat-form-field>
           }
@@ -154,13 +156,22 @@ function localInputValue(date: Date): string {
             <dt>{{ t('user.services.order.vat', { percent: vatPercent }) }}</dt>
             <dd>{{ price() ? money(price()!.vat) : '' }}</dd>
             <dt class="total">{{ t('user.services.order.total') }}</dt>
-            <dd class="total">{{ price() ? money(price()!.gross) : t('user.services.order.pickVariant') }}</dd>
+            <dd class="total">
+              {{ price() ? money(price()!.gross) : t('user.services.order.pickVariant') }}
+            </dd>
           </dl>
 
           @if (missing() > 0) {
             <div class="notice" role="note" data-testid="service-balance-short">
               <mat-icon aria-hidden="true">account_balance_wallet</mat-icon>
-              <p>{{ t('user.services.order.balanceShort', { balance: money(balanceEur), missing: money(missing()) }) }}</p>
+              <p>
+                {{
+                  t('user.services.order.balanceShort', {
+                    balance: money(balanceEur),
+                    missing: money(missing()),
+                  })
+                }}
+              </p>
             </div>
           } @else {
             <p class="hint">{{ t('user.services.order.paidFrom', { balance: money(balanceEur) }) }}</p>
@@ -175,7 +186,11 @@ function localInputValue(date: Date): string {
             [disabled]="!ready() || ordering()"
             data-testid="service-order-submit"
           >
-            {{ price() ? t('user.services.order.submit', { amount: money(price()!.gross) }) : t('user.services.order.submitPlain') }}
+            {{
+              price()
+                ? t('user.services.order.submit', { amount: money(price()!.gross) })
+                : t('user.services.order.submitPlain')
+            }}
           </button>
         </mat-dialog-actions>
       </form>
@@ -233,7 +248,9 @@ export class ServiceOrderDialogComponent {
   readonly earliest = localInputValue(new Date());
 
   /** A single variant is the only choice there is, so it is picked already. */
-  readonly variantKey = signal<string | null>(this.service.variants.length === 1 ? this.service.variants[0].key : null);
+  readonly variantKey = signal<string | null>(
+    this.service.variants.length === 1 ? this.service.variants[0].key : null,
+  );
   readonly answers = signal<Record<string, string>>({});
   readonly fieldErrors = signal<Record<string, FieldError>>({});
   readonly ordering = signal(false);
@@ -331,7 +348,8 @@ export class ServiceOrderDialogComponent {
       case 'INSUFFICIENT_BALANCE': {
         const balance = Number(details['balanceEur']);
         const gross = Number(details['grossEur']);
-        const missing = Number.isFinite(balance) && Number.isFinite(gross) ? Math.max(0, gross - balance) : null;
+        const missing =
+          Number.isFinite(balance) && Number.isFinite(gross) ? Math.max(0, gross - balance) : null;
         if (missing !== null) {
           this.notify.error('user.services.order.errors.balance', { missing: this.money(missing) });
         } else {

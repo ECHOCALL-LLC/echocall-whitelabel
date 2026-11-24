@@ -43,7 +43,14 @@ interface PriceLine extends PriceRow {
  */
 @Component({
   selector: 'app-admin-service-offer-card',
-  imports: [FormsModule, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, TranslocoDirective],
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatCheckboxModule,
+    MatFormFieldModule,
+    MatInputModule,
+    TranslocoDirective,
+  ],
   template: `
     <ng-container *transloco="let t">
       <form class="offer" (ngSubmit)="save()" [attr.data-testid]="'offer-' + offer().positionId">
@@ -54,7 +61,11 @@ interface PriceLine extends PriceRow {
               <p class="sub">{{ t('admin.serviceOrders.eta.' + e.key, { min: e.min, max: e.max }) }}</p>
             }
           </div>
-          <mat-checkbox [checked]="enabled()" (change)="enabled.set($event.checked)" data-testid="offer-enabled">
+          <mat-checkbox
+            [checked]="enabled()"
+            (change)="enabled.set($event.checked)"
+            data-testid="offer-enabled"
+          >
             {{ t('admin.services.offers.enabled') }}
           </mat-checkbox>
         </div>
@@ -89,10 +100,16 @@ interface PriceLine extends PriceRow {
                   @if (line.invalid) {
                     <mat-hint class="error">{{ t('admin.services.offers.errors.PRICE_INVALID') }}</mat-hint>
                   } @else if (line.below) {
-                    <mat-hint class="error">{{ t('admin.services.offers.minimum', { price: money(line.purchaseNet) }) }}</mat-hint>
+                    <mat-hint class="error">{{
+                      t('admin.services.offers.minimum', { price: money(line.purchaseNet) })
+                    }}</mat-hint>
                   }
                 </mat-form-field>
-                <span class="cell margin" [class.positive]="line.margin > 0" [attr.data-testid]="'offer-margin-' + (line.key || 'base')">
+                <span
+                  class="cell margin"
+                  [class.positive]="line.margin > 0"
+                  [attr.data-testid]="'offer-margin-' + (line.key || 'base')"
+                >
                   <span class="cap">{{ t('admin.services.offers.margin') }}</span>
                   {{ line.margin > 0 ? '+' + money(line.margin) : money(0) }}
                 </span>
@@ -104,7 +121,12 @@ interface PriceLine extends PriceRow {
         }
 
         <div class="foot">
-          <button mat-flat-button type="submit" [disabled]="!dirty() || hasError() || saving()" data-testid="offer-save">
+          <button
+            mat-flat-button
+            type="submit"
+            [disabled]="!dirty() || hasError() || saving()"
+            data-testid="offer-save"
+          >
             {{ t('actions.save') }}
           </button>
         </div>
@@ -238,7 +260,14 @@ export class AdminServiceOfferCard {
       const invalid = !empty && value === null;
       const below = value !== null && value < row.purchaseNet;
       const customer = value ?? row.purchaseNet;
-      return { ...row, raw, value, invalid, below, margin: Math.round((customer - row.purchaseNet) * 100) / 100 };
+      return {
+        ...row,
+        raw,
+        value,
+        invalid,
+        below,
+        margin: Math.round((customer - row.purchaseNet) * 100) / 100,
+      };
     }),
   );
 
@@ -248,7 +277,9 @@ export class AdminServiceOfferCard {
       this.lines().some((line) => (line.custom ? line.customerNet : null) !== line.value),
   );
 
-  readonly hasError = computed(() => this.enabled() && this.lines().some((line) => line.invalid || line.below));
+  readonly hasError = computed(
+    () => this.enabled() && this.lines().some((line) => line.invalid || line.below),
+  );
 
   constructor() {
     // A fresh list from the service resets what is shown to what is stored.

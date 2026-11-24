@@ -121,7 +121,9 @@ describe('AdminServicesPage', () => {
     const fixture = await render();
 
     expect(el(fixture, 'offers')?.textContent).toContain('Number setup');
-    expect(el(fixture, 'offers')?.textContent).toContain(ADMIN_TEXTS.services.offers.intro.replace('{{vat}}', '19'));
+    expect(el(fixture, 'offers')?.textContent).toContain(
+      ADMIN_TEXTS.services.offers.intro.replace('{{vat}}', '19'),
+    );
     const rows = all(fixture, 'own-row');
     expect(rows.length).toBe(2);
     expect(rows[0].textContent).toContain('Logo design');
@@ -158,7 +160,10 @@ describe('AdminServicesPage', () => {
 
     all(fixture, 'own-delete')[1].click();
     expect(opened[0].component).toBe(ConfirmDialogComponent);
-    expect(opened[0].data).toMatchObject({ messageKey: 'admin.services.own.deleteMessage', destructive: true });
+    expect(opened[0].data).toMatchObject({
+      messageKey: 'admin.services.own.deleteMessage',
+      destructive: true,
+    });
     const request = http.expectOne(`${OWN_URL}/14`);
     expect(request.request.method).toBe('DELETE');
     request.flush({ data: { ok: true } });

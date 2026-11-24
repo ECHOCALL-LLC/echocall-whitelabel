@@ -23,7 +23,9 @@ describe('ServiceOrderCancelDialogComponent', () => {
   }
 
   const confirm = (fixture: { nativeElement: HTMLElement }) =>
-    (fixture.nativeElement.querySelector('[data-testid="service-cancel-confirm"]') as HTMLButtonElement).click();
+    (
+      fixture.nativeElement.querySelector('[data-testid="service-cancel-confirm"]') as HTMLButtonElement
+    ).click();
 
   it('gives the money back unless told otherwise', async () => {
     const fixture = await render('€59.50');

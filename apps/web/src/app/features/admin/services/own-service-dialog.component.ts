@@ -28,7 +28,14 @@ import { parsePrice, priceInput, priceValidator } from './service-price';
 export type OwnServiceDialogData = { mode: 'create' } | { mode: 'edit'; service: ResellerOwnService };
 
 /** The limits the service enforces, so the form says no before it does. */
-export const OWN_LIMITS = { name: 160, description: 4000, label: 120, fields: 12, variants: 12, maxSlaHours: 8760 };
+export const OWN_LIMITS = {
+  name: 160,
+  description: 4000,
+  label: 120,
+  fields: 12,
+  variants: 12,
+  maxSlaHours: 8760,
+};
 
 const FIELD_TYPES = ['text', 'textarea', 'country', 'datetime'] as const;
 type FieldType = (typeof FIELD_TYPES)[number];
@@ -101,12 +108,22 @@ const hours = (raw: string): number | null => (raw.trim() === '' ? null : Number
           <div class="row">
             <mat-form-field appearance="outline" subscriptSizing="dynamic">
               <mat-label>{{ t('admin.services.own.descriptionDe') }}</mat-label>
-              <textarea matInput rows="3" formControlName="description" [maxlength]="limits.description"></textarea>
+              <textarea
+                matInput
+                rows="3"
+                formControlName="description"
+                [maxlength]="limits.description"
+              ></textarea>
               <mat-hint>{{ t('admin.services.own.descriptionHint') }}</mat-hint>
             </mat-form-field>
             <mat-form-field appearance="outline" subscriptSizing="dynamic">
               <mat-label>{{ t('admin.services.own.descriptionEn') }}</mat-label>
-              <textarea matInput rows="3" formControlName="descriptionEn" [maxlength]="limits.description"></textarea>
+              <textarea
+                matInput
+                rows="3"
+                formControlName="descriptionEn"
+                [maxlength]="limits.description"
+              ></textarea>
             </mat-form-field>
           </div>
 
@@ -189,7 +206,9 @@ const hours = (raw: string): number | null => (raw.trim() === '' ? null : Number
                     }
                   </mat-select>
                 </mat-form-field>
-                <mat-checkbox formControlName="required">{{ t('admin.services.own.fieldRequired') }}</mat-checkbox>
+                <mat-checkbox formControlName="required">{{
+                  t('admin.services.own.fieldRequired')
+                }}</mat-checkbox>
                 <button
                   mat-icon-button
                   type="button"
@@ -227,7 +246,9 @@ const hours = (raw: string): number | null => (raw.trim() === '' ? null : Number
             </mat-form-field>
           </div>
           @if (form.hasError('slaOrder')) {
-            <p class="hint error" data-testid="own-sla-order">{{ t('admin.services.own.errors.SLA_INVALID') }}</p>
+            <p class="hint error" data-testid="own-sla-order">
+              {{ t('admin.services.own.errors.SLA_INVALID') }}
+            </p>
           }
 
           <mat-checkbox formControlName="isVisible" data-testid="own-visible">
@@ -354,11 +375,18 @@ export class OwnServiceDialogComponent {
       });
       for (const variant of service.variants) {
         this.variants.push(
-          this.variantGroup(variant.key, variant.nameDe, variant.nameEn, priceInput(variant.priceNet, language)),
+          this.variantGroup(
+            variant.key,
+            variant.nameDe,
+            variant.nameEn,
+            priceInput(variant.priceNet, language),
+          ),
         );
       }
       for (const field of service.fields) {
-        this.fields.push(this.fieldGroup(field.key, field.labelDe, field.labelEn, field.type, field.required));
+        this.fields.push(
+          this.fieldGroup(field.key, field.labelDe, field.labelEn, field.type, field.required),
+        );
       }
     }
   }
@@ -378,7 +406,11 @@ export class OwnServiceDialogComponent {
     const single = this.form.controls.priceNet;
     single.setValidators(this.variants.length === 0 ? [Validators.required, priceValidator] : []);
     single.updateValueAndValidity();
-    for (const control of [this.form.controls.name, ...this.variants.controls.map((v) => v.controls.nameDe), ...this.fields.controls.map((f) => f.controls.labelDe)]) {
+    for (const control of [
+      this.form.controls.name,
+      ...this.variants.controls.map((v) => v.controls.nameDe),
+      ...this.fields.controls.map((f) => f.controls.labelDe),
+    ]) {
       if (control.value.trim() === '') control.setErrors({ required: true });
     }
     if (this.form.invalid || this.saving()) {

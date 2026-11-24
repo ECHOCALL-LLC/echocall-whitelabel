@@ -25,8 +25,24 @@ const VARIANTS: ResellerServiceOffer = {
   enabled: true,
   price: null,
   variants: [
-    { key: 'basic', nameDe: 'Basis', nameEn: 'Basic', purchaseNet: 100, customerNet: 150, marginNet: 50, custom: true },
-    { key: 'pro', nameDe: 'Profi', nameEn: 'Pro', purchaseNet: 200, customerNet: 200, marginNet: 0, custom: false },
+    {
+      key: 'basic',
+      nameDe: 'Basis',
+      nameEn: 'Basic',
+      purchaseNet: 100,
+      customerNet: 150,
+      marginNet: 50,
+      custom: true,
+    },
+    {
+      key: 'pro',
+      nameDe: 'Profi',
+      nameEn: 'Pro',
+      purchaseNet: 200,
+      customerNet: 200,
+      marginNet: 0,
+      custom: false,
+    },
   ],
   slaMinHours: null,
   slaMaxHours: null,
@@ -71,7 +87,8 @@ describe('AdminServiceOfferCard', () => {
     fixture.detectChanges();
   }
 
-  const saveButton = (fixture: { nativeElement: HTMLElement }) => el(fixture, 'offer-save') as HTMLButtonElement;
+  const saveButton = (fixture: { nativeElement: HTMLElement }) =>
+    el(fixture, 'offer-save') as HTMLButtonElement;
 
   afterEach(() => http.verify());
 

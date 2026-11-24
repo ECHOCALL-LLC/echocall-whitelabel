@@ -84,7 +84,11 @@ interface WarningMailsResponse {
                     >
                       @for (interval of intervals; track interval) {
                         <mat-option [value]="interval">
-                          {{ t('account.warningMails.intervals.' + optionSet(setting.category) + '.' + interval) }}
+                          {{
+                            t(
+                              'account.warningMails.intervals.' + optionSet(setting.category) + '.' + interval
+                            )
+                          }}
                         </mat-option>
                       }
                     </mat-select>
@@ -208,7 +212,9 @@ export class WarningMailsPanel implements OnInit {
     this.saving.set(category);
     try {
       await firstValueFrom(this.hub.put(`/users/me/warning-mails/${category}`, { interval }));
-      this.notify.success(interval === 'off' ? 'account.warningMails.savedOff' : 'account.warningMails.savedOn');
+      this.notify.success(
+        interval === 'off' ? 'account.warningMails.savedOff' : 'account.warningMails.savedOn',
+      );
     } catch (err) {
       this.settings.set(previous);
       this.notify.apiError(err);

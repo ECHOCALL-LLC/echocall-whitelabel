@@ -166,16 +166,13 @@ describe('AdminCustomersController', () => {
   });
 
   it('passes billing details to the hub, clears empty ones and records only which fields changed', async () => {
-    const res = await api()
-      .patch('/api/admin/customers/901/billing')
-      .set(asAdmin)
-      .send({
-        billingEmail: ' Rechnung@Example.com ',
-        billingCcEmail: '',
-        billingStreet: 'Hauptstr. 1\nHinterhaus',
-        vatId: 'DE123456789',
-        unknown: 'dropped',
-      });
+    const res = await api().patch('/api/admin/customers/901/billing').set(asAdmin).send({
+      billingEmail: ' Rechnung@Example.com ',
+      billingCcEmail: '',
+      billingStreet: 'Hauptstr. 1\nHinterhaus',
+      vatId: 'DE123456789',
+      unknown: 'dropped',
+    });
 
     expect(res.status).toBe(200);
     expect(JSON.parse(hubCalls('PATCH', '/resellers/customers/901').at(-1)?.body ?? '{}')).toEqual({
@@ -191,7 +188,10 @@ describe('AdminCustomersController', () => {
 
   it('refuses a billing address that is not one before it calls the hub, and an empty change', async () => {
     const before = hub.calls.length;
-    const bad = await api().patch('/api/admin/customers/901/billing').set(asAdmin).send({ billingEmail: 'nope' });
+    const bad = await api()
+      .patch('/api/admin/customers/901/billing')
+      .set(asAdmin)
+      .send({ billingEmail: 'nope' });
     const empty = await api().patch('/api/admin/customers/901/billing').set(asAdmin).send({});
 
     expect(bad.status).toBe(400);

@@ -113,7 +113,12 @@ import { type InvoiceSendDialogData, InvoiceSendDialogComponent } from './invoic
             <dt>{{ t('admin.invoices.mail.status') }}</dt>
             <dd data-testid="mail-status">
               @if (d.invoice.emailSentAt) {
-                {{ t('admin.invoices.mail.sentAt', { date: (d.invoice.emailSentAt | localDate), to: d.invoice.emailSentTo ?? '' }) }}
+                {{
+                  t('admin.invoices.mail.sentAt', {
+                    date: (d.invoice.emailSentAt | localDate),
+                    to: d.invoice.emailSentTo ?? '',
+                  })
+                }}
               } @else {
                 <span class="sub">{{ t('admin.invoices.mail.notSent') }}</span>
               }
@@ -315,7 +320,10 @@ export class AdminInvoiceDetailPage implements OnInit {
     const ref = this.dialog.open<InvoiceSendDialogComponent, InvoiceSendDialogData, SendInvoiceResult>(
       InvoiceSendDialogComponent,
       {
-        data: { invoiceId: detail.invoice.id, invoiceNumber: detail.invoice.invoiceNumber ?? String(detail.invoice.id) },
+        data: {
+          invoiceId: detail.invoice.id,
+          invoiceNumber: detail.invoice.invoiceNumber ?? String(detail.invoice.id),
+        },
         panelClass: 'dialog-wide',
         autoFocus: 'first-tabbable',
       },

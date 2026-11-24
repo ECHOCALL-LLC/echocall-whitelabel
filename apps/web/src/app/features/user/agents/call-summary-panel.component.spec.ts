@@ -88,7 +88,9 @@ describe('CallSummaryPanelComponent', () => {
     expect(text(fixture)).toContain('**61*03012345678#');
     expect(text(fixture)).toContain(cs.forwarding.howTo);
     // Nothing changed yet, so there is nothing to save.
-    const save = fixture.nativeElement.querySelector('[data-testid="call-summary-save"]') as HTMLButtonElement;
+    const save = fixture.nativeElement.querySelector(
+      '[data-testid="call-summary-save"]',
+    ) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
   });
 
@@ -198,7 +200,9 @@ describe('CallSummaryPanelComponent', () => {
     expect(panel.available()).toBe(false);
 
     pending = panel.save();
-    http.expectOne(URL).flush({ error: { code: 'internal', message: 'x' } }, { status: 500, statusText: 'Error' });
+    http
+      .expectOne(URL)
+      .flush({ error: { code: 'internal', message: 'x' } }, { status: 500, statusText: 'Error' });
     await pending;
 
     expect(snacks).toEqual([
@@ -210,7 +214,9 @@ describe('CallSummaryPanelComponent', () => {
   it('copies a code and says so when copying fails', async () => {
     const fixture = await render();
 
-    (fixture.nativeElement.querySelector('[data-testid="forwarding-code-##61#"]') as HTMLButtonElement).click();
+    (
+      fixture.nativeElement.querySelector('[data-testid="forwarding-code-##61#"]') as HTMLButtonElement
+    ).click();
     expect(copiedText).toBe('##61#');
     expect(fixture.componentInstance.copied()).toBe('##61#');
 

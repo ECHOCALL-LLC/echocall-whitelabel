@@ -80,7 +80,12 @@ import { providePaginatorIntl } from '../../../shared/paginator-intl';
           </ng-container>
           <ng-container matColumnDef="billed">
             <th mat-header-cell *matHeaderCellDef>{{ t('user.conversations.billed') }}</th>
-            <td mat-cell *matCellDef="let c" [attr.data-label]="t('user.conversations.billed')" data-testid="conversation-billed">
+            <td
+              mat-cell
+              *matCellDef="let c"
+              [attr.data-label]="t('user.conversations.billed')"
+              data-testid="conversation-billed"
+            >
               @if (billed(c); as minutes) {
                 {{ t('user.conversations.billedMinutes', { count: minutes.count }) }}
               }

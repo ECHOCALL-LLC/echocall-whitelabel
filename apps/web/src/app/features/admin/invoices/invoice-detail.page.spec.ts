@@ -217,7 +217,11 @@ describe('AdminInvoiceDetailPage', () => {
   it('names when and to whom it was mailed, and offers to send it again', async () => {
     const fixture = await render({
       ...DETAIL,
-      invoice: { ...DETAIL.invoice, emailSentAt: '2026-11-20T09:00:00.000Z', emailSentTo: 'rechnung@example.com' },
+      invoice: {
+        ...DETAIL.invoice,
+        emailSentAt: '2026-11-20T09:00:00.000Z',
+        emailSentTo: 'rechnung@example.com',
+      },
     });
 
     expect(fixture.nativeElement.querySelector('[data-testid="mail-status"]').textContent).toContain(
@@ -242,7 +246,11 @@ describe('AdminInvoiceDetailPage', () => {
     await settle();
     http.expectOne('/api/admin/hub/resellers/invoices/21').flush({
       ...DETAIL,
-      invoice: { ...DETAIL.invoice, emailSentAt: '2026-11-24T09:00:00.000Z', emailSentTo: 'rechnung@example.com' },
+      invoice: {
+        ...DETAIL.invoice,
+        emailSentAt: '2026-11-24T09:00:00.000Z',
+        emailSentTo: 'rechnung@example.com',
+      },
     });
     await settle();
 

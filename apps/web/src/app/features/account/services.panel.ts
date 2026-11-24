@@ -100,7 +100,9 @@ const STATUS_TONE: Record<ServiceOrderStatus, string> = {
                         mat-stroked-button
                         type="button"
                         (click)="open(service)"
-                        [attr.aria-label]="t('user.services.orderNamed', { name: text(service.name, service.nameEn) })"
+                        [attr.aria-label]="
+                          t('user.services.orderNamed', { name: text(service.name, service.nameEn) })
+                        "
                         [attr.data-testid]="'service-order-' + service.id"
                       >
                         {{ t('user.services.order.open') }}
@@ -108,7 +110,9 @@ const STATUS_TONE: Record<ServiceOrderStatus, string> = {
                     </li>
                   } @empty {
                     <li class="empty" data-testid="services-empty">
-                      <p class="hint">{{ t(c.eligible ? 'user.services.empty' : 'user.services.notEligible') }}</p>
+                      <p class="hint">
+                        {{ t(c.eligible ? 'user.services.empty' : 'user.services.notEligible') }}
+                      </p>
                     </li>
                   }
                 </ul>
@@ -143,7 +147,10 @@ const STATUS_TONE: Record<ServiceOrderStatus, string> = {
                   <ng-container matColumnDef="status">
                     <th mat-header-cell *matHeaderCellDef>{{ t('user.services.orders.status') }}</th>
                     <td mat-cell *matCellDef="let o" [attr.data-label]="t('user.services.orders.status')">
-                      <span [class]="'status status-' + statusTone(o.status)" [attr.data-testid]="'service-status-' + o.id">
+                      <span
+                        [class]="'status status-' + statusTone(o.status)"
+                        [attr.data-testid]="'service-status-' + o.id"
+                      >
                         {{ t('user.services.statuses.' + o.status) }}
                       </span>
                       @if (o.status === 'waiting_customer') {
@@ -165,7 +172,9 @@ const STATUS_TONE: Record<ServiceOrderStatus, string> = {
                     <td mat-cell *matCellDef="let o" [attr.data-label]="t('user.services.orders.total')">
                       {{ money(o.priceGross) }}
                       @if (o.refundedEur > 0) {
-                        <span class="sub">{{ t('user.services.orders.refunded', { amount: money(o.refundedEur) }) }}</span>
+                        <span class="sub">{{
+                          t('user.services.orders.refunded', { amount: money(o.refundedEur) })
+                        }}</span>
                       }
                     </td>
                   </ng-container>
@@ -173,7 +182,9 @@ const STATUS_TONE: Record<ServiceOrderStatus, string> = {
                     <th mat-header-cell *matHeaderCellDef>{{ t('user.services.orders.ticket') }}</th>
                     <td mat-cell *matCellDef="let o" [attr.data-label]="t('user.services.orders.ticket')">
                       @if (o.ticketId) {
-                        <a [routerLink]="['/app/tickets', o.ticketId]">{{ t('user.services.orders.ticketLink', { id: o.ticketId }) }}</a>
+                        <a [routerLink]="['/app/tickets', o.ticketId]">{{
+                          t('user.services.orders.ticketLink', { id: o.ticketId })
+                        }}</a>
                       }
                     </td>
                   </ng-container>
@@ -299,7 +310,10 @@ export class ServicesPanel implements OnInit {
     return t(from ? 'user.services.priceFrom' : 'user.services.price', { amount: this.money(net) });
   }
 
-  turnaroundLabel(t: (key: string, params?: Record<string, unknown>) => string, service: ServiceOffer): string {
+  turnaroundLabel(
+    t: (key: string, params?: Record<string, unknown>) => string,
+    service: ServiceOffer,
+  ): string {
     const eta = turnaround(service);
     return eta ? t('user.services.turnaround.' + eta.key, { min: eta.min, max: eta.max }) : '';
   }
@@ -329,10 +343,13 @@ export class ServicesPanel implements OnInit {
     };
     const result = await firstValueFrom(
       this.dialog
-        .open<ServiceOrderDialogComponent, ServiceOrderDialogData, ServiceOrderResult>(ServiceOrderDialogComponent, {
-          data,
-          panelClass: 'dialog-wide',
-        })
+        .open<ServiceOrderDialogComponent, ServiceOrderDialogData, ServiceOrderResult>(
+          ServiceOrderDialogComponent,
+          {
+            data,
+            panelClass: 'dialog-wide',
+          },
+        )
         .afterClosed(),
     );
     if (!result) return;

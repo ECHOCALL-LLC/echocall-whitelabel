@@ -159,7 +159,13 @@ const PROBLEM_FIELD: Record<string, BillingField> = {
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>{{ t('admin.customer.billing.vatId') }}</mat-label>
-              <input matInput formControlName="vatId" maxlength="50" autocomplete="off" data-testid="billing-vat-id" />
+              <input
+                matInput
+                formControlName="vatId"
+                maxlength="50"
+                autocomplete="off"
+                data-testid="billing-vat-id"
+              />
               @if (form.controls.vatId | fieldError; as e) {
                 <mat-error>{{ t(e.key, e.params) }}</mat-error>
               }

@@ -120,7 +120,11 @@ export class AdminCustomersService {
    * live only in the hub, so nothing in the portal follows; the trail records
    * which fields changed, never their values.
    */
-  async updateBilling(customerId: number, patch: UpdateBillingDto, ctx: ActionContext): Promise<{ success: true }> {
+  async updateBilling(
+    customerId: number,
+    patch: UpdateBillingDto,
+    ctx: ActionContext,
+  ): Promise<{ success: true }> {
     const body: Record<string, string | null> = {};
     for (const [key, value] of Object.entries(patch)) {
       if (value !== undefined) body[key] = value === '' ? null : value;

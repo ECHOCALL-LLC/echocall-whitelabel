@@ -4,10 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ADMIN_TEXTS, provideTestI18n } from '../../../testing/i18n';
-import {
-  type CustomerBilling,
-  CustomerBillingDialogComponent,
-} from './customer-billing-dialog.component';
+import { type CustomerBilling, CustomerBillingDialogComponent } from './customer-billing-dialog.component';
 
 const URL = '/api/admin/customers/501/billing';
 
@@ -103,7 +100,9 @@ describe('CustomerBillingDialogComponent', () => {
 
     expect(dialog.form.controls.billingPostalCode.hasError('server')).toBe(true);
     expect(snacks).toEqual([ADMIN_TEXTS.customer.billing.errors.invalid_postal_code]);
-    expect(fixture.nativeElement.textContent).toContain(ADMIN_TEXTS.customer.billing.errors.invalid_postal_code);
+    expect(fixture.nativeElement.textContent).toContain(
+      ADMIN_TEXTS.customer.billing.errors.invalid_postal_code,
+    );
     expect(closed).toEqual([]);
   });
 
