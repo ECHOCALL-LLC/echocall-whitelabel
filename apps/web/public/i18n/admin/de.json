@@ -515,7 +515,7 @@
   },
   "numbers": {
     "title": "Rufnummern",
-    "intro": "Der Nummernbestand Ihres Portals. Freie Nummern teilen Sie einem Kunden zu, vergebene holen Sie zurück.",
+    "intro": "Die Rufnummern Ihres Portals. Kaufen Sie Plattformnummern hinzu oder übernehmen Sie eigene, teilen Sie freie einem Kunden zu und holen Sie vergebene zurück.",
     "import": "Nummer importieren",
     "tabs": {
       "available": "Im Bestand",
@@ -549,7 +549,13 @@
       "title": "Nummer zuteilen",
       "intro": "Die Nummer {{number}} geht an diesen Kunden. Er kann sie danach selbst einem Agenten zuweisen.",
       "customer": "Kunde",
-      "submit": "Zuteilen"
+      "submit": "Zuteilen",
+      "billing": "Abrechnung",
+      "free": "Kostenlos zuteilen",
+      "freeHint": "Der Kunde zahlt nichts für die Nummer. Eine gekaufte Plattformnummer kostet Sie weiter den Plattformpreis.",
+      "charge": "Kunde zahlt",
+      "chargeHint": "Der Kunde zahlt Ihren Preis für die Nummer aus seinem Guthaben, jetzt den ersten Monat und danach jeden Monat. Die Rechnung geht in Ihrem Namen an ihn.",
+      "chargeNeedsPayment": "Hinterlegen Sie zuerst Ihre eigenen Zahlungsdaten, dann können Ihre Kunden für Nummern bezahlen."
     },
     "importDialog": {
       "title": "Eigene Nummer übernehmen",
@@ -611,6 +617,33 @@
       "priceHint": "Höchstens 1.000 €. Die Umsatzsteuer kommt beim Kauf hinzu.",
       "invalid": "Bitte einen Monatspreis über 0 und höchstens 1.000 € eingeben.",
       "submit": "Anbieten"
+    },
+    "buy": "Nummer kaufen",
+    "boughtBadge": "Gekauft, {{price}} im Monat",
+    "onSaleMarkup": "Im Angebot, mit Ihrem Aufschlag",
+    "offerBoughtMessage": "Ihre Kunden können die Nummer {{number}} selbst kaufen. Sie zahlen den Plattformpreis plus Ihren Aufschlag aus ihrem Guthaben.",
+    "return": "Zurückgeben",
+    "returnTitle": "Nummer zurückgeben",
+    "returnMessage": "Die Nummer {{number}} geht an die Plattform zurück und belastet Ihr Guthaben ab sofort nicht mehr. Der bereits bezahlte Monat wird nicht erstattet, und die Nummer kann danach an andere gehen.",
+    "returned": "Die Nummer {{number}} ist an die Plattform zurückgegangen.",
+    "bought": "Die Nummer {{number}} gehört jetzt zu Ihrem Bestand.",
+    "billing": "Abrechnung",
+    "customerPays": "Kunde zahlt {{price}} im Monat",
+    "customerFree": "Für den Kunden kostenlos",
+    "assignedCharged": "Nummer {{number}} wurde zugeteilt. Der Kunde zahlt {{price}} netto im Monat aus seinem Guthaben.",
+    "chargeErrors": {
+      "insufficient_balance": "Das Guthaben des Kunden reicht für den ersten Monat nicht aus.",
+      "billing_profile_incomplete": "Die Rechnungsdaten des Kunden sind unvollständig, deshalb kann keine Rechnung an ihn gehen."
+    },
+    "buyDialog": {
+      "title": "Plattformnummer kaufen",
+      "intro": "Die Nummer gehört dann zu Ihrem Bestand. Ihr Guthaben zahlt den ersten Monat sofort und danach jeden Monat am selben Tag, bis Sie die Nummer zurückgeben. Für jeden Monat erhalten Sie eine Rechnung.",
+      "empty": "Gerade sind keine Plattformnummern verfügbar.",
+      "choose": "Nummer",
+      "perMonth": "{{price}} im Monat netto",
+      "summary": "Heute werden {{gross}} von Ihrem Guthaben abgebucht, inklusive {{vat}} % Umsatzsteuer. Danach zahlen Sie für {{number}} jeden Monat diesen Betrag, bis Sie die Nummer zurückgeben.",
+      "submit": "Kaufen",
+      "submitFor": "Für {{price}} kaufen"
     }
   },
   "users": {

@@ -28,7 +28,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - When no mail server is set up, the invoice mail dialog links straight to that section.
 - The overview, and an order the balance does not cover, link to the page of the service
   where the operator buys credit.
-- These need API version 1.25.0 at the service.
+- A number stock. The operator buys a platform number into the portal's stock from the
+  balance, with the monthly price and the VAT named before anything is bought, offers it to
+  the customers at the platform price plus the markup, and gives it back to the platform
+  when it is no longer needed.
+- Handing a number to a customer can bill it: the customer then pays the operator's price
+  from their balance, the first month at once and every month after, invoiced in the
+  operator's name. That needs the operator's own payment details at the service; until
+  then the choice is off and says why.
+- These need API version 1.26.0 at the service.
 
 ### Fixed
 
@@ -36,13 +44,23 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   portal now says what went wrong: the agent has not been saved yet, a test call is already
   running on the account, no voice minutes are left, or the service is not available right
   now. In English, German and French.
+- The number pool offered Remove and Take back on numbers the service refuses them for,
+  which ended in a generic error. Remove now shows on the operator's own numbers only, and
+  Take back on their own and bought numbers only.
+- An invalid VAT ID, a failed payment and a number a customer still holds now get a
+  message of their own instead of the generic error. A VAT ID the service refuses in the
+  company details is also marked on its field.
 
 ### Changed
 
-- The typed client was regenerated from API version 1.25.0. From 1.22.0 on, the number
+- The typed client was regenerated from API version 1.28.0. From 1.22.0 on, the number
   inventory documents whose number it is and whether customers can buy it,
   closing a ticket takes `ticket_12` as well as the bare number, and the test call says
-  that its time limit shrinks when fewer voice minutes are left.
+  that its time limit shrinks when fewer voice minutes are left. From 1.26.0 on, resellers
+  keep a number stock and bill numbers on to their customers, and from 1.27.0 on an
+  invalid VAT ID is refused with `invalid_vat_id`.
+- The table of handed out numbers says for each number whether the customer pays for it,
+  instead of its monthly price.
 
 ## [0.5.0] - 2026-11-11
 

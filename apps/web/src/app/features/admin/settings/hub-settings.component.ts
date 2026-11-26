@@ -6,8 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { type MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
+import { provideTranslocoScope, TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
+import { readApiError } from '../../../core/errors/api-error';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
 import type { ResellerCompany, ResellerSettings } from '../../../core/hub/hub.models';
 import { NotifyService } from '../../../core/notify/notify.service';
@@ -356,6 +357,7 @@ type CompanyField = (typeof COMPANY_FIELDS)[number];
 export class HubSettingsComponent implements OnInit {
   private readonly hub = inject(AdminHubService);
   private readonly notify = inject(NotifyService);
+  private readonly transloco = inject(TranslocoService);
   private readonly fb = inject(NonNullableFormBuilder);
 
   readonly settings = signal<ResellerSettings | null>(null);
@@ -563,6 +565,13 @@ export class HubSettingsComponent implements OnInit {
       this.notify.success('admin.settings.hub.saved');
       await this.load();
     } catch (err) {
+      // Since API 1.27.0 the service checks the VAT ID against its country's format;
+      // the refusal then belongs to that field, not only to the notice.
+      if (path === '/resellers/company' && readApiError(err).code === 'invalid_vat_id') {
+        const vat = this.companyForm.controls.companyVatId;
+        vat.setErrors({ server: this.transloco.translate('errors.invalid_vat_id') });
+        vat.markAsTouched();
+      }
       this.notify.apiError(err);
     } finally {
       this.saving.set(false);

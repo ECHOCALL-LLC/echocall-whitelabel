@@ -322,6 +322,10 @@
     "invoice_email_no_billing_email": "Aucun e-mail de facturation n'est enregistré pour ce client.",
     "invoice_email_no_smtp": "Aucun serveur de messagerie n'est configuré pour l'envoi.",
     "invoice_email_daily_limit": "La limite quotidienne d'e-mails de facture est atteinte. L'envoi reprend demain.",
-    "invoice_email_failed": "Le serveur de messagerie n'a pas accepté l'e-mail. Veuillez réessayer plus tard."
+    "invoice_email_failed": "Le serveur de messagerie n'a pas accepté l'e-mail. Veuillez réessayer plus tard.",
+    "payment_not_ready": "Vos clients ne peuvent pas encore payer les numéros. Enregistrez d'abord vos propres coordonnées de paiement, ou attribuez le numéro gratuitement.",
+    "number_assigned": "Un client détient ce numéro. Reprenez-le d'abord.",
+    "payment_failed": "Le paiement a échoué.",
+    "invalid_vat_id": "Ce numéro de TVA n'est pas valide. Vérifiez-le avec le code pays, par exemple DE123456789."
   }
 }

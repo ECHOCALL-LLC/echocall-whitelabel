@@ -2,7 +2,7 @@
   "openapi": "3.1.3",
   "info": {
     "title": "EchoCall Developer Platform - High-Performance AI Voice & Chat API",
-    "version": "1.25.0",
+    "version": "1.28.0",
     "contact": {
       "name": "EchoCall - Support",
       "url": "https://echocall.de/support",
@@ -13,7 +13,7 @@
       "url": "https://echocall.de/terms-conditions"
     },
     "termsOfService": "https://echocall.de/terms-conditions",
-    "description": "\nWelcome to the **EchoCall Public API**. This platform is designed for developers, resellers, and enterprises to programmatically build, manage, and scale ultra-realistic AI voice agents and smart chatbots.\n\n### 🚀 Getting Started\nOur API follows RESTful principles and returns standard JSON responses. To start building, you'll need:\n1.  **An API Key**: Generate your `eck_live_...` key in the [EchoCall Developer Portal](https://hub.echocall.de/developer).\n2.  **Base URL**: Use `https://hub.echocall.de/api/v1` for all requests.\n\n### 🔐 Authentication & Security\nEchoCall uses **Bearer Token Authentication**. Send your API key in the `Authorization` header:\n```bash\ncurl -X GET \"https://hub.echocall.de/api/v1/agents\" \\\n     -H \"Authorization: Bearer YOUR_API_KEY\"\n```\n> [!IMPORTANT]\n> Keep your keys secure. A key grants full access to your account's data under its scopes.\n\n### 🧑‍💼 Acting on behalf of a customer\nReseller keys can run any customer-facing operation as one of their customers by adding the header `X-EchoCall-Customer: <customerId>`. The request is then treated exactly as if that customer had sent it: ownership, limits and usage are the customer's, and none of the reseller operations are reachable with the header set. This is how a self-hosted front end serves many customers with a single key. The customer id is the one returned by `POST /resellers/customers`.\n```bash\ncurl -X GET \"https://hub.echocall.de/api/v1/agents\" \\\n     -H \"Authorization: Bearer YOUR_RESELLER_KEY\" \\\n     -H \"X-EchoCall-Customer: 501\"\n```\n\n### 🎭 White-labeling & Reselling\nEchoCall is built with an **API-First White-labeling Strategy**. \n-   **Proprietary Models**: EchoCall utilizes its own high-performance models, `EchoCall-Voice` and `EchoCall-Smart`, specifically optimized for low-latency conversational AI.\n-   **Reseller Scopes**: Resellers can manage their own customers via the `/resellers` endpoints, adjusting balances, credits, and plans dynamically.\n\n### 🚦 Rate Limiting & Pagination\n-   **Rate Limits**: Limits are applied **per API key, per second** (`rateLimitPerSecond`, **500 requests per second** by default). Every response carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`. Exceeding the limit returns **429** with `Retry-After: 1`.\n-   **Pagination**: Most list endpoints support `page` and `perPage` query parameters. `page` starts at 1; the default `perPage` varies per endpoint and the maximum `perPage` is **100**.\n\n### 🔔 Webhooks\nRegister an endpoint with `POST /webhooks` and EchoCall pushes events to it as they happen. `GET /webhooks/events` returns the full catalog; subscribe to `\"*\"` to receive everything.\n\n**Envelope.** Every delivery is a single JSON object:\n```json\n{\n  \"id\": \"evt_1f0c9a24-6f0e-4a1e-9f0c-2b6a1c1c1c1c\",\n  \"event\": \"call.ended\",\n  \"createdAt\": \"2026-01-31T09:12:44.512Z\",\n  \"data\": { }\n}\n```\n\n**Headers.**\n| Header | Meaning |\n| --- | --- |\n| `X-EchoCall-Event` | Event name, same value as `event` in the body. |\n| `X-EchoCall-Delivery` | Envelope id. Use it to make your handler idempotent. |\n| `X-EchoCall-Signature` | `t=<unix seconds>,v1=<hex>` (see below). |\n| `User-Agent` | `EchoCall-Webhooks/1.0` |\n\n**Signature verification.** `v1` is the HMAC-SHA256 of `${t}.${rawBody}`, keyed with the secret returned once when the webhook was created. Compute it over the **raw** request body, before any JSON parsing, and compare in constant time:\n```js\nimport crypto from 'crypto';\n\nfunction verify(secret, header, rawBody, toleranceSeconds = 300) {\n  const parts = Object.fromEntries(header.split(',').map((p) => p.split('=')));\n  if (Math.abs(Date.now() / 1000 - Number(parts.t)) > toleranceSeconds) return false;\n  const expected = crypto.createHmac('sha256', secret).update(`${parts.t}.${rawBody}`).digest('hex');\n  const a = Buffer.from(expected);\n  const b = Buffer.from(parts.v1 ?? '');\n  return a.length === b.length && crypto.timingSafeEqual(a, b);\n}\n```\n\n**Delivery, retries and auto-disable.** Answer with any 2xx status within **10 seconds**; anything else counts as a failure. A failed delivery is retried three times, after **1s**, **5s** and **30s**. `lastDeliveryAt` and `lastDeliveryStatus` on the webhook record the final outcome of each event, `failedDeliveries` counts consecutive failures and resets to 0 on the next success. After **25** consecutive failures the endpoint is set to `isActive: false` and receives nothing until you re-enable it with `PATCH /webhooks/{id}`. Use `POST /webhooks/{id}/test` to check an endpoint at any time; that ping is sent once, with no retry.\n\n### MCP: use EchoCall from AI agents\n\nEvery operation in this reference is also available as a tool over the Model Context Protocol, so\nChatGPT, Claude, Cursor, VS Code, Claude Code and other MCP clients can work with your EchoCall\naccount directly. Each operation names its tool at the end of its description, for example\n`list_agents`.\n\n**Server URL:** `https://hub.echocall.de/mcp` (Streamable HTTP)\n\n**Sign-in:** add the URL to your AI app and sign in with your EchoCall account when it asks (OAuth).\nYou choose on the consent page whether the app may only read or may also make changes. Billing\n(payment methods, top-ups, plan changes) and team & access (team members, API keys, logs, connected\napps) are separate choices, both off unless you switch them on. A team member's connection never\ngets more than that member's own page rights in the workspace and ends when the membership ends.\nYou can disconnect an app at any time in the [Developer Portal](https://hub.echocall.de/developer). Clients without\nOAuth send an API key instead: `Authorization: Bearer eck_live_...`. A key restricted to browser\ndomains cannot be used over MCP, because MCP clients send no matching origin.\n\n```bash\n# Claude Code\nclaude mcp add --transport http echocall https://hub.echocall.de/mcp\n```\n```json\n// Cursor (.cursor/mcp.json) or VS Code (.vscode/mcp.json, key \"servers\")\n{ \"mcpServers\": { \"echocall\": { \"url\": \"https://hub.echocall.de/mcp\" } } }\n```\n\n**What an agent can do:** exactly what the connection may do through this API, with the same\nscopes, limits and logs. Read-only connections see only read tools. Partner tools appear only for\nreseller accounts that allowed them. Tools that cost money or cannot be undone say so at the start\nof their description and need your yes: the first call answers `409 confirmation_required` with a\none-time `confirm` value, and only a repeat of the same call with that value runs the action. At\nmost 10 such actions that cost money run per hour and connection.\nResults that contain text written by callers or chat visitors are marked as data, never as\ninstructions.\n\n**Fewer tools:** append `?tags=agents,conversations` to the server URL to offer only some areas\n(tag names as in this reference, lower case).\n\n### Errors\n\nEvery failing request answers with the same envelope, whatever went wrong:\n\n```json\n{\n  \"error\": {\n    \"code\": \"validation_error\",\n    \"message\": \"Invalid request body\",\n    \"details\": { \"name\": { \"_errors\": [\"Required\"] } }\n  }\n}\n```\n\nBranch on `error.code`, never on `error.message`: the code is stable, the wording is not.\n`details` appears only on validation failures and carries the per-field report from the\nrequest schema.\n\n| Status | `error.code` | What it means |\n| --- | --- | --- |\n| 400 | `validation_error`, `invalid_id`, `invalid_date`, `bad_request` | The request could not be accepted as written. |\n| 401 | `unauthorized`, `invalid_api_key` | The `Authorization` header was missing, malformed, or the key is unknown, revoked or expired. |\n| 402 | `insufficient_balance` | The account wallet does not cover the purchase. |\n| 403 | `insufficient_permissions`, `forbidden` | The key is valid but lacks the required scope, or the endpoint is reseller-only. |\n| 404 | `not_found` | No such resource is visible to this key. Resources owned by another account are reported as missing. |\n| 409 | `conflict` | The resource exists but its state does not allow the operation. |\n| 412 | `provider_not_configured` | The account is not yet provisioned for the voice engine. |\n| 429 | `rate_limit_exceeded` | Too many requests. Wait for `Retry-After` seconds. |\n| 500 | `internal_error`, `database_error` | An unexpected server fault. Safe to retry. |\n| 502 | `upstream_error`, `sync_failed` | A dependency the endpoint needs answered badly. |\n| 503 | `service_unavailable`, `marketplace_disabled` | The feature is switched off for this deployment. |\n\nA 403 caused by a missing scope also carries `error.requiredScope`, naming the scope the key\nwould need.\n\n### Scopes\n\nEvery API key carries a set of scopes. Each operation names the one it requires in its\n`x-required-scope` extension, and self-service keys are currently issued with all of them.\nReseller endpoints (`/resellers`) and the provisioning hooks (`/provisioning`) carry a scope like\nevery other operation, and additionally require the key to belong to a reseller account: the\nscope alone does not make a key a partner key.\n\n| Scope | What it allows |\n| --- | --- |\n| `read:agents` | Read voice agents, their knowledge sources and their integration assignments. Also required for the voice library and for reading batch calling campaigns. |\n| `write:agents` | Create, change and delete voice agents, their knowledge and their integration assignments. Also required to create, submit, cancel and delete batch calling campaigns. |\n| `read:chatbots` | Read chatbots, their knowledge sources and their integration assignments. |\n| `write:chatbots` | Create, change and delete chatbots, their knowledge and their integration assignments. |\n| `read:phone-numbers` | List owned numbers, browse the marketplace and read regulatory verification state. |\n| `write:phone-numbers` | Buy, reassign, cancel numbers and submit regulatory verification documents. Purchases charge the account wallet. |\n| `read:conversations` | Read call records, chat conversations and chat transcripts. |\n| `write:conversations` | Send messages into a chat conversation, reassign it, archive it and close it. |\n| `read:analytics` | Read usage, revenue and per-agent performance aggregates. |\n| `read:webhooks` | List webhook endpoints and read the event catalog. |\n| `write:webhooks` | Register, change, test and delete webhook endpoints. |\n| `read:tickets` | Read support tickets and their message threads. |\n| `write:tickets` | Open tickets and post replies. |\n| `read:integrations` | List integrations, read one with its credentials masked, read the tool catalog, and read the bookings and event types of a calendar integration. |\n| `write:integrations` | Connect, change, test and remove integrations, and confirm, decline and cancel bookings in their calendars. |\n| `read:billing` | Read plans, prices, invoices, subscriptions, payment methods, usage pools, credits, wallet balance and transactions. |\n| `write:billing` | Buy and change plans and add-ons, cancel or renew subscriptions, top up the balance, set automatic top-ups and manage stored payment methods. Spends money. |\n| `read:profile` | Read the account profile, its usage and limits, and the notification inbox. |\n| `write:profile` | Mark notifications read. |\n| `read:presence` | Read KI-Avatar Presence devices, avatars and usage. |\n| `write:presence` | Pair, change and remove Presence devices and send them commands. |\n| `read:team` | Read the team members and live chat staff of the workspace. Never granted to a team member. |\n| `write:team` | Invite, change and remove team members and live chat staff. Never granted to a team member. |\n| `read:developer` | Read API keys (masked), API request logs and connected AI apps. |\n| `write:developer` | Create and revoke API keys and disconnect AI apps. |\n| `read:resellers` | Read partner data: customers, plans, subscriptions, invoices, analytics and settings. |\n| `write:resellers` | Change partner data and run the provisioning lifecycle hooks. |\n\n### Pagination\n\nList endpoints take `page` (1-based) and `perPage`. `perPage` is clamped to at most 100\neverywhere; the default differs per endpoint and is stated on each operation. The response\ncarries a `pagination` object with `page` and `perPage`, and with `total` only where the\nhandler runs a count query. Where `total` is absent, that is documented on the operation:\npage until you receive fewer items than you asked for.\n"
+    "description": "\nWelcome to the **EchoCall Public API**. This platform is designed for developers, resellers, and enterprises to programmatically build, manage, and scale ultra-realistic AI voice agents and smart chatbots.\n\n### 🚀 Getting Started\nOur API follows RESTful principles and returns standard JSON responses. To start building, you'll need:\n1.  **An API Key**: Generate your `eck_live_...` key in the [EchoCall Developer Portal](https://hub.echocall.de/developer).\n2.  **Base URL**: Use `https://hub.echocall.de/api/v1` for all requests.\n\n### 🔐 Authentication & Security\nEchoCall uses **Bearer Token Authentication**. Send your API key in the `Authorization` header:\n```bash\ncurl -X GET \"https://hub.echocall.de/api/v1/agents\" \\\n     -H \"Authorization: Bearer YOUR_API_KEY\"\n```\n> [!IMPORTANT]\n> Keep your keys secure. A key grants full access to your account's data under its scopes.\n\n### 🧑‍💼 Acting on behalf of a customer\nReseller keys can run any customer-facing operation as one of their customers by adding the header `X-EchoCall-Customer: <customerId>`. The request is then treated exactly as if that customer had sent it: ownership, limits and usage are the customer's, and none of the reseller operations are reachable with the header set. This is how a self-hosted front end serves many customers with a single key. The customer id is the one returned by `POST /resellers/customers`.\n```bash\ncurl -X GET \"https://hub.echocall.de/api/v1/agents\" \\\n     -H \"Authorization: Bearer YOUR_RESELLER_KEY\" \\\n     -H \"X-EchoCall-Customer: 501\"\n```\n\n### 🎭 White-labeling & Reselling\nEchoCall is built with an **API-First White-labeling Strategy**. \n-   **Proprietary Models**: EchoCall utilizes its own high-performance models, `EchoCall-Voice` and `EchoCall-Smart`, specifically optimized for low-latency conversational AI.\n-   **Reseller Scopes**: Resellers can manage their own customers via the `/resellers` endpoints, adjusting balances, credits, and plans dynamically.\n\n### 🚦 Rate Limiting & Pagination\n-   **Rate Limits**: Limits are applied **per API key, per second** (`rateLimitPerSecond`, **500 requests per second** by default). Every response carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`. Exceeding the limit returns **429** with `Retry-After: 1`.\n-   **Pagination**: Most list endpoints support `page` and `perPage` query parameters. `page` starts at 1; the default `perPage` varies per endpoint and the maximum `perPage` is **100**.\n\n### 🔔 Webhooks\nRegister an endpoint with `POST /webhooks` and EchoCall pushes events to it as they happen. `GET /webhooks/events` returns the full catalog; subscribe to `\"*\"` to receive everything.\n\n**Envelope.** Every delivery is a single JSON object:\n```json\n{\n  \"id\": \"evt_1f0c9a24-6f0e-4a1e-9f0c-2b6a1c1c1c1c\",\n  \"event\": \"call.ended\",\n  \"createdAt\": \"2026-01-31T09:12:44.512Z\",\n  \"data\": { }\n}\n```\n\n**Headers.**\n| Header | Meaning |\n| --- | --- |\n| `X-EchoCall-Event` | Event name, same value as `event` in the body. |\n| `X-EchoCall-Delivery` | Envelope id. Use it to make your handler idempotent. |\n| `X-EchoCall-Signature` | `t=<unix seconds>,v1=<hex>` (see below). |\n| `User-Agent` | `EchoCall-Webhooks/1.0` |\n\n**Signature verification.** `v1` is the HMAC-SHA256 of `${t}.${rawBody}`, keyed with the secret returned once when the webhook was created. Compute it over the **raw** request body, before any JSON parsing, and compare in constant time:\n```js\nimport crypto from 'crypto';\n\nfunction verify(secret, header, rawBody, toleranceSeconds = 300) {\n  const parts = Object.fromEntries(header.split(',').map((p) => p.split('=')));\n  if (Math.abs(Date.now() / 1000 - Number(parts.t)) > toleranceSeconds) return false;\n  const expected = crypto.createHmac('sha256', secret).update(`${parts.t}.${rawBody}`).digest('hex');\n  const a = Buffer.from(expected);\n  const b = Buffer.from(parts.v1 ?? '');\n  return a.length === b.length && crypto.timingSafeEqual(a, b);\n}\n```\n\n**Delivery, retries and auto-disable.** Answer with any 2xx status within **10 seconds**; anything else counts as a failure. A failed delivery is retried three times, after **1s**, **5s** and **30s**. `lastDeliveryAt` and `lastDeliveryStatus` on the webhook record the final outcome of each event, `failedDeliveries` counts consecutive failures and resets to 0 on the next success. After **25** consecutive failures the endpoint is set to `isActive: false` and receives nothing until you re-enable it with `PATCH /webhooks/{id}`. Use `POST /webhooks/{id}/test` to check an endpoint at any time; that ping is sent once, with no retry.\n\n### MCP: use EchoCall from AI agents\n\nEvery operation in this reference is also available as a tool over the Model Context Protocol, so\nChatGPT, Claude, Cursor, VS Code, Claude Code and other MCP clients can work with your EchoCall\naccount directly. Each operation names its tool at the end of its description, for example\n`list_agents`.\n\n**Server URL:** `https://hub.echocall.de/mcp` (Streamable HTTP)\n\n**Sign-in:** add the URL to your AI app and sign in with your EchoCall account when it asks (OAuth).\nYou choose on the consent page whether the app may only read or may also make changes. Billing\n(payment methods, top-ups, plan changes) and team & access (team members, API keys, logs, connected\napps) are separate choices, both off unless you switch them on. A team member's connection never\ngets more than that member's own page rights in the workspace and ends when the membership ends.\nYou can disconnect an app at any time in the [Developer Portal](https://hub.echocall.de/developer). Clients without\nOAuth send an API key instead: `Authorization: Bearer eck_live_...`. A key restricted to browser\ndomains cannot be used over MCP, because MCP clients send no matching origin.\n\n```bash\n# Claude Code\nclaude mcp add --transport http echocall https://hub.echocall.de/mcp\n```\n```json\n// Cursor (.cursor/mcp.json) or VS Code (.vscode/mcp.json, key \"servers\")\n{ \"mcpServers\": { \"echocall\": { \"url\": \"https://hub.echocall.de/mcp\" } } }\n```\n\n**What an agent can do:** exactly what the connection may do through this API, with the same\nscopes, limits and logs. Read-only connections see only read tools. Partner tools appear only for\nreseller accounts that allowed them. Tools that cost money or cannot be undone say so at the start\nof their description and need your yes: the first call answers `409 confirmation_required` with a\none-time `confirm` value, and only a repeat of the same call with that value runs the action. At\nmost 10 such actions that cost money run per hour and connection.\nResults that contain text written by callers or chat visitors are marked as data, never as\ninstructions.\n\n**Which tools a client loads:** without `?tags=` the server lists the core tools for voice agents,\nphone numbers, calls and chats, voices and languages (tags `agents`, `phonenumbers`,\n`conversations`, `voices`, `utilities`), about 40 tools, plus two more: `search_tools` finds\nany other tool of the connection with its input schema, and `run_tool` runs it with the same\npermissions, limits, logs and confirmations as calling it directly. So an agent keeps every\noperation of this reference without loading all of them up front. To list more areas, append them\nto the server URL: `?tags=core,billing` adds billing to the core, `?tags=agents,conversations`\noffers only those areas (tag names as in this reference, lower case), and `?tags=all` lists every\ntool at once, as before API 1.28.0.\n\n### Errors\n\nEvery failing request answers with the same envelope, whatever went wrong:\n\n```json\n{\n  \"error\": {\n    \"code\": \"validation_error\",\n    \"message\": \"Invalid request body\",\n    \"details\": { \"name\": { \"_errors\": [\"Required\"] } }\n  }\n}\n```\n\nBranch on `error.code`, never on `error.message`: the code is stable, the wording is not.\n`details` appears only on validation failures and carries the per-field report from the\nrequest schema.\n\n| Status | `error.code` | What it means |\n| --- | --- | --- |\n| 400 | `validation_error`, `invalid_id`, `invalid_date`, `bad_request` | The request could not be accepted as written. |\n| 401 | `unauthorized`, `invalid_api_key` | The `Authorization` header was missing, malformed, or the key is unknown, revoked or expired. |\n| 402 | `insufficient_balance` | The account wallet does not cover the purchase. |\n| 403 | `insufficient_permissions`, `forbidden` | The key is valid but lacks the required scope, or the endpoint is reseller-only. |\n| 404 | `not_found` | No such resource is visible to this key. Resources owned by another account are reported as missing. |\n| 409 | `conflict` | The resource exists but its state does not allow the operation. |\n| 412 | `provider_not_configured` | The account is not yet provisioned for the voice engine. |\n| 429 | `rate_limit_exceeded` | Too many requests. Wait for `Retry-After` seconds. |\n| 500 | `internal_error`, `database_error` | An unexpected server fault. Safe to retry. |\n| 502 | `upstream_error`, `sync_failed` | A dependency the endpoint needs answered badly. |\n| 503 | `service_unavailable`, `marketplace_disabled` | The feature is switched off for this deployment. |\n\nA 403 caused by a missing scope also carries `error.requiredScope`, naming the scope the key\nwould need.\n\n### Scopes\n\nEvery API key carries a set of scopes. Each operation names the one it requires in its\n`x-required-scope` extension, and self-service keys are currently issued with all of them.\nReseller endpoints (`/resellers`) and the provisioning hooks (`/provisioning`) carry a scope like\nevery other operation, and additionally require the key to belong to a reseller account: the\nscope alone does not make a key a partner key.\n\n| Scope | What it allows |\n| --- | --- |\n| `read:agents` | Read voice agents, their knowledge sources and their integration assignments. Also required for the voice library and for reading batch calling campaigns. |\n| `write:agents` | Create, change and delete voice agents, their knowledge and their integration assignments. Also required to create, submit, cancel and delete batch calling campaigns. |\n| `read:chatbots` | Read chatbots, their knowledge sources and their integration assignments. |\n| `write:chatbots` | Create, change and delete chatbots, their knowledge and their integration assignments. |\n| `read:phone-numbers` | List owned numbers, browse the marketplace and read regulatory verification state. |\n| `write:phone-numbers` | Buy, reassign, cancel numbers and submit regulatory verification documents. Purchases charge the account wallet. |\n| `read:conversations` | Read call records, chat conversations and chat transcripts. |\n| `write:conversations` | Send messages into a chat conversation, reassign it, archive it and close it. |\n| `read:analytics` | Read usage, revenue and per-agent performance aggregates. |\n| `read:webhooks` | List webhook endpoints and read the event catalog. |\n| `write:webhooks` | Register, change, test and delete webhook endpoints. |\n| `read:tickets` | Read support tickets and their message threads. |\n| `write:tickets` | Open tickets and post replies. |\n| `read:integrations` | List integrations, read one with its credentials masked, read the tool catalog, and read the bookings and event types of a calendar integration. |\n| `write:integrations` | Connect, change, test and remove integrations, and confirm, decline and cancel bookings in their calendars. |\n| `read:billing` | Read plans, prices, invoices, subscriptions, payment methods, usage pools, credits, wallet balance and transactions. |\n| `write:billing` | Buy and change plans and add-ons, cancel or renew subscriptions, top up the balance, set automatic top-ups and manage stored payment methods. Spends money. |\n| `read:profile` | Read the account profile, its usage and limits, and the notification inbox. |\n| `write:profile` | Mark notifications read. |\n| `read:presence` | Read KI-Avatar Presence devices, avatars and usage. |\n| `write:presence` | Pair, change and remove Presence devices and send them commands. |\n| `read:team` | Read the team members and live chat staff of the workspace. Never granted to a team member. |\n| `write:team` | Invite, change and remove team members and live chat staff. Never granted to a team member. |\n| `read:developer` | Read API keys (masked), API request logs and connected AI apps. |\n| `write:developer` | Create and revoke API keys and disconnect AI apps. |\n| `read:resellers` | Read partner data: customers, plans, subscriptions, invoices, analytics and settings. |\n| `write:resellers` | Change partner data and run the provisioning lifecycle hooks. |\n\n### Pagination\n\nList endpoints take `page` (1-based) and `perPage`. `perPage` is clamped to at most 100\neverywhere; the default differs per endpoint and is stated on each operation. The response\ncarries a `pagination` object with `page` and `perPage`, and with `total` only where the\nhandler runs a count query. Where `total` is absent, that is documented on the operation:\npage until you receive fewer items than you asked for.\n"
   },
   "servers": [
     {
@@ -4298,10 +4298,15 @@
                   "string",
                   "null"
                 ]
+              },
+              "businessConfirmed": {
+                "type": "boolean",
+                "description": "True when the account confirmed buying as a business or freelancer. Inside the EU it stands in for a missing VAT ID before a purchase."
               }
             },
             "required": [
-              "street"
+              "street",
+              "businessConfirmed"
             ]
           }
         },
@@ -10273,7 +10278,7 @@
           "PhoneNumbers"
         ],
         "summary": "Purchase a phone number",
-        "description": "Buys one of the numbers returned by the search and attaches it to the account. Buying numbers needs an active Voice subscription (Voice, Bundle or a voice capable plan) and is not possible during the free trial; otherwise the request is rejected with 403 and one of the codes `voice_subscription_required`, `voice_subscription_inactive` or `trial_not_allowed`, before anything is charged. This charges money: the setup price plus the first month, plus VAT, is deducted from the account wallet, a balance transaction is written and an invoice is issued. An account managed by a provider (a partner of EchoCall) pays the provider's price as the search shows it and gets the invoice from that provider; when the provider cannot take the order right now the request is rejected with 400 `provider_unavailable`, nothing is bought and the provider is informed. Pass the listing from the search result back unchanged. Prices are never taken from the request: the server prices the number again from the marketplace listing, or from the platform price list for the countries that carry one, so the `setupPrice`, `monthlyPrice`, `providerSetupCost` and `providerMonthlyCost` fields are accepted for compatibility and ignored. Read the `pricing` block of the response for what was actually charged. A listing that can no longer be priced, because it has been withdrawn or its SKU has changed, is answered with 502 `quote_failed`: search again and retry with a current listing. If the wallet does not cover the total the request is rejected with 402 and nothing is bought. If the billing profile of the account is incomplete (company name, street, postal code, city, country, and the VAT ID for EU countries) the request is rejected with 412 `billing_profile_incomplete` before anything is charged, because the invoice could not be issued; complete the company details under Settings and retry. When the listing carries a `requirementId` the number is created with verification pending and cannot carry traffic until the verification endpoints below have been completed.\n\nMCP tool: `purchase_phone_number` (costs money).",
+        "description": "Buys one of the numbers returned by the search and attaches it to the account. Buying numbers needs an active Voice subscription (Voice, Bundle or a voice capable plan) and is not possible during the free trial; otherwise the request is rejected with 403 and one of the codes `voice_subscription_required`, `voice_subscription_inactive` or `trial_not_allowed`, before anything is charged. This charges money: the setup price plus the first month, plus VAT, is deducted from the account wallet, a balance transaction is written and an invoice is issued. An account managed by a provider (a partner of EchoCall) pays the provider's price as the search shows it and gets the invoice from that provider; when the provider cannot take the order right now the request is rejected with 400 `provider_unavailable`, nothing is bought and the provider is informed. Pass the listing from the search result back unchanged. Prices are never taken from the request: the server prices the number again from the marketplace listing, or from the platform price list for the countries that carry one, so the `setupPrice`, `monthlyPrice`, `providerSetupCost` and `providerMonthlyCost` fields are accepted for compatibility and ignored. Read the `pricing` block of the response for what was actually charged. A listing that can no longer be priced, because it has been withdrawn or its SKU has changed, is answered with 502 `quote_failed`: search again and retry with a current listing. If the wallet does not cover the total the request is rejected with 402 and nothing is bought. If the billing profile of the account is incomplete (street, postal code, city and country; inside the EU also a VAT ID or the confirmation that the account buys as a business) the request is rejected with 412 `billing_profile_incomplete` before anything is charged, because the invoice could not be issued; complete the billing details with `PUT /users/me/billing-address` or under Settings and retry. When the listing carries a `requirementId` the number is created with verification pending and cannot carry traffic until the verification endpoints below have been completed.\n\nMCP tool: `purchase_phone_number` (costs money).",
         "requestBody": {
           "required": true,
           "description": "The listing to buy, exactly as returned by the search. `availableDidId` and `skuId` identify the listing at the marketplace, `features` lists the capabilities of the number, and `requirementId` names the regulatory requirement set to satisfy, if there is one. The four price fields are deprecated: they are optional, they are ignored, and the server prices the purchase itself. They remain in the schema only so integrations that echo a whole search result back keep working.",
@@ -10440,7 +10445,7 @@
             "$ref": "#/components/responses/InsufficientScope"
           },
           "412": {
-            "description": "The billing profile of the account is incomplete, so no invoice could be issued. The error body carries `missingFields`, the profile fields still empty (`companyName`, `billingStreet`, `billingPostalCode`, `billingCity`, `billingCountry`, and `vatId` for EU countries). Complete the company details under Settings and retry. Nothing was bought and nothing was charged.",
+            "description": "The billing profile of the account is incomplete, so no invoice could be issued. The error body carries `missingFields`, the profile fields still empty (`billingStreet`, `billingPostalCode`, `billingCity`, `billingCountry`; `businessConfirmation` for an EU account with neither VAT ID nor business confirmation; `companyName` and `vatId` for a reseller account). Complete the billing details with `PUT /users/me/billing-address` or under Settings and retry. Nothing was bought and nothing was charged.",
             "content": {
               "application/json": {
                 "schema": {
@@ -21802,6 +21807,22 @@
                               "isAvailableForPurchase": {
                                 "type": "boolean",
                                 "description": "True while your customers can buy the number at once at its `monthlyPrice`."
+                              },
+                              "resellerPoolSince": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true,
+                                "description": "Set while the number is one of ours in your stock: the day you bought it in. You pay its monthly stock price from this day on, every month, until you return it."
+                              },
+                              "resellerPoolPrice": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "The net monthly price you pay us for this number of your stock, as a decimal string. Null for any other number."
+                              },
+                              "resellerBaseMonthlyPrice": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Set while a customer pays you a monthly price for the number. Null when the number is free, in your own use, or assigned without a price."
                               }
                             }
                           }
@@ -21864,7 +21885,41 @@
                         "type": "object",
                         "properties": {
                           "phoneNumber": {
-                            "$ref": "#/components/schemas/PhoneNumber"
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/PhoneNumber"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "ownership": {
+                                    "type": "string",
+                                    "enum": [
+                                      "platform",
+                                      "partner",
+                                      "customer"
+                                    ],
+                                    "description": "Whose number it is: `partner` is one you imported yourself, `platform` comes from our stock."
+                                  },
+                                  "resellerPoolSince": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true,
+                                    "description": "Set while the number is one of ours in your stock: the day you bought it in. You pay its monthly stock price from this day on, every month, until you return it."
+                                  },
+                                  "resellerPoolPrice": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "description": "The net monthly price you pay us for this number of your stock, as a decimal string. Null for any other number."
+                                  },
+                                  "resellerBaseMonthlyPrice": {
+                                    "type": "string",
+                                    "nullable": true,
+                                    "description": "Set while a customer pays you a monthly price for the number. Null when the number is free, in your own use, or assigned without a price."
+                                  }
+                                }
+                              }
+                            ]
                           },
                           "owner": {
                             "anyOf": [
@@ -21949,7 +22004,7 @@
                     "type": "number",
                     "exclusiveMinimum": 0,
                     "maximum": 1000,
-                    "description": "Monthly price your customer pays, net in EUR, at most 1000. Required when onSale is true; left out, the stored price stays."
+                    "description": "Monthly price your customer pays, net in EUR, at most 1000. Required to put one of your own imported numbers on sale; left out, the stored price stays. Ignored for a number of your stock, which sells at our price plus your markup."
                   }
                 },
                 "required": [
@@ -22017,7 +22072,7 @@
           "Reseller"
         ],
         "summary": "Assign a phone number to a customer",
-        "description": "Hands one number out of the reseller inventory to one of the reseller customers. The number must be booked under the calling reseller and must still be unassigned; an already assigned number answers 404, the same status used when the number does not exist at all. The customer must belong to the calling reseller, otherwise the answer is also 404, so that one reseller cannot probe for another reseller customers. On success the owner is set and the purchase timestamp is stamped with the current time. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.\n\nMCP tool: `reseller_assign_phone_number` (writes).",
+        "description": "Hands one number out of the reseller inventory to one of the reseller customers. The number must be booked under the calling reseller and must still be unassigned; an already assigned number answers 404, the same status used when the number does not exist at all. The customer must belong to the calling reseller, otherwise the answer is also 404, so that one reseller cannot probe for another reseller customers. On success the owner is set and the purchase timestamp is stamped with the current time. With `chargeCustomer` false (the default) the customer pays nothing for the number and no invoice is issued; a number of your stock keeps costing you its stock price. With `chargeCustomer` true the customer pays the number at your price with your markup from its own balance, now for the first month and every month after, and each payment is invoiced in your name. That needs your payment account to be connected (otherwise 409 `payment_not_ready`), a complete billing profile of the customer (otherwise 412 `billing_profile_incomplete`) and enough balance on the customer account (otherwise 402 `insufficient_balance` with `required` and `available`). A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.\n\nMCP tool: `reseller_assign_phone_number` (writes).",
         "parameters": [
           {
             "name": "id",
@@ -22031,14 +22086,19 @@
         ],
         "requestBody": {
           "required": true,
-          "description": "The customer that shall receive the number, given by its numeric user id.",
+          "description": "The customer that shall receive the number, given by its numeric user id, and whether the customer pays for it.",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
                   "customerId": {
-                    "type": "number"
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "chargeCustomer": {
+                    "type": "boolean",
+                    "default": false
                   }
                 },
                 "required": [
@@ -22055,14 +22115,32 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "success"
-                  ],
                   "properties": {
                     "success": {
-                      "type": "boolean"
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "charged": {
+                      "type": "boolean",
+                      "description": "True when the customer paid the first month just now."
+                    },
+                    "monthlyPrice": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "The net monthly price the customer pays, as a decimal string. Null when the customer pays nothing."
+                    },
+                    "invoiceId": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "The invoice issued in your name for the first month. Null when nothing was charged or the invoice could not be issued."
                     }
-                  }
+                  },
+                  "required": [
+                    "success",
+                    "charged"
+                  ]
                 }
               }
             }
@@ -22073,11 +22151,27 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
           "403": {
             "$ref": "#/components/responses/InsufficientScope"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "412": {
+            "description": "The billing profile of the customer is incomplete, so no invoice in your name could be issued. The error body carries `missingFields`. Nothing was assigned and nothing was charged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/RateLimited"
@@ -22106,7 +22200,7 @@
           "Reseller"
         ],
         "summary": "Take a phone number back from a customer",
-        "description": "Returns a number to the reseller inventory. The owner and the purchase timestamp are cleared, any pending cancellation is cleared as well, and a revocation timestamp is stamped. The number also stops answering on the customer voice agent and is booked back onto the reseller account, so the next assignment starts from a clean line. The number only has to be booked under the calling reseller: releasing a number that is already unassigned succeeds and simply rewrites the same empty state. A number belonging to another reseller, or none at all, answers 404. This endpoint takes no request body. The API key must belong to a reseller account.\n\nMCP tool: `reseller_release_phone_number` (irreversible).",
+        "description": "Returns a number to the reseller inventory. The owner and the purchase timestamp are cleared, any pending cancellation is cleared as well, and a revocation timestamp is stamped. The number also stops answering on the customer voice agent and is booked back onto the reseller account, so the next assignment starts from a clean line. The number has to be one you imported yourself or one of your stock: releasing a number that is already unassigned succeeds and simply rewrites the same empty state. A number of your stock stays in your stock and keeps costing you its stock price; a customer paying for it stops paying from now on. A number a customer bought from our stock itself, a number of another reseller, or none at all, answers 404. This endpoint takes no request body. The API key must belong to a reseller account.\n\nMCP tool: `reseller_release_phone_number` (irreversible).",
         "parameters": [
           {
             "name": "id",
@@ -22172,13 +22266,312 @@
         }
       }
     },
+    "/resellers/phone-numbers/stock-offers": {
+      "get": {
+        "tags": [
+          "Reseller"
+        ],
+        "summary": "List numbers you can buy into your stock",
+        "description": "Returns our free numbers that can be bought into your stock, cheapest first, not paginated. `monthlyPrice` is our net monthly price, the price you pay for the number every month while it is in your stock; `vatPercent` is the VAT rate added on top. `paymentReady` says whether your customers can already be charged for numbers (see `POST /resellers/phone-numbers/{id}/assign`). Buying needs no payment account, your own balance pays. Requires a reseller key.\n\nMCP tool: `reseller_list_stock_offers` (read only).",
+        "responses": {
+          "200": {
+            "description": "Numbers for your stock.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "phoneNumber": {
+                            "type": "string",
+                            "description": "The number in E.164 format."
+                          },
+                          "friendlyName": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "countryCode": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "country": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "numberType": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "monthlyPrice": {
+                            "type": "string",
+                            "description": "Net monthly price as a decimal string."
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "phoneNumber",
+                          "monthlyPrice"
+                        ]
+                      }
+                    },
+                    "vatPercent": {
+                      "type": "number",
+                      "description": "The VAT rate in percent that is added to every price."
+                    },
+                    "paymentReady": {
+                      "type": "boolean",
+                      "description": "True when your customers can be charged for numbers."
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "vatPercent",
+                    "paymentReady"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/InsufficientScope"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": [
+              "read:resellers"
+            ]
+          }
+        ],
+        "x-required-scope": "read:resellers",
+        "operationId": "reseller_list_stock_offers",
+        "x-mcp": {
+          "tool": "reseller_list_stock_offers"
+        }
+      }
+    },
+    "/resellers/phone-numbers/stock": {
+      "post": {
+        "tags": [
+          "Reseller"
+        ],
+        "summary": "Buy a number into your stock",
+        "description": "Buys one of our free numbers (see `GET /resellers/phone-numbers/stock-offers`) into your stock. Your balance pays the first month at once, net plus VAT, and we invoice it to you; every following month is charged and invoiced on the same day of the month until you return the number. Free numbers of your stock show up in `GET /resellers/phone-numbers/available` and can be assigned to your customers. Answers 402 `insufficient_balance` with `required` and `available` when your balance is too low, 412 `billing_profile_incomplete` when your billing profile lacks fields an invoice needs, and 404 `not_found` when the number is not on offer (any more). A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.\n\nMCP tool: `reseller_buy_phone_number_into_stock` (writes).",
+        "requestBody": {
+          "required": true,
+          "description": "The number to buy, by its id from the stock offers.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phoneNumberId": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "phoneNumberId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The number is in your stock.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "phoneNumber": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "phoneNumber": {
+                          "type": "string"
+                        },
+                        "monthlyPrice": {
+                          "type": "string",
+                          "description": "The net monthly stock price as a decimal string."
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "phoneNumber",
+                        "monthlyPrice"
+                      ]
+                    },
+                    "invoiceId": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Our invoice for the first month. Null when it could not be issued; the purchase stands."
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "phoneNumber"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "403": {
+            "$ref": "#/components/responses/InsufficientScope"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "412": {
+            "description": "Your billing profile is incomplete, so our invoice could not be issued. The error body carries `missingFields`. Nothing was bought and nothing was charged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": [
+              "write:resellers"
+            ]
+          }
+        ],
+        "x-required-scope": "write:resellers",
+        "operationId": "reseller_buy_phone_number_into_stock",
+        "x-mcp": {
+          "tool": "reseller_buy_phone_number_into_stock"
+        }
+      }
+    },
+    "/resellers/phone-numbers/{id}/return": {
+      "post": {
+        "tags": [
+          "Reseller"
+        ],
+        "summary": "Return a number of your stock",
+        "description": "Gives a number of your stock back to us. From then on it costs you nothing; the month you have already paid is not refunded. Only a number that is free or in your own use can be returned: one a customer holds answers 409 `number_assigned`, take it back first with `POST /resellers/phone-numbers/{id}/release`. Any number that is not in your stock answers 404. This endpoint takes no request body.\n\nMCP tool: `reseller_return_stock_phone_number` (irreversible).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identifier of the phone number record to return. A non-numeric value answers 400 `invalid_id`.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "x-no-request-body": "This endpoint takes no request body.",
+        "responses": {
+          "200": {
+            "description": "The number went back to us.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/InsufficientScope"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": [
+              "write:resellers"
+            ]
+          }
+        ],
+        "x-required-scope": "write:resellers",
+        "operationId": "reseller_return_stock_phone_number",
+        "x-mcp": {
+          "tool": "reseller_return_stock_phone_number",
+          "destructive": true
+        }
+      }
+    },
     "/resellers/phone-numbers/{id}": {
       "delete": {
         "tags": [
           "Reseller"
         ],
         "summary": "Remove a phone number from the inventory",
-        "description": "Deletes an imported number for good: the record here and its registration with the telephony provider, including the stored SIP credentials. Use it for a trunk that was imported with wrong details or whose contract has ended. The number must be booked under the calling reseller and must currently be unassigned; a number a customer still holds answers 409 `number_assigned` and has to be released first, so that a working line cannot be dropped by accident. A number belonging to another reseller, or none at all, answers 404. Deleting the record does not cancel the number with the carrier it was bought from. This endpoint takes no request body.\n\nMCP tool: `reseller_delete_phone_number` (irreversible).",
+        "description": "Deletes an imported number for good: the record here and its registration with the telephony provider, including the stored SIP credentials. Use it for a trunk that was imported with wrong details or whose contract has ended. The number must be booked under the calling reseller and must currently be unassigned; a number a customer still holds answers 409 `number_assigned` and has to be released first, so that a working line cannot be dropped by accident. A number of your stock is given back with `POST /resellers/phone-numbers/{id}/return` instead; it, a number belonging to another reseller, or none at all, answers 404. Deleting the record does not cancel the number with the carrier it was bought from. This endpoint takes no request body.\n\nMCP tool: `reseller_delete_phone_number` (irreversible).",
         "parameters": [
           {
             "name": "id",
@@ -22590,7 +22983,7 @@
           "Reseller"
         ],
         "summary": "Update the invoicing company data",
-        "description": "Updates the company details that appear on invoices the reseller issues to its customers. All fields are optional and the object you send is written as given, so sending a field with an empty string does clear it, unlike the trading name, which must be at least one character when present. The email field must be a valid address. `defaultMailAnonymous` sets whether `anonymous` starts as true on a new email template one of the customers of the reseller creates; templates that exist keep their own setting. The change is recorded in the activity log as `company_data_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. The calling key has to belong to a reseller.\n\nMCP tool: `reseller_update_invoice_company` (writes).",
+        "description": "Updates the company details that appear on invoices the reseller issues to its customers. All fields are optional and the object you send is written as given, so sending a field with an empty string does clear it, unlike the trading name, which must be at least one character when present. The email field must be a valid address. `defaultMailAnonymous` sets whether `anonymous` starts as true on a new email template one of the customers of the reseller creates; templates that exist keep their own setting. A non-empty `companyVatId` is checked against the format of its country (from `companyCountry` when sent) and stored without spaces or dots; a wrong format answers 400 `invalid_vat_id` and nothing is written. The change is recorded in the activity log as `company_data_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. The calling key has to belong to a reseller.\n\nMCP tool: `reseller_update_invoice_company` (writes).",
         "requestBody": {
           "required": true,
           "description": "The invoicing company fields to change.",
@@ -22767,7 +23160,7 @@
           "Reseller"
         ],
         "summary": "Update the company and branding profile",
-        "description": "Partially updates the branding profile. Every field is optional and only the keys you send are written. The portal logo accepts null explicitly, which removes it, while the remaining fields take strings only. Note that the trading name, address and VAT id overlap with the invoicing profile written by PATCH /resellers/settings/company: both endpoints write the same stored record. The change is recorded in the activity log as `company_profile_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. Reseller keys only.\n\nMCP tool: `reseller_update_company` (writes).",
+        "description": "Partially updates the branding profile. Every field is optional and only the keys you send are written. The portal logo accepts null explicitly, which removes it, while the remaining fields take strings only. Note that the trading name, address and VAT id overlap with the invoicing profile written by PATCH /resellers/settings/company: both endpoints write the same stored record. A non-empty `companyVatId` is checked against the format of its country (from `companyCountry` when sent) and stored without spaces or dots; a wrong format answers 400 `invalid_vat_id` and nothing is written. The change is recorded in the activity log as `company_profile_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. Reseller keys only.\n\nMCP tool: `reseller_update_company` (writes).",
         "requestBody": {
           "required": true,
           "description": "The profile fields to change. Omitted fields keep their stored value.",
@@ -23453,7 +23846,7 @@
           "Reseller"
         ],
         "summary": "Set the markup on platform phone numbers",
-        "description": "Sets one markup in percent that your customers pay on top of the platform price for phone numbers, on the setup fee and on every monthly fee. The platform charges you its own price from your balance; the difference is yours. 0 sells the numbers at the platform price. The value is stored for the reseller, creating the pricing record on first use, and written to the activity log as `pricing_updated`. Your own imported numbers are not affected: you price those one by one. Reseller keys only. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.\n\nMCP tool: `reseller_set_number_markup` (writes).",
+        "description": "Sets one markup in percent that your customers pay on top of the platform price for phone numbers, on the setup fee and on every monthly fee. The platform charges you its own price plus VAT from your balance and sends you an invoice for it; the difference is yours. 0 sells the numbers at the platform price. The value is stored for the reseller, creating the pricing record on first use, and written to the activity log as `pricing_updated`. Your own imported numbers are not affected: you price those one by one. Reseller keys only. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.\n\nMCP tool: `reseller_set_number_markup` (writes).",
         "requestBody": {
           "required": true,
           "description": "The markup in percent, from 0 to 500.",
@@ -33673,7 +34066,7 @@
           "Billing"
         ],
         "summary": "Top up the balance",
-        "description": "Charges one of your stored cards right away and adds the amount to your prepaid euro balance; this cannot be undone over the API. `amountEur` is net and at least 5 euro: the balance carries no VAT, VAT is charged when the balance is used. The balance pays for every minute and conversation on pay as you go, and for orders placed with `place_order` and payment method `balance`. To buy a plan or add-on directly use `place_order`; for automatic refills of minutes and conversations use `set_auto_topup`. `paymentMethodId` is an `id` from `list_payment_methods`. Refused with 400 when the card holder has to confirm the payment (top up in the dashboard then), when top ups are not available for your account or when the payment fails. Returns the new balance.\n\nMCP tool: `deposit_balance` (costs money).",
+        "description": "Charges one of your stored cards right away and adds the amount to your prepaid euro balance; this cannot be undone over the API. `amountEur` is net and at least 5 euro: the balance carries no VAT, VAT is charged when the balance is used. The balance pays for every minute and conversation on pay as you go, and for orders placed with `place_order` and payment method `balance`. To buy a plan or add-on directly use `place_order`; for automatic refills of minutes and conversations use `set_auto_topup`. `paymentMethodId` is an `id` from `list_payment_methods`. Refused with 400 when the card holder has to confirm the payment (top up in the dashboard then), when top ups are not available for your account or when the payment fails. Returns the new balance. A private customer (in the EU without VAT ID and without the business confirmation) is refused with 412 and `details.reason` `CONSUMER_BUSINESS_ONLY`: such an account tops up on the billing page in the dashboard.\n\nMCP tool: `deposit_balance` (costs money).",
         "requestBody": {
           "required": true,
           "content": {
@@ -33778,7 +34171,7 @@
           "Billing"
         ],
         "summary": "Turn automatic top-ups on or off",
-        "description": "When the minutes or conversations already paid for run low, the amount set here is bought again automatically: from your prepaid euro balance, and when the balance is not enough your stored card is charged (at least 5 euro). Not during a trial. Turning it on needs a default card (see `list_payment_methods`): without one it is refused with 400 and `details.reason` `NO_CARD`; turning it off or changing the amounts always works.\n\nMCP tool: `set_auto_topup` (costs money).",
+        "description": "When the minutes or conversations already paid for run low, the amount set here is bought again automatically: from your prepaid euro balance, and when the balance is not enough your stored card is charged (at least 5 euro). Not during a trial. Turning it on needs a default card (see `list_payment_methods`): without one it is refused with 400 and `details.reason` `NO_CARD`; turning it off or changing the amounts always works. A private customer (in the EU without VAT ID and without the business confirmation) is refused with 412 and `details.reason` `CONSUMER_BUSINESS_ONLY`: such an account tops up on the billing page in the dashboard.\n\nMCP tool: `set_auto_topup` (costs money).",
         "requestBody": {
           "required": true,
           "content": {
@@ -35389,7 +35782,7 @@
           "Users"
         ],
         "summary": "Set the billing address",
-        "description": "Sets the company name, address and VAT id printed on your invoices, the same form as in the billing settings. It replaces the whole address: send every field each time, because `companyName` and `vatId` are cleared when left out; the saved address is `billingAddress` in `get_my_account`. `country` is a country name or ISO code; an unknown country is refused with 400. Only the account owner can call this; a team member gets 403. To change the account name use `update_profile`.\n\nMCP tool: `set_billing_address` (writes).",
+        "description": "Sets the company name, address and VAT id printed on your invoices, the same form as in the billing settings. It replaces the whole address: send every field each time, because `companyName` and `vatId` are cleared when left out; the saved address is `billingAddress` in `get_my_account`. `country` is a country name or ISO code; an unknown country is refused with 400 (reason `INVALID_COUNTRY`). `vatId` is checked against the format of its country and saved without spaces or dots, for example DE123456789; a wrong format is refused with 400 (reason `INVALID_VAT_ID`). Inside the EU a purchase needs either a VAT id or `businessConfirmed: true`, the confirmation that the account buys as a business or freelancer; `businessConfirmed` is kept as it is when left out. Only the account owner can call this; a team member gets 403. To change the account name use `update_profile`.\n\nMCP tool: `set_billing_address` (writes).",
         "requestBody": {
           "required": true,
           "content": {
@@ -35424,6 +35817,9 @@
                   "vatId": {
                     "type": "string",
                     "maxLength": 30
+                  },
+                  "businessConfirmed": {
+                    "type": "boolean"
                   }
                 },
                 "required": [

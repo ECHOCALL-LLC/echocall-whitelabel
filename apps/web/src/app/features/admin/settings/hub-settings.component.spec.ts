@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ADMIN_TEXTS, provideTestI18n } from '../../../testing/i18n';
+import { ADMIN_TEXTS, provideTestI18n, TEXTS } from '../../../testing/i18n';
 import { HubSettingsComponent } from './hub-settings.component';
 
 const COMPANY = {
@@ -288,5 +288,24 @@ describe('HubSettingsComponent', () => {
 
     expect(mailToggle(fixture).getAttribute('aria-checked')).toBe('true');
     expect(fixture.componentInstance.settings()?.defaultMailAnonymous).toBe(true);
+  });
+  it('puts a refused VAT ID back on its field', async () => {
+    const fixture = await render();
+
+    fixture.componentInstance.companyForm.controls.companyVatId.setValue('DE12');
+    void fixture.componentInstance.saveCompany();
+    await settle();
+    http
+      .expectOne('/api/admin/hub/resellers/company')
+      .flush(
+        { error: { code: 'invalid_vat_id', message: 'companyVatId does not look like a VAT ID.' } },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    await settle();
+    fixture.detectChanges();
+
+    const vat = fixture.componentInstance.companyForm.controls.companyVatId;
+    expect(vat.errors).toEqual({ server: TEXTS.errors.invalid_vat_id });
+    expect(fixture.nativeElement.textContent).toContain(TEXTS.errors.invalid_vat_id);
   });
 });

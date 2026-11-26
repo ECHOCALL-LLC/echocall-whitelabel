@@ -6,9 +6,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTableModule } from '@angular/material/table';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
+import { readApiError } from '../../../core/errors/api-error';
 import { formatMoney } from '../../../core/format/money';
 import { AdminHubService } from '../../../core/hub/admin-hub.service';
-import type { PhoneNumber, ResellerAssignedNumber } from '../../../core/hub/hub.models';
+import type { PhoneNumber, ResellerAssignedNumber, ResellerAssignResult } from '../../../core/hub/hub.models';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { NotifyService } from '../../../core/notify/notify.service';
 import { ConfirmDialogComponent, type ConfirmDialogData } from '../../../shared/confirm-dialog.component';
@@ -18,6 +19,7 @@ import {
   type AssignNumberDialogData,
   type AssignNumberResult,
 } from './assign-number-dialog.component';
+import { BuyNumberDialogComponent, type BuyNumberResult } from './buy-number-dialog.component';
 import { ImportNumberDialogComponent, type ImportNumberResult } from './import-number-dialog.component';
 import {
   SaleNumberDialogComponent,
@@ -26,14 +28,28 @@ import {
 } from './sale-number-dialog.component';
 
 /**
- * A number in the pool. The hub also says whose number it is and whether the
- * operator offers it to its customers. The API reference lists these two fields
- * since 1.22.0; hubs before that sent them undocumented, so they stay optional
- * here and are read defensively.
+ * A number in the pool. The hub also says whose number it is, whether the
+ * operator offers it to its customers and, since API 1.26.0, whether it is a
+ * platform number the operator bought into the portal's stock (since when, at
+ * which monthly price) and whether a customer pays the operator for it. Hubs
+ * before that sent fewer fields, so they stay optional here and are read
+ * defensively.
  */
 export type PoolNumber = PhoneNumber & {
   ownership?: 'platform' | 'partner' | 'customer' | null;
   isAvailableForPurchase?: boolean | null;
+  resellerPoolSince?: string | null;
+  resellerPoolPrice?: string | null;
+  resellerBaseMonthlyPrice?: string | null;
+};
+
+/** The fields `isOwn` and `isBought` look at, on a pool row and on an assigned one. */
+type Tenancy = Pick<PoolNumber, 'ownership' | 'resellerPoolSince'>;
+
+/** What the hub says about a charged assignment the operator should read in the portal's words. */
+const CHARGE_MESSAGES: Record<string, string> = {
+  insufficient_balance: 'admin.numbers.chargeErrors.insufficient_balance',
+  billing_profile_incomplete: 'admin.numbers.chargeErrors.billing_profile_incomplete',
 };
 
 /**
@@ -60,10 +76,15 @@ export type PoolNumber = PhoneNumber & {
           <h1 class="page-title">{{ t('admin.numbers.title') }}</h1>
           <p class="page-hint">{{ t('admin.numbers.intro') }}</p>
         </div>
-        <button mat-flat-button type="button" (click)="importNumber()" data-testid="import">
-          <mat-icon>add</mat-icon>
-          {{ t('admin.numbers.import') }}
-        </button>
+        <div class="head-actions">
+          <button mat-stroked-button type="button" (click)="importNumber()" data-testid="import">
+            {{ t('admin.numbers.import') }}
+          </button>
+          <button mat-flat-button type="button" (click)="buyNumber()" data-testid="buy">
+            <mat-icon>add</mat-icon>
+            {{ t('admin.numbers.buy') }}
+          </button>
+        </div>
       </div>
       @if (loading()) {
         <mat-progress-bar mode="indeterminate" />
@@ -75,8 +96,13 @@ export type PoolNumber = PhoneNumber & {
           <table mat-table [dataSource]="available()" data-testid="available-table">
             <ng-container matColumnDef="number">
               <th mat-header-cell *matHeaderCellDef>{{ t('admin.numbers.number') }}</th>
-              <td mat-cell *matCellDef="let row" [attr.data-label]="t('admin.numbers.number')" class="nowrap">
-                {{ row.phoneNumber }}
+              <td mat-cell *matCellDef="let row" [attr.data-label]="t('admin.numbers.number')">
+                <span class="nowrap">{{ row.phoneNumber }}</span>
+                @if (isBought(row)) {
+                  <span class="cell-sub block" data-testid="bought">
+                    {{ t('admin.numbers.boughtBadge', { price: money(row.resellerPoolPrice) }) }}
+                  </span>
+                }
               </td>
             </ng-container>
             <ng-container matColumnDef="label">
@@ -111,9 +137,11 @@ export type PoolNumber = PhoneNumber & {
                 [attr.data-label]="t('admin.numbers.sale')"
                 data-testid="sale-state"
               >
-                @if (isOwn(row)) {
+                @if (isOwn(row) || isBought(row)) {
                   @if (row.isAvailableForPurchase) {
-                    <span class="on-sale">{{ t('admin.numbers.onSale') }}</span>
+                    <span class="on-sale">
+                      {{ isBought(row) ? t('admin.numbers.onSaleMarkup') : t('admin.numbers.onSale') }}
+                    </span>
                   } @else {
                     <span class="cell-sub">{{ t('admin.numbers.notOnSale') }}</span>
                   }
@@ -141,13 +169,34 @@ export type PoolNumber = PhoneNumber & {
                       {{ t('admin.numbers.offer') }}
                     </button>
                   }
+                } @else if (isBought(row)) {
+                  @if (row.isAvailableForPurchase) {
+                    <button mat-stroked-button type="button" (click)="withdraw(row)" data-testid="sale-stop">
+                      {{ t('admin.numbers.stopSale') }}
+                    </button>
+                  } @else {
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="offerBought(row)"
+                      data-testid="sale-start"
+                    >
+                      {{ t('admin.numbers.offer') }}
+                    </button>
+                  }
                 }
                 <button mat-stroked-button type="button" (click)="assign(row)" data-testid="assign">
                   {{ t('admin.numbers.assign') }}
                 </button>
-                <button mat-stroked-button type="button" (click)="remove(row)" data-testid="delete">
-                  {{ t('admin.numbers.delete') }}
-                </button>
+                @if (isBought(row)) {
+                  <button mat-stroked-button type="button" (click)="giveBack(row)" data-testid="return">
+                    {{ t('admin.numbers.return') }}
+                  </button>
+                } @else if (isOwn(row)) {
+                  <button mat-stroked-button type="button" (click)="remove(row)" data-testid="delete">
+                    {{ t('admin.numbers.delete') }}
+                  </button>
+                }
               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="availableColumns"></tr>
@@ -164,8 +213,13 @@ export type PoolNumber = PhoneNumber & {
           <table mat-table [dataSource]="assigned()" data-testid="assigned-table">
             <ng-container matColumnDef="number">
               <th mat-header-cell *matHeaderCellDef>{{ t('admin.numbers.number') }}</th>
-              <td mat-cell *matCellDef="let row" [attr.data-label]="t('admin.numbers.number')" class="nowrap">
-                {{ row.phoneNumber.phoneNumber }}
+              <td mat-cell *matCellDef="let row" [attr.data-label]="t('admin.numbers.number')">
+                <span class="nowrap">{{ row.phoneNumber.phoneNumber }}</span>
+                @if (isBought(row.phoneNumber)) {
+                  <span class="cell-sub block">
+                    {{ t('admin.numbers.boughtBadge', { price: money(row.phoneNumber.resellerPoolPrice) }) }}
+                  </span>
+                }
               </td>
             </ng-container>
             <ng-container matColumnDef="label">
@@ -190,18 +244,29 @@ export type PoolNumber = PhoneNumber & {
                 {{ row.phoneNumber.purchasedAt | localDate: 'date' }}
               </td>
             </ng-container>
-            <ng-container matColumnDef="price">
-              <th mat-header-cell *matHeaderCellDef>{{ t('admin.numbers.price') }}</th>
-              <td mat-cell *matCellDef="let row" [attr.data-label]="t('admin.numbers.price')" class="numeric">
-                {{ money(row.phoneNumber.monthlyPrice) }}
+            <ng-container matColumnDef="billing">
+              <th mat-header-cell *matHeaderCellDef>{{ t('admin.numbers.billing') }}</th>
+              <td
+                mat-cell
+                *matCellDef="let row"
+                [attr.data-label]="t('admin.numbers.billing')"
+                data-testid="billing"
+              >
+                @if (billedToCustomer(row.phoneNumber)) {
+                  {{ t('admin.numbers.customerPays', { price: money(row.phoneNumber.monthlyPrice) }) }}
+                } @else {
+                  <span class="cell-sub">{{ t('admin.numbers.customerFree') }}</span>
+                }
               </td>
             </ng-container>
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let row" class="row-actions">
-                <button mat-stroked-button type="button" (click)="release(row)" data-testid="release">
-                  {{ t('admin.numbers.release') }}
-                </button>
+                @if (isOwn(row.phoneNumber) || isBought(row.phoneNumber)) {
+                  <button mat-stroked-button type="button" (click)="release(row)" data-testid="release">
+                    {{ t('admin.numbers.release') }}
+                  </button>
+                }
               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="assignedColumns"></tr>
@@ -216,6 +281,12 @@ export type PoolNumber = PhoneNumber & {
     </ng-container>
   `,
   styles: `
+    .head-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
     .section {
       font: var(--mat-sys-title-medium);
       margin: 24px 0 8px;
@@ -223,6 +294,9 @@ export type PoolNumber = PhoneNumber & {
     .cell-sub {
       font: var(--mat-sys-body-small);
       color: var(--mat-sys-on-surface-variant);
+    }
+    .block {
+      display: block;
     }
     .row-actions {
       text-align: right;
@@ -245,7 +319,7 @@ export class AdminNumbersPage implements OnInit {
   private readonly language = inject(LanguageService);
 
   readonly availableColumns = ['number', 'label', 'country', 'direction', 'price', 'sale', 'actions'];
-  readonly assignedColumns = ['number', 'label', 'customer', 'since', 'price', 'actions'];
+  readonly assignedColumns = ['number', 'label', 'customer', 'since', 'billing', 'actions'];
   readonly available = signal<PoolNumber[]>([]);
   readonly assigned = signal<ResellerAssignedNumber[]>([]);
   readonly loading = signal(false);
@@ -279,9 +353,23 @@ export class AdminNumbersPage implements OnInit {
     if (failed) this.notify.apiError(failed.reason);
   }
 
-  /** Only the operator's own imported numbers can be offered to its customers. */
-  isOwn(number: PoolNumber): boolean {
+  /** The operator's own imported numbers: offered at its own price, removed for good. */
+  isOwn(number: Tenancy): boolean {
     return number.ownership === 'partner';
+  }
+
+  /**
+   * A platform number the operator bought into the portal's stock. It sells at
+   * the platform price plus the operator's markup and goes back to the
+   * platform rather than being removed.
+   */
+  isBought(number: Tenancy): boolean {
+    return number.ownership === 'platform' && number.resellerPoolSince != null;
+  }
+
+  /** Whether the customer pays the operator for a handed out number: the hub keeps the base price beside it then. */
+  billedToCustomer(number: Pick<PoolNumber, 'resellerBaseMonthlyPrice'>): boolean {
+    return number.resellerBaseMonthlyPrice != null;
   }
 
   /**
@@ -307,6 +395,23 @@ export class AdminNumbersPage implements OnInit {
           { onSale: true, monthlyPrice: result.monthlyPrice },
           'admin.numbers.offered',
         );
+      });
+  }
+
+  /** Offers a bought number. Its price is not the operator's to type: platform price plus markup. */
+  offerBought(number: PoolNumber): void {
+    const data: ConfirmDialogData = {
+      titleKey: 'admin.numbers.saleDialog.title',
+      messageKey: 'admin.numbers.offerBoughtMessage',
+      params: { number: number.phoneNumber },
+      confirmKey: 'admin.numbers.offer',
+    };
+    this.dialog
+      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, { data })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) return;
+        await this.setSale(number, { onSale: true }, 'admin.numbers.offered');
       });
   }
 
@@ -341,7 +446,10 @@ export class AdminNumbersPage implements OnInit {
     }
   }
 
-  /** Hands one number out. The customer can point an agent at it afterwards. */
+  /**
+   * Hands one number out, for free or for the customer to pay. The customer can
+   * point an agent at it afterwards.
+   */
   assign(number: PhoneNumber): void {
     const data: AssignNumberDialogData = { phoneNumber: number.phoneNumber };
     this.dialog
@@ -353,13 +461,25 @@ export class AdminNumbersPage implements OnInit {
       .subscribe(async (result) => {
         if (!result) return;
         try {
-          await firstValueFrom(
-            this.hub.post(`/resellers/phone-numbers/${number.id}/assign`, { customerId: result.customerId }),
+          const answer = await firstValueFrom(
+            this.hub.post<ResellerAssignResult>(`/resellers/phone-numbers/${number.id}/assign`, {
+              customerId: result.customerId,
+              chargeCustomer: result.chargeCustomer,
+            }),
           );
-          this.notify.success('admin.numbers.assigned', { number: number.phoneNumber });
+          if (answer?.charged) {
+            this.notify.success('admin.numbers.assignedCharged', {
+              number: number.phoneNumber,
+              price: this.money(answer.monthlyPrice),
+            });
+          } else {
+            this.notify.success('admin.numbers.assigned', { number: number.phoneNumber });
+          }
           await this.load();
         } catch (err) {
-          this.notify.apiError(err);
+          const own = result.chargeCustomer ? CHARGE_MESSAGES[readApiError(err).code] : undefined;
+          if (own) this.notify.error(own);
+          else this.notify.apiError(err);
         }
       });
   }
@@ -392,9 +512,10 @@ export class AdminNumbersPage implements OnInit {
   }
 
   /**
-   * Drops a number out of the pool for good. Only offered for numbers no
-   * customer holds, and the confirmation spells out that the stored trunk
-   * credentials go with it while the carrier contract does not.
+   * Drops one of the operator's own numbers out of the pool for good. Only
+   * offered for numbers no customer holds, and the confirmation spells out
+   * that the stored trunk credentials go with it while the carrier contract
+   * does not.
    */
   remove(number: PhoneNumber): void {
     const data: ConfirmDialogData = {
@@ -416,6 +537,46 @@ export class AdminNumbersPage implements OnInit {
         } catch (err) {
           this.notify.apiError(err);
         }
+      });
+  }
+
+  /**
+   * Hands a bought number back to the platform. It stops costing the portal
+   * balance at once; the month already paid stays paid, which the
+   * confirmation says before anything happens.
+   */
+  giveBack(number: PoolNumber): void {
+    const data: ConfirmDialogData = {
+      titleKey: 'admin.numbers.returnTitle',
+      messageKey: 'admin.numbers.returnMessage',
+      params: { number: number.phoneNumber },
+      confirmKey: 'admin.numbers.return',
+      destructive: true,
+    };
+    this.dialog
+      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, { data })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) return;
+        try {
+          await firstValueFrom(this.hub.post(`/resellers/phone-numbers/${number.id}/return`));
+          this.notify.success('admin.numbers.returned', { number: number.phoneNumber });
+          await this.load();
+        } catch (err) {
+          this.notify.apiError(err);
+        }
+      });
+  }
+
+  /** Buys a platform number into the portal's stock; the dialog names the price first. */
+  buyNumber(): void {
+    this.dialog
+      .open<BuyNumberDialogComponent, unknown, BuyNumberResult>(BuyNumberDialogComponent, { data: {} })
+      .afterClosed()
+      .subscribe((result) => {
+        if (!result) return;
+        this.notify.success('admin.numbers.bought', { number: result.phoneNumber });
+        void this.load();
       });
   }
 

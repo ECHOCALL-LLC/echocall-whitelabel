@@ -86,6 +86,11 @@ const RULES: readonly (readonly [string, string])[] = [
   ['POST', '/resellers/phone-numbers/{id}/release'],
   ['PATCH', '/resellers/phone-numbers/{id}/sale'],
   ['DELETE', '/resellers/phone-numbers/{id}'],
+  // The portal's number stock (API 1.26.0): the service's free numbers on offer,
+  // buying one from the portal balance, and handing a free one back.
+  ['GET', '/resellers/phone-numbers/stock-offers'],
+  ['POST', '/resellers/phone-numbers/stock'],
+  ['POST', '/resellers/phone-numbers/{id}/return'],
 
   ['GET', '/resellers/tickets'],
   ['GET|PATCH', '/resellers/tickets/{id}'],

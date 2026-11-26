@@ -322,6 +322,10 @@
     "invoice_email_no_billing_email": "Für diesen Kunden ist keine Rechnungs-E-Mail hinterlegt.",
     "invoice_email_no_smtp": "Es ist kein Mailserver für den Versand eingerichtet.",
     "invoice_email_daily_limit": "Das Tageslimit für Rechnungs-E-Mails ist erreicht. Morgen geht es weiter.",
-    "invoice_email_failed": "Der Mailserver hat die E-Mail nicht angenommen. Bitte versuchen Sie es später erneut."
+    "invoice_email_failed": "Der Mailserver hat die E-Mail nicht angenommen. Bitte versuchen Sie es später erneut.",
+    "payment_not_ready": "Ihre Kunden können noch nicht für Nummern bezahlen. Hinterlegen Sie zuerst Ihre eigenen Zahlungsdaten oder teilen Sie die Nummer kostenlos zu.",
+    "number_assigned": "Ein Kunde hat diese Nummer. Holen Sie sie zuerst zurück.",
+    "payment_failed": "Die Zahlung ist fehlgeschlagen.",
+    "invalid_vat_id": "Diese USt-IdNr. ist ungültig. Bitte prüfen Sie sie samt Länderkürzel, zum Beispiel DE123456789."
   }
 }

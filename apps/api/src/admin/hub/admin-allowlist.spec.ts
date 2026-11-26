@@ -30,6 +30,15 @@ describe('matchOperatorCall', () => {
     expect(matchOperatorCall('POST', '/resellers/phone-numbers/7/sale')).toBe(false);
   });
 
+  it('accepts the portal’s number stock: the offers, buying one and handing it back', () => {
+    expect(matchOperatorCall('GET', '/resellers/phone-numbers/stock-offers')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/phone-numbers/stock')).toBe(true);
+    expect(matchOperatorCall('POST', '/resellers/phone-numbers/7/return')).toBe(true);
+    expect(matchOperatorCall('GET', '/resellers/phone-numbers/stock')).toBe(false);
+    expect(matchOperatorCall('POST', '/resellers/phone-numbers/stock-offers')).toBe(false);
+    expect(matchOperatorCall('GET', '/resellers/phone-numbers/7/return')).toBe(false);
+  });
+
   it('accepts mailing an invoice, but only its preview and the send itself', () => {
     expect(matchOperatorCall('GET', '/resellers/invoices/7/email-preview')).toBe(true);
     expect(matchOperatorCall('POST', '/resellers/invoices/7/send')).toBe(true);

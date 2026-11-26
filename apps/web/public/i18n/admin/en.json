@@ -515,7 +515,7 @@
   },
   "numbers": {
     "title": "Phone numbers",
-    "intro": "The number pool of your portal. Hand a free number to a customer, or take an assigned one back.",
+    "intro": "The phone numbers of your portal. Buy platform numbers or bring your own, hand a free number to a customer, or take an assigned one back.",
     "import": "Import a number",
     "tabs": {
       "available": "In the pool",
@@ -549,7 +549,13 @@
       "title": "Assign the number",
       "intro": "Number {{number}} goes to this customer. They can then point one of their agents at it.",
       "customer": "Customer",
-      "submit": "Assign"
+      "submit": "Assign",
+      "billing": "Billing",
+      "free": "Assign for free",
+      "freeHint": "The customer pays nothing for the number. A bought platform number keeps costing you the platform price.",
+      "charge": "Customer pays",
+      "chargeHint": "The customer pays your price for the number from their balance, the first month now and every month after. The invoice is issued to them in your name.",
+      "chargeNeedsPayment": "Add your own payment details first, then your customers can pay for numbers."
     },
     "importDialog": {
       "title": "Import a number of your own",
@@ -611,6 +617,33 @@
       "priceHint": "At most €1,000. VAT is added at purchase.",
       "invalid": "Please enter a monthly price above 0 and at most €1,000.",
       "submit": "Offer"
+    },
+    "buy": "Buy a number",
+    "boughtBadge": "Bought, {{price}} a month",
+    "onSaleMarkup": "On offer, with your markup",
+    "offerBoughtMessage": "Your customers can buy number {{number}} themselves. They pay the platform price plus your markup from their balance.",
+    "return": "Give back",
+    "returnTitle": "Give the number back",
+    "returnMessage": "Number {{number}} goes back to the platform and stops costing your balance from now on. The month already paid is not refunded, and the number may go to others afterwards.",
+    "returned": "Number {{number}} went back to the platform.",
+    "bought": "Number {{number}} is now part of your stock.",
+    "billing": "Billing",
+    "customerPays": "Customer pays {{price}} a month",
+    "customerFree": "Free for the customer",
+    "assignedCharged": "Number {{number}} was assigned. The customer pays {{price}} a month, net, from their balance.",
+    "chargeErrors": {
+      "insufficient_balance": "The customer’s balance does not cover the first month.",
+      "billing_profile_incomplete": "The customer’s billing details are incomplete, so no invoice can be issued to them."
+    },
+    "buyDialog": {
+      "title": "Buy a platform number",
+      "intro": "The number then belongs to your stock. Your balance pays the first month at once and then every month on the same day until you give the number back. You receive an invoice for every month.",
+      "empty": "No platform numbers are available right now.",
+      "choose": "Number",
+      "perMonth": "{{price}} a month, net",
+      "summary": "{{gross}} is debited from your balance today, including {{vat}}% VAT. After that you pay this amount for {{number}} every month until you give the number back.",
+      "submit": "Buy",
+      "submitFor": "Buy for {{price}}"
     }
   },
   "users": {

@@ -515,7 +515,7 @@
   },
   "numbers": {
     "title": "Numéros",
-    "intro": "Le parc de numéros de votre portail. Attribuez un numéro libre à un client, ou reprenez celui qui est attribué.",
+    "intro": "Les numéros de votre portail. Achetez des numéros de la plateforme ou importez les vôtres, attribuez un numéro libre à un client, ou reprenez celui qui est attribué.",
     "import": "Importer un numéro",
     "tabs": {
       "available": "Dans le parc",
@@ -549,7 +549,13 @@
       "title": "Attribuer le numéro",
       "intro": "Le numéro {{number}} va à ce client. Il pourra ensuite y affecter un de ses agents.",
       "customer": "Client",
-      "submit": "Attribuer"
+      "submit": "Attribuer",
+      "billing": "Facturation",
+      "free": "Attribuer gratuitement",
+      "freeHint": "Le client ne paie rien pour le numéro. Un numéro de la plateforme acheté continue de vous coûter le prix de la plateforme.",
+      "charge": "Le client paie",
+      "chargeHint": "Le client paie votre prix pour le numéro depuis son solde, le premier mois maintenant puis chaque mois. La facture lui est adressée en votre nom.",
+      "chargeNeedsPayment": "Enregistrez d'abord vos propres coordonnées de paiement, ensuite vos clients pourront payer les numéros."
     },
     "importDialog": {
       "title": "Reprendre un numéro à vous",
@@ -611,6 +617,33 @@
       "priceHint": "Au maximum 1 000 €. La TVA est ajoutée lors de l'achat.",
       "invalid": "Veuillez saisir un prix mensuel supérieur à 0 et au maximum 1 000 €.",
       "submit": "Proposer"
+    },
+    "buy": "Acheter un numéro",
+    "boughtBadge": "Acheté, {{price}} par mois",
+    "onSaleMarkup": "En vente, avec votre marge",
+    "offerBoughtMessage": "Vos clients peuvent acheter eux-mêmes le numéro {{number}}. Ils paient le prix de la plateforme plus votre marge depuis leur solde.",
+    "return": "Rendre",
+    "returnTitle": "Rendre le numéro",
+    "returnMessage": "Le numéro {{number}} retourne à la plateforme et ne pèse plus sur votre solde dès maintenant. Le mois déjà payé n'est pas remboursé, et le numéro peut ensuite être attribué à d'autres.",
+    "returned": "Le numéro {{number}} a été rendu à la plateforme.",
+    "bought": "Le numéro {{number}} fait maintenant partie de votre stock.",
+    "billing": "Facturation",
+    "customerPays": "Le client paie {{price}} par mois",
+    "customerFree": "Gratuit pour le client",
+    "assignedCharged": "Le numéro {{number}} a été attribué. Le client paie {{price}} HT par mois depuis son solde.",
+    "chargeErrors": {
+      "insufficient_balance": "Le solde du client ne couvre pas le premier mois.",
+      "billing_profile_incomplete": "Les coordonnées de facturation du client sont incomplètes, aucune facture ne peut donc lui être adressée."
+    },
+    "buyDialog": {
+      "title": "Acheter un numéro de la plateforme",
+      "intro": "Le numéro fait alors partie de votre stock. Votre solde paie le premier mois immédiatement, puis chaque mois le même jour, jusqu'à ce que vous rendiez le numéro. Vous recevez une facture pour chaque mois.",
+      "empty": "Aucun numéro de la plateforme n'est disponible pour le moment.",
+      "choose": "Numéro",
+      "perMonth": "{{price}} par mois HT",
+      "summary": "{{gross}} est débité de votre solde aujourd'hui, TVA de {{vat}} % comprise. Ensuite, vous payez ce montant chaque mois pour {{number}}, jusqu'à ce que vous rendiez le numéro.",
+      "submit": "Acheter",
+      "submitFor": "Acheter pour {{price}}"
     }
   },
   "users": {

@@ -38,10 +38,13 @@ describe('AssignNumberDialogComponent', () => {
 
   afterEach(() => http.verify());
 
-  async function render() {
+  async function render(paymentReady = true) {
     const fixture = TestBed.createComponent(AssignNumberDialogComponent);
     await fixture.whenStable();
     http.expectOne((req) => req.url === '/api/admin/hub/resellers/customers').flush({ data: CUSTOMERS });
+    http
+      .expectOne('/api/admin/hub/resellers/phone-numbers/stock-offers')
+      .flush({ data: [], vatPercent: 19, paymentReady });
     await settle();
     fixture.detectChanges();
     return fixture;
@@ -59,10 +62,31 @@ describe('AssignNumberDialogComponent', () => {
   it('reports the chosen customer back to the page', async () => {
     const fixture = await render();
 
-    fixture.componentInstance.form.setValue({ customerId: 501 });
+    fixture.componentInstance.form.patchValue({ customerId: 501 });
     fixture.componentInstance.submit();
 
-    expect(closed).toEqual({ customerId: 501 });
+    expect(closed).toEqual({ customerId: 501, chargeCustomer: false });
+  });
+
+  it('bills the customer when the operator chooses so', async () => {
+    const fixture = await render();
+
+    fixture.componentInstance.form.setValue({ customerId: 501, billing: 'charge' });
+    fixture.componentInstance.submit();
+
+    expect(closed).toEqual({ customerId: 501, chargeCustomer: true });
+  });
+
+  it('keeps billing off and says why while the operator has no payment details', async () => {
+    const fixture = await render(false);
+    const charge = fixture.nativeElement.querySelector('[data-testid="charge"] input') as HTMLInputElement;
+
+    expect(charge.disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('[data-testid="charge-needs-payment"]')).not.toBeNull();
+
+    fixture.componentInstance.form.setValue({ customerId: 501, billing: 'charge' });
+    fixture.componentInstance.submit();
+    expect(closed).toEqual({ customerId: 501, chargeCustomer: false });
   });
 
   it('closes with nothing when no customer was chosen', async () => {

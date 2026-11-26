@@ -322,6 +322,10 @@
     "invoice_email_no_billing_email": "No billing email is on file for this customer.",
     "invoice_email_no_smtp": "No mail server is set up for sending.",
     "invoice_email_daily_limit": "Today's limit for invoice emails is reached. Sending resumes tomorrow.",
-    "invoice_email_failed": "The mail server did not accept the email. Please try again later."
+    "invoice_email_failed": "The mail server did not accept the email. Please try again later.",
+    "payment_not_ready": "Your customers cannot pay for numbers yet. Add your own payment details first, or assign the number for free.",
+    "number_assigned": "A customer holds this number. Take it back first.",
+    "payment_failed": "The payment failed.",
+    "invalid_vat_id": "This VAT ID is not valid. Please check it, country code included, for example DE123456789."
   }
 }

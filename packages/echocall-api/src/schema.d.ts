@@ -654,7 +654,7 @@ export interface paths {
         get?: never;
         /**
          * Turn automatic top-ups on or off
-         * @description When the minutes or conversations already paid for run low, the amount set here is bought again automatically: from your prepaid euro balance, and when the balance is not enough your stored card is charged (at least 5 euro). Not during a trial. Turning it on needs a default card (see `list_payment_methods`): without one it is refused with 400 and `details.reason` `NO_CARD`; turning it off or changing the amounts always works.
+         * @description When the minutes or conversations already paid for run low, the amount set here is bought again automatically: from your prepaid euro balance, and when the balance is not enough your stored card is charged (at least 5 euro). Not during a trial. Turning it on needs a default card (see `list_payment_methods`): without one it is refused with 400 and `details.reason` `NO_CARD`; turning it off or changing the amounts always works. A private customer (in the EU without VAT ID and without the business confirmation) is refused with 412 and `details.reason` `CONSUMER_BUSINESS_ONLY`: such an account tops up on the billing page in the dashboard.
          *
          *     MCP tool: `set_auto_topup` (costs money).
          */
@@ -699,7 +699,7 @@ export interface paths {
         put?: never;
         /**
          * Top up the balance
-         * @description Charges one of your stored cards right away and adds the amount to your prepaid euro balance; this cannot be undone over the API. `amountEur` is net and at least 5 euro: the balance carries no VAT, VAT is charged when the balance is used. The balance pays for every minute and conversation on pay as you go, and for orders placed with `place_order` and payment method `balance`. To buy a plan or add-on directly use `place_order`; for automatic refills of minutes and conversations use `set_auto_topup`. `paymentMethodId` is an `id` from `list_payment_methods`. Refused with 400 when the card holder has to confirm the payment (top up in the dashboard then), when top ups are not available for your account or when the payment fails. Returns the new balance.
+         * @description Charges one of your stored cards right away and adds the amount to your prepaid euro balance; this cannot be undone over the API. `amountEur` is net and at least 5 euro: the balance carries no VAT, VAT is charged when the balance is used. The balance pays for every minute and conversation on pay as you go, and for orders placed with `place_order` and payment method `balance`. To buy a plan or add-on directly use `place_order`; for automatic refills of minutes and conversations use `set_auto_topup`. `paymentMethodId` is an `id` from `list_payment_methods`. Refused with 400 when the card holder has to confirm the payment (top up in the dashboard then), when top ups are not available for your account or when the payment fails. Returns the new balance. A private customer (in the EU without VAT ID and without the business confirmation) is refused with 412 and `details.reason` `CONSUMER_BUSINESS_ONLY`: such an account tops up on the billing page in the dashboard.
          *
          *     MCP tool: `deposit_balance` (costs money).
          */
@@ -2897,7 +2897,7 @@ export interface paths {
         put?: never;
         /**
          * Purchase a phone number
-         * @description Buys one of the numbers returned by the search and attaches it to the account. Buying numbers needs an active Voice subscription (Voice, Bundle or a voice capable plan) and is not possible during the free trial; otherwise the request is rejected with 403 and one of the codes `voice_subscription_required`, `voice_subscription_inactive` or `trial_not_allowed`, before anything is charged. This charges money: the setup price plus the first month, plus VAT, is deducted from the account wallet, a balance transaction is written and an invoice is issued. An account managed by a provider (a partner of EchoCall) pays the provider's price as the search shows it and gets the invoice from that provider; when the provider cannot take the order right now the request is rejected with 400 `provider_unavailable`, nothing is bought and the provider is informed. Pass the listing from the search result back unchanged. Prices are never taken from the request: the server prices the number again from the marketplace listing, or from the platform price list for the countries that carry one, so the `setupPrice`, `monthlyPrice`, `providerSetupCost` and `providerMonthlyCost` fields are accepted for compatibility and ignored. Read the `pricing` block of the response for what was actually charged. A listing that can no longer be priced, because it has been withdrawn or its SKU has changed, is answered with 502 `quote_failed`: search again and retry with a current listing. If the wallet does not cover the total the request is rejected with 402 and nothing is bought. If the billing profile of the account is incomplete (company name, street, postal code, city, country, and the VAT ID for EU countries) the request is rejected with 412 `billing_profile_incomplete` before anything is charged, because the invoice could not be issued; complete the company details under Settings and retry. When the listing carries a `requirementId` the number is created with verification pending and cannot carry traffic until the verification endpoints below have been completed.
+         * @description Buys one of the numbers returned by the search and attaches it to the account. Buying numbers needs an active Voice subscription (Voice, Bundle or a voice capable plan) and is not possible during the free trial; otherwise the request is rejected with 403 and one of the codes `voice_subscription_required`, `voice_subscription_inactive` or `trial_not_allowed`, before anything is charged. This charges money: the setup price plus the first month, plus VAT, is deducted from the account wallet, a balance transaction is written and an invoice is issued. An account managed by a provider (a partner of EchoCall) pays the provider's price as the search shows it and gets the invoice from that provider; when the provider cannot take the order right now the request is rejected with 400 `provider_unavailable`, nothing is bought and the provider is informed. Pass the listing from the search result back unchanged. Prices are never taken from the request: the server prices the number again from the marketplace listing, or from the platform price list for the countries that carry one, so the `setupPrice`, `monthlyPrice`, `providerSetupCost` and `providerMonthlyCost` fields are accepted for compatibility and ignored. Read the `pricing` block of the response for what was actually charged. A listing that can no longer be priced, because it has been withdrawn or its SKU has changed, is answered with 502 `quote_failed`: search again and retry with a current listing. If the wallet does not cover the total the request is rejected with 402 and nothing is bought. If the billing profile of the account is incomplete (street, postal code, city and country; inside the EU also a VAT ID or the confirmation that the account buys as a business) the request is rejected with 412 `billing_profile_incomplete` before anything is charged, because the invoice could not be issued; complete the billing details with `PUT /users/me/billing-address` or under Settings and retry. When the listing carries a `requirementId` the number is created with verification pending and cannot carry traffic until the verification endpoints below have been completed.
          *
          *     MCP tool: `purchase_phone_number` (costs money).
          */
@@ -3904,7 +3904,7 @@ export interface paths {
         head?: never;
         /**
          * Update the company and branding profile
-         * @description Partially updates the branding profile. Every field is optional and only the keys you send are written. The portal logo accepts null explicitly, which removes it, while the remaining fields take strings only. Note that the trading name, address and VAT id overlap with the invoicing profile written by PATCH /resellers/settings/company: both endpoints write the same stored record. The change is recorded in the activity log as `company_profile_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. Reseller keys only.
+         * @description Partially updates the branding profile. Every field is optional and only the keys you send are written. The portal logo accepts null explicitly, which removes it, while the remaining fields take strings only. Note that the trading name, address and VAT id overlap with the invoicing profile written by PATCH /resellers/settings/company: both endpoints write the same stored record. A non-empty `companyVatId` is checked against the format of its country (from `companyCountry` when sent) and stored without spaces or dots; a wrong format answers 400 `invalid_vat_id` and nothing is written. The change is recorded in the activity log as `company_profile_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. Reseller keys only.
          *
          *     MCP tool: `reseller_update_company` (writes).
          */
@@ -4526,7 +4526,7 @@ export interface paths {
         post?: never;
         /**
          * Remove a phone number from the inventory
-         * @description Deletes an imported number for good: the record here and its registration with the telephony provider, including the stored SIP credentials. Use it for a trunk that was imported with wrong details or whose contract has ended. The number must be booked under the calling reseller and must currently be unassigned; a number a customer still holds answers 409 `number_assigned` and has to be released first, so that a working line cannot be dropped by accident. A number belonging to another reseller, or none at all, answers 404. Deleting the record does not cancel the number with the carrier it was bought from. This endpoint takes no request body.
+         * @description Deletes an imported number for good: the record here and its registration with the telephony provider, including the stored SIP credentials. Use it for a trunk that was imported with wrong details or whose contract has ended. The number must be booked under the calling reseller and must currently be unassigned; a number a customer still holds answers 409 `number_assigned` and has to be released first, so that a working line cannot be dropped by accident. A number of your stock is given back with `POST /resellers/phone-numbers/{id}/return` instead; it, a number belonging to another reseller, or none at all, answers 404. Deleting the record does not cancel the number with the carrier it was bought from. This endpoint takes no request body.
          *
          *     MCP tool: `reseller_delete_phone_number` (irreversible).
          */
@@ -4547,7 +4547,7 @@ export interface paths {
         put?: never;
         /**
          * Assign a phone number to a customer
-         * @description Hands one number out of the reseller inventory to one of the reseller customers. The number must be booked under the calling reseller and must still be unassigned; an already assigned number answers 404, the same status used when the number does not exist at all. The customer must belong to the calling reseller, otherwise the answer is also 404, so that one reseller cannot probe for another reseller customers. On success the owner is set and the purchase timestamp is stamped with the current time. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.
+         * @description Hands one number out of the reseller inventory to one of the reseller customers. The number must be booked under the calling reseller and must still be unassigned; an already assigned number answers 404, the same status used when the number does not exist at all. The customer must belong to the calling reseller, otherwise the answer is also 404, so that one reseller cannot probe for another reseller customers. On success the owner is set and the purchase timestamp is stamped with the current time. With `chargeCustomer` false (the default) the customer pays nothing for the number and no invoice is issued; a number of your stock keeps costing you its stock price. With `chargeCustomer` true the customer pays the number at your price with your markup from its own balance, now for the first month and every month after, and each payment is invoiced in your name. That needs your payment account to be connected (otherwise 409 `payment_not_ready`), a complete billing profile of the customer (otherwise 412 `billing_profile_incomplete`) and enough balance on the customer account (otherwise 402 `insufficient_balance` with `required` and `available`). A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.
          *
          *     MCP tool: `reseller_assign_phone_number` (writes).
          */
@@ -4569,11 +4569,33 @@ export interface paths {
         put?: never;
         /**
          * Take a phone number back from a customer
-         * @description Returns a number to the reseller inventory. The owner and the purchase timestamp are cleared, any pending cancellation is cleared as well, and a revocation timestamp is stamped. The number also stops answering on the customer voice agent and is booked back onto the reseller account, so the next assignment starts from a clean line. The number only has to be booked under the calling reseller: releasing a number that is already unassigned succeeds and simply rewrites the same empty state. A number belonging to another reseller, or none at all, answers 404. This endpoint takes no request body. The API key must belong to a reseller account.
+         * @description Returns a number to the reseller inventory. The owner and the purchase timestamp are cleared, any pending cancellation is cleared as well, and a revocation timestamp is stamped. The number also stops answering on the customer voice agent and is booked back onto the reseller account, so the next assignment starts from a clean line. The number has to be one you imported yourself or one of your stock: releasing a number that is already unassigned succeeds and simply rewrites the same empty state. A number of your stock stays in your stock and keeps costing you its stock price; a customer paying for it stops paying from now on. A number a customer bought from our stock itself, a number of another reseller, or none at all, answers 404. This endpoint takes no request body. The API key must belong to a reseller account.
          *
          *     MCP tool: `reseller_release_phone_number` (irreversible).
          */
         post: operations["reseller_release_phone_number"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/phone-numbers/{id}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Return a number of your stock
+         * @description Gives a number of your stock back to us. From then on it costs you nothing; the month you have already paid is not refunded. Only a number that is free or in your own use can be returned: one a customer holds answers 409 `number_assigned`, take it back first with `POST /resellers/phone-numbers/{id}/release`. Any number that is not in your stock answers 404. This endpoint takes no request body.
+         *
+         *     MCP tool: `reseller_return_stock_phone_number` (irreversible).
+         */
+        post: operations["reseller_return_stock_phone_number"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4662,6 +4684,50 @@ export interface paths {
          *     MCP tool: `reseller_import_phone_number` (writes).
          */
         post: operations["reseller_import_phone_number"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/phone-numbers/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Buy a number into your stock
+         * @description Buys one of our free numbers (see `GET /resellers/phone-numbers/stock-offers`) into your stock. Your balance pays the first month at once, net plus VAT, and we invoice it to you; every following month is charged and invoiced on the same day of the month until you return the number. Free numbers of your stock show up in `GET /resellers/phone-numbers/available` and can be assigned to your customers. Answers 402 `insufficient_balance` with `required` and `available` when your balance is too low, 412 `billing_profile_incomplete` when your billing profile lacks fields an invoice needs, and 404 `not_found` when the number is not on offer (any more). A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.
+         *
+         *     MCP tool: `reseller_buy_phone_number_into_stock` (writes).
+         */
+        post: operations["reseller_buy_phone_number_into_stock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resellers/phone-numbers/stock-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List numbers you can buy into your stock
+         * @description Returns our free numbers that can be bought into your stock, cheapest first, not paginated. `monthlyPrice` is our net monthly price, the price you pay for the number every month while it is in your stock; `vatPercent` is the VAT rate added on top. `paymentReady` says whether your customers can already be charged for numbers (see `POST /resellers/phone-numbers/{id}/assign`). Buying needs no payment account, your own balance pays. Requires a reseller key.
+         *
+         *     MCP tool: `reseller_list_stock_offers` (read only).
+         */
+        get: operations["reseller_list_stock_offers"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4762,7 +4828,7 @@ export interface paths {
         get?: never;
         /**
          * Set the markup on platform phone numbers
-         * @description Sets one markup in percent that your customers pay on top of the platform price for phone numbers, on the setup fee and on every monthly fee. The platform charges you its own price from your balance; the difference is yours. 0 sells the numbers at the platform price. The value is stored for the reseller, creating the pricing record on first use, and written to the activity log as `pricing_updated`. Your own imported numbers are not affected: you price those one by one. Reseller keys only. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.
+         * @description Sets one markup in percent that your customers pay on top of the platform price for phone numbers, on the setup fee and on every monthly fee. The platform charges you its own price plus VAT from your balance and sends you an invoice for it; the difference is yours. 0 sells the numbers at the platform price. The value is stored for the reseller, creating the pricing record on first use, and written to the activity log as `pricing_updated`. Your own imported numbers are not affected: you price those one by one. Reseller keys only. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string.
          *
          *     MCP tool: `reseller_set_number_markup` (writes).
          */
@@ -5021,7 +5087,7 @@ export interface paths {
         head?: never;
         /**
          * Update the invoicing company data
-         * @description Updates the company details that appear on invoices the reseller issues to its customers. All fields are optional and the object you send is written as given, so sending a field with an empty string does clear it, unlike the trading name, which must be at least one character when present. The email field must be a valid address. `defaultMailAnonymous` sets whether `anonymous` starts as true on a new email template one of the customers of the reseller creates; templates that exist keep their own setting. The change is recorded in the activity log as `company_data_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. The calling key has to belong to a reseller.
+         * @description Updates the company details that appear on invoices the reseller issues to its customers. All fields are optional and the object you send is written as given, so sending a field with an empty string does clear it, unlike the trading name, which must be at least one character when present. The email field must be a valid address. `defaultMailAnonymous` sets whether `anonymous` starts as true on a new email template one of the customers of the reseller creates; templates that exist keep their own setting. A non-empty `companyVatId` is checked against the format of its country (from `companyCountry` when sent) and stored without spaces or dots; a wrong format answers 400 `invalid_vat_id` and nothing is written. The change is recorded in the activity log as `company_data_updated`. A body that fails validation answers 400 with `error.code` set to `validation_error` and `error.message` carrying the raw list of validation issues as an array of objects, not as a human-readable string. The calling key has to belong to a reseller.
          *
          *     MCP tool: `reseller_update_invoice_company` (writes).
          */
@@ -6320,7 +6386,7 @@ export interface paths {
         get?: never;
         /**
          * Set the billing address
-         * @description Sets the company name, address and VAT id printed on your invoices, the same form as in the billing settings. It replaces the whole address: send every field each time, because `companyName` and `vatId` are cleared when left out; the saved address is `billingAddress` in `get_my_account`. `country` is a country name or ISO code; an unknown country is refused with 400. Only the account owner can call this; a team member gets 403. To change the account name use `update_profile`.
+         * @description Sets the company name, address and VAT id printed on your invoices, the same form as in the billing settings. It replaces the whole address: send every field each time, because `companyName` and `vatId` are cleared when left out; the saved address is `billingAddress` in `get_my_account`. `country` is a country name or ISO code; an unknown country is refused with 400 (reason `INVALID_COUNTRY`). `vatId` is checked against the format of its country and saved without spaces or dots, for example DE123456789; a wrong format is refused with 400 (reason `INVALID_VAT_ID`). Inside the EU a purchase needs either a VAT id or `businessConfirmed: true`, the confirmation that the account buys as a business or freelancer; `businessConfirmed` is kept as it is when left out. Only the account owner can call this; a team member gets 403. To change the account name use `update_profile`.
          *
          *     MCP tool: `set_billing_address` (writes).
          */
@@ -9166,6 +9232,8 @@ export interface components {
         UserProfileInput: {
             avatarUrl?: string | null;
             billingAddress?: {
+                /** @description True when the account confirmed buying as a business or freelancer. Inside the EU it stands in for a missing VAT ID before a purchase. */
+                businessConfirmed: boolean;
                 city?: string | null;
                 companyName?: string | null;
                 country?: string | null;
@@ -16080,7 +16148,7 @@ export interface operations {
                 };
             };
             403: components["responses"]["InsufficientScope"];
-            /** @description The billing profile of the account is incomplete, so no invoice could be issued. The error body carries `missingFields`, the profile fields still empty (`companyName`, `billingStreet`, `billingPostalCode`, `billingCity`, `billingCountry`, and `vatId` for EU countries). Complete the company details under Settings and retry. Nothing was bought and nothing was charged. */
+            /** @description The billing profile of the account is incomplete, so no invoice could be issued. The error body carries `missingFields`, the profile fields still empty (`billingStreet`, `billingPostalCode`, `billingCity`, `billingCountry`; `businessConfirmation` for an EU account with neither VAT ID nor business confirmation; `companyName` and `vatId` for a reseller account). Complete the billing details with `PUT /users/me/billing-address` or under Settings and retry. Nothing was bought and nothing was charged. */
             412: {
                 headers: {
                     [name: string]: unknown;
@@ -19368,10 +19436,12 @@ export interface operations {
             };
             cookie?: never;
         };
-        /** @description The customer that shall receive the number, given by its numeric user id. */
+        /** @description The customer that shall receive the number, given by its numeric user id, and whether the customer pays for it. */
         requestBody: {
             content: {
                 "application/json": {
+                    /** @default false */
+                    chargeCustomer?: boolean;
                     customerId: number;
                 };
             };
@@ -19384,14 +19454,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        success: boolean;
+                        /** @description True when the customer paid the first month just now. */
+                        charged: boolean;
+                        /** @description The invoice issued in your name for the first month. Null when nothing was charged or the invoice could not be issued. */
+                        invoiceId?: number | null;
+                        /** @description The net monthly price the customer pays, as a decimal string. Null when the customer pays nothing. */
+                        monthlyPrice?: string | null;
+                        /** @enum {boolean} */
+                        success: true;
                     };
                 };
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            402: components["responses"]["PaymentRequired"];
             403: components["responses"]["InsufficientScope"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            /** @description The billing profile of the customer is incomplete, so no invoice in your name could be issued. The error body carries `missingFields`. Nothing was assigned and nothing was charged. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
         };
@@ -19427,6 +19515,38 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    reseller_return_stock_phone_number: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identifier of the phone number record to return. A non-numeric value answers 400 `invalid_id`. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The number went back to us. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        success: boolean;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     reseller_set_phone_number_sale: {
         parameters: {
             query?: never;
@@ -19441,7 +19561,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description Monthly price your customer pays, net in EUR, at most 1000. Required when onSale is true; left out, the stored price stays. */
+                    /** @description Monthly price your customer pays, net in EUR, at most 1000. Required to put one of your own imported numbers on sale; left out, the stored price stays. Ignored for a number of your stock, which sells at our price plus your markup. */
                     monthlyPrice?: number;
                     /** @description True offers the number to your customers, false takes it off sale. */
                     onSale: boolean;
@@ -19487,7 +19607,22 @@ export interface operations {
                         data: {
                             /** @description The customer the number is assigned to. Null when the user row could not be joined. */
                             owner?: components["schemas"]["OwnerRef"] | null;
-                            phoneNumber: components["schemas"]["PhoneNumber"];
+                            phoneNumber: components["schemas"]["PhoneNumber"] & {
+                                /**
+                                 * @description Whose number it is: `partner` is one you imported yourself, `platform` comes from our stock.
+                                 * @enum {string}
+                                 */
+                                ownership?: "platform" | "partner" | "customer";
+                                /** @description Set while a customer pays you a monthly price for the number. Null when the number is free, in your own use, or assigned without a price. */
+                                resellerBaseMonthlyPrice?: string | null;
+                                /** @description The net monthly price you pay us for this number of your stock, as a decimal string. Null for any other number. */
+                                resellerPoolPrice?: string | null;
+                                /**
+                                 * Format: date-time
+                                 * @description Set while the number is one of ours in your stock: the day you bought it in. You pay its monthly stock price from this day on, every month, until you return it.
+                                 */
+                                resellerPoolSince?: string | null;
+                            };
                         }[];
                     };
                 };
@@ -19522,6 +19657,15 @@ export interface operations {
                              * @enum {string}
                              */
                             ownership?: "platform" | "partner" | "customer";
+                            /** @description Set while a customer pays you a monthly price for the number. Null when the number is free, in your own use, or assigned without a price. */
+                            resellerBaseMonthlyPrice?: string | null;
+                            /** @description The net monthly price you pay us for this number of your stock, as a decimal string. Null for any other number. */
+                            resellerPoolPrice?: string | null;
+                            /**
+                             * Format: date-time
+                             * @description Set while the number is one of ours in your stock: the day you bought it in. You pay its monthly stock price from this day on, every month, until you return it.
+                             */
+                            resellerPoolSince?: string | null;
                         })[];
                     };
                 };
@@ -19612,6 +19756,101 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reseller_buy_phone_number_into_stock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The number to buy, by its id from the stock offers. */
+        requestBody: {
+            content: {
+                "application/json": {
+                    phoneNumberId: number;
+                };
+            };
+        };
+        responses: {
+            /** @description The number is in your stock. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Our invoice for the first month. Null when it could not be issued; the purchase stands. */
+                        invoiceId?: number | null;
+                        phoneNumber: {
+                            id: number;
+                            /** @description The net monthly stock price as a decimal string. */
+                            monthlyPrice: string;
+                            phoneNumber: string;
+                        };
+                        /** @enum {boolean} */
+                        success: true;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            402: components["responses"]["PaymentRequired"];
+            403: components["responses"]["InsufficientScope"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            /** @description Your billing profile is incomplete, so our invoice could not be issued. The error body carries `missingFields`. Nothing was bought and nothing was charged. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    reseller_list_stock_offers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Numbers for your stock. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            country?: string | null;
+                            countryCode?: string | null;
+                            friendlyName?: string | null;
+                            id: number;
+                            /** @description Net monthly price as a decimal string. */
+                            monthlyPrice: string;
+                            numberType?: string | null;
+                            /** @description The number in E.164 format. */
+                            phoneNumber: string;
+                        }[];
+                        /** @description True when your customers can be charged for numbers. */
+                        paymentReady: boolean;
+                        /** @description The VAT rate in percent that is added to every price. */
+                        vatPercent: number;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["InsufficientScope"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
         };
@@ -22260,6 +22499,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    businessConfirmed?: boolean;
                     city: string;
                     companyName?: string;
                     country: string;

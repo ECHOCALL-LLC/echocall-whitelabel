@@ -117,6 +117,13 @@ type PostResult<P extends keyof paths> = paths[P] extends {
   ? B
   : never;
 
+/** The JSON body of the 201 answer of a POST path that creates something. */
+type PostCreated<P extends keyof paths> = paths[P] extends {
+  post: { responses: { 201: { content: { 'application/json': infer B } } } };
+}
+  ? B
+  : never;
+
 export type ResellerCustomer = Schemas['ResellerCustomer'];
 export type ResellerStats = Schemas['ResellerStats'];
 export type ResellerActivity = Schemas['ResellerActivity'];
@@ -147,6 +154,11 @@ export type ResellerCustomerUsageRow = ResellerCustomerUsage['usage'][number];
 export type ResellerCustomerSubscription = ListItem<GetBody<'/resellers/customers/{id}/subscriptions'>>;
 export type ResellerAssignedNumber = ListItem<GetBody<'/resellers/phone-numbers/assigned'>>;
 export type ResellerAvailableNumber = ListItem<GetBody<'/resellers/phone-numbers/available'>>;
+/** The service's free numbers the operator can buy into the portal's stock (API 1.26.0). */
+export type ResellerStockOffers = GetBody<'/resellers/phone-numbers/stock-offers'>;
+export type ResellerStockOffer = ResellerStockOffers['data'][number];
+export type ResellerStockPurchase = PostCreated<'/resellers/phone-numbers/stock'>;
+export type ResellerAssignResult = PostResult<'/resellers/phone-numbers/{id}/assign'>;
 export type ResellerVoiceAgentRow = ListItem<GetBody<'/resellers/voice-agents'>>;
 export type ResellerChatbotRow = ListItem<GetBody<'/resellers/chatbots'>>;
 export type ResellerRevenueAnalytics = GetBody<'/resellers/analytics/revenue'>;
